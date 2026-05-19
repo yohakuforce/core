@@ -11,16 +11,29 @@
 
 ## クイックスタート
 
+### 利用者向け (npm から導入)
+
 ```bash
-git clone https://github.com/yohakuforce/core yohakuforce
-cd yohakuforce
-npm install && npm run build
-npm link --workspace @yohakuforce/core
+# Node.js 20 以上が必要
+npm install -g @yohakuforce/core
+yohaku --version
+
 cd /path/to/your-salesforce-project
 yohaku init --bootstrap --profile minimal
 ```
 
+`npx` で 1 回だけ試したい場合:
+
+```bash
+cd /path/to/your-salesforce-project
+npx -p @yohakuforce/core yohaku init --bootstrap --profile minimal
+```
+
 30 分で導入完了する詳細手順: [`docs/01-getting-started/quickstart.md`](./docs/01-getting-started/quickstart.md)
+
+### コントリビュータ向け (ソースから)
+
+OSS への貢献やローカル開発を行う場合は [`CONTRIBUTING.md`](./CONTRIBUTING.md) を参照。`git clone` + `npm install` + `npm run build` のフローを記載している。
 
 ---
 

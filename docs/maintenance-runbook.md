@@ -81,7 +81,7 @@ git commit -m "chore: release vX.Y.Z"
 # 6. アノテーション付きタグを作成
 git tag -a vX.Y.Z -m "vX.Y.Z — <リリースタイトル>"
 
-# 7. koya 確認後に push
+# 7. メンテナー確認後に push
 git push origin main
 git push origin vX.Y.Z
 

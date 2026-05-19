@@ -8,7 +8,7 @@ tags: [roadmap, long-term, version-planning, context-layer, l1-l6, yohakuforce, 
 
 # 長期ロードマップ (v0.3 〜 v1.0) + コンテキスト独立トラック + AI プロバイダ抽象トラック
 
-> **Status: active** (2026-05-13 koya 承認)
+> **Status: active** (2026-05-13 メンテナー承認)
 > 前提: [`decisions/2026-05-13-product-vision-expansion-ai-driven-development.md`](./2026-05-13-product-vision-expansion-ai-driven-development.md) (ビジョン拡張 ADR)
 >
 > 各バージョンの **DoD は「たたき台」** であり、当該 Phase 着手時の Phase ADR で最終確定する (規律 §3.1)。
@@ -256,7 +256,7 @@ AI プロバイダ層 ─→ v0.4 で抽象層 + Claude/OpenAI/Antigravity 3 ada
 - adapter 寄贈のための CONTRIBUTING.md / コード規約 / Pull Request テンプレート整備
 - 商標方針: 名称は `yohakuforce` (ブランド) / `yohaku` (CLI)、商標登録の要否を v1.0 公開時点で再判断
 - **商業展開はなし** ([Vision ADR §商業展開モデル](./2026-05-13-product-vision-expansion-ai-driven-development.md#商業展開モデル-2026-05-13-確定) と整合)
-  - 価値が出た場合に koya 主導の「ガイド付き導入」を任意提供する余地は残す (商業化は別判断)
+  - 価値が出た場合に メンテナー主導の「ガイド付き導入」を任意提供する余地は残す (商業化は別判断)
 
 **主機能**:
 - 公開ドキュメント整備 (英 + 日)
@@ -303,7 +303,7 @@ AI プロバイダ層 ─→ v0.4 で抽象層 + Claude/OpenAI/Antigravity 3 ada
 | 状態 | 判断 |
 |---|---|
 | 当該バージョンの DoD 全項目達成 | 次バージョンの Phase ADR を起案 |
-| DoD の主要 3 項目以上達成 | 達成内容 + 残課題を retrospectives/ に記録、次バージョン着手判断は **人間オーナー (koya)** |
+| DoD の主要 3 項目以上達成 | 達成内容 + 残課題を retrospectives/ に記録、次バージョン着手判断は **人間オーナー (メンテナー)** |
 | DoD 半数未満達成 | 当該バージョン内で対処継続 (新 Phase / 新バージョンを立てない、規律 §3.3) |
 | 構造的破綻 (アプローチが間違っていた) | 当該バージョンの Phase ADR を `Status: Superseded` に書き換え、新案を起案 |
 
@@ -324,8 +324,8 @@ AI プロバイダ層 ─→ v0.4 で抽象層 + Claude/OpenAI/Antigravity 3 ada
 
 ## トレードオフ
 
-- **長期コミットメント**: 推定 1〜2 年、koya 体制で 10 バージョンを完走する持続力が必要
-  - 対処: 1 バージョン = 1 North Star で各バージョンを独立完結化、koya が降りても次の人が引き継げる粒度
+- **長期コミットメント**: 推定 1〜2 年、メンテナー体制で 10 バージョンを完走する持続力が必要
+  - 対処: 1 バージョン = 1 North Star で各バージョンを独立完結化、メンテナーが交代しても次の人が引き継げる粒度
 - **L5 が遠い (v0.9 / v0.10)**: 「実装 AI 駆動」の最大期待が後ろになる
   - 対処: v0.5 / v0.6 / v0.7 で順次価値を出す、L5 だけで売らない
 - **コンテキスト層が adapter ごとに段階追加**: 議事録だけだと初期は地味に見える
@@ -370,7 +370,7 @@ AI プロバイダ層 ─→ v0.4 で抽象層 + Claude/OpenAI/Antigravity 3 ada
 
 ## 次の動き
 
-1. ~~本 ADR を koya がレビュー~~ ✅ 2026-05-13 完了 (ビジョン ADR とセット)
+1. ~~本 ADR を メンテナーがレビュー~~ ✅ 2026-05-13 完了 (ビジョン ADR とセット)
 2. ~~`status: active` に昇格~~ ✅ 2026-05-13 完了
 3. v0.3.0 完了 (2026-06-15 週) 後、v0.4.0 着手 Phase ADR を本 ADR の v0.4.0 セクションを起点に起案
 4. 各バージョン完了時に本 ADR の検証ゲート (達成度追記) を実施

@@ -2,6 +2,44 @@
 
 すべての注目すべき変更は本ファイルに記録される (SemVer 準拠)。
 
+## [0.4.1] - 2026-05-19 (Docs sanitize & npm-first quickstart)
+
+> **v0.4.1 は機能変更なしのドキュメント整備リリース**。OSS 公開後の現実 (`@yohakuforce/core` が npm に publish 済み) に合わせてセットアップ手順を `npm install -g` 起点に改め、合わせて公開ドキュメント・ADR から内部情報を取り除いた。配布物 (`dist`) には変更なし。
+
+### Changed — Quickstart の npm 起点化
+
+- `README.md` クイックスタートを `npm install -g @yohakuforce/core` 起点に変更。`npx -p @yohakuforce/core yohaku ...` の代替手順も併記
+- `docs/01-getting-started/quickstart.md` §1 を 3 方式 (npm global / npx / source build) に再構成。サンプル取得手順は `git clone --depth 1` で `examples/sample-project` のみ抜き出すパスを明示
+- `docs/release-notes/v0.3.0.md` の Getting Started を npm 起点に更新
+
+### Docs — rollout テンプレートの汎用化
+
+- `docs/rollout/*.md` 全 5 ファイルを **自組織導入用の汎用テンプレート集** に書き換え
+  - 個人名・固定日付・「ツールを作りました」目線を全て削除
+  - `<実施日>` `<発表者名>` `<チーム名>` `<差出人名>` 等のプレースホルダーで再構成
+  - バージョン固定値・社内固有値を「最新版」「対象チーム」などの抽象表現に置換
+- `docs/rollout/README.md` を新規追加。テンプレート集の使い方・置換すべきプレースホルダーを明示
+
+### Security — 公開ドキュメントの sanitize
+
+- 公開リポジトリ上のドキュメント・ADR から個人名 / 個人パス / 旧 GitHub org 名 (`pro-koya/yohakuforce`) を除去
+- ADR (`.agents/knowledge/decisions/`) の `koya` 言及を `メンテナー` / `オーナー` に置換
+- `CHANGELOG.md` の `/Users/koya1104` 言及を抽象表現に変更
+- `docs/maintenance-runbook.md` / `docs/release-notes/v0.3.0.md` の「koya 確認」「koya 向け」を「メンテナー」に置換
+
+### Verified
+
+- `npm run lint` / `npm run typecheck` / `npm run test` 全 green
+- 配布 tarball (`packages/core`): `dist` 変更なし、`files` フィールド経由で `.agents/` `docs/` は配布対象外を再確認
+- 公開対象ファイル全文検索: 個人名 / ローカルパス / 旧 org URL のヒット 0 件
+
+### Migration Notes (v0.4.0 → v0.4.1)
+
+- コード変更なし。`npm update -g @yohakuforce/core` で更新可能
+- 既存プロジェクトの再 `init` 不要。ドキュメント参照先の URL が変わっただけ
+
+---
+
 ## [0.4.0] - 2026-05-15 (OSS 一般公開初版)
 
 > **v0.4.0 は yohakuforce の最初の一般公開リリース**。社内プロジェクトでの実利用を通じて発見した課題 (Claude Code との統合周りの摩擦、LLM のスキーマ誤推測、hook 同期実行による wall-clock 遅延) を構造的に解消し、加えて Salesforce 静的解析の新領域 (バッチ許容件数算出パック) を追加した。
@@ -74,7 +112,7 @@
 - 310 / 310 テスト pass
 - `npm run build`, `npm run typecheck`, `npm run lint` 全 green
 - `npm audit`: CRITICAL/HIGH 0 件、moderate 5 件は dev only (vitest 経由)
-- 公開 tarball スキャン: シークレット・機密ファイル混入なし、`/Users/koya1104` 等の個人情報 0 件
+- 公開 tarball スキャン: シークレット・機密ファイル混入なし、ローカル絶対パスや個人情報 0 件
 - マルウェアパターンスキャン: 不審 URL / `eval` / `new Function` / 不審 child_process いずれも 0 件
 - `package.json` の `files` フィールドで配布対象を `["dist", "src/schema", "README.md", "LICENSE", "NOTICE"]` に限定 (511 files / 270kB)
 

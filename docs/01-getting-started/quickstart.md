@@ -16,20 +16,35 @@
 
 ## 1. core のインストール
 
+### 方法 A: npm からグローバル導入（推奨）
+
+```bash
+npm install -g @yohakuforce/core
+which yohaku
+yohaku --version
+```
+
+これだけで `yohaku` コマンドがどこからでも呼べる状態になる。
+
+### 方法 B: `npx` で 1 回だけ試す
+
+導入をコミットしたくない場合:
+
+```bash
+npx -p @yohakuforce/core yohaku --version
+npx -p @yohakuforce/core yohaku init --bootstrap --profile minimal
+```
+
+### 方法 C: ソースからビルド（コントリビュータ向け）
+
+OSS への貢献やローカル開発を行いたい場合のみ。詳細は [`CONTRIBUTING.md`](../../CONTRIBUTING.md) 参照。
+
 ```bash
 git clone https://github.com/yohakuforce/core yohakuforce
 cd yohakuforce
 npm install
 npm run build
-```
-
-ビルドすると `packages/core/dist/cli.js` が `yohaku` 本体になる。
-グローバルから呼びたい場合:
-
-```bash
 npm link --workspace @yohakuforce/core
-which yohaku
-yohaku version
 ```
 
 ---
@@ -38,14 +53,16 @@ yohaku version
 
 すでに `sfdx-project.json` があるプロジェクトなら **そのまま使えます**。
 
-無い場合は最寄りのプロジェクトに移動するか、サンプルから始める:
+まだ無い場合は、Dev Edition org からメタデータを取得する手順を [`dev-edition-setup.md`](./dev-edition-setup.md) で確認してください。
+
+動作確認用のサンプルプロジェクトはリポジトリの [`examples/sample-project/`](https://github.com/yohakuforce/core/tree/main/examples/sample-project) にあります。手元で動かしたい場合は以下で取得できます。
 
 ```bash
-cp -r /path/to/yohakuforce/examples/sample-project ./my-yohaku-trial
+# サンプルだけ欲しい場合
+git clone --depth 1 https://github.com/yohakuforce/core /tmp/yohakuforce-src
+cp -r /tmp/yohakuforce-src/examples/sample-project ./my-yohaku-trial
 cd my-yohaku-trial
 ```
-
-(自分の Dev Edition org からメタデータを取得する手順は [`dev-edition-setup.md`](./dev-edition-setup.md) 参照)
 
 ---
 

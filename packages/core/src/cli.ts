@@ -46,7 +46,7 @@ import { appendTimingLog, measureMsAsync } from "./util/timing-log.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const BUNDLED_SCAFFOLD = resolve(here, "scaffold");
 
-const YOHAKU_VERSION = "0.4.0";
+const YOHAKU_VERSION = "0.4.1";
 const DEFAULT_API = "62.0";
 const DEFAULT_DB = ".yohaku/graph.sqlite";
 const DEFAULT_OUT = "docs/generated";
