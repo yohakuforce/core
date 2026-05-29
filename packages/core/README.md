@@ -1,65 +1,83 @@
 # @yohakuforce/core
 
-Core CLI and knowledge graph engine for [yohakuforce](../../README.md).
+[![npm](https://img.shields.io/npm/v/@yohakuforce/core.svg)](https://www.npmjs.com/package/@yohakuforce/core)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-> **Status**: Phase 1 着手 (実装開始前のスケルトンのみ)。実装は順次進める。
+**Salesforce metadata → SQLite knowledge graph → deterministic Markdown.**
 
-## 責務
+Core is the deterministic foundation layer of the [余白フォース / yohakuforce](../../README.md) suite.
+It turns Salesforce DX metadata into a queryable SQLite knowledge graph, then renders
+documentation **deterministically** — the same input always produces the same output, and every
+fact carries its provenance. **Core never calls an LLM**; it is the stable scaffold that AI tools
+build on top of.
 
-- Salesforce DX ソース (`force-app/`) → SQLite 知識グラフ (`.yohaku/graph.sqlite`)
-- 知識グラフ → 決定的な Markdown 派生物 (`docs/generated/`)
-- 入力ソース層の抽象化 (`LocalSourceAdapter` を Phase 1 で実装、`DxMcpSourceAdapter` を Phase 6 で追加)
+---
 
-## CLI
+## Why deterministic?
 
-```
-yohaku graph build [--incremental] [--source local|dx-mcp]
-yohaku graph query <sql>
-yohaku graph schema [--format json|markdown]
-yohaku render <target> [--output <path>]
-yohaku validate <target>
-yohaku diff --from <ref> --to <ref> [--json]
-yohaku metrics [--period day|week|month]
-yohaku version
-```
+AI-generated docs drift: re-run them and you get different prose, sometimes different facts.
+Core separates the two concerns — it owns the **deterministic** half (extract → graph → render),
+and leaves the **interpretive** half (explanations, summaries) to AI tools that consume the graph.
+That makes the output auditable and reproducible.
 
-## ディレクトリ構造 (計画)
+## Install
 
-```
-packages/core/
-├── package.json
-├── tsconfig.json / tsconfig.build.json
-├── vitest.config.ts
-├── biome.json
-├── src/
-│   ├── cli.ts                       (Phase 1 で実装)
-│   ├── index.ts                     (公開 API)
-│   ├── types/                       (TypeScript 型定義)
-│   │   ├── graph.ts
-│   │   ├── source-adapter.ts
-│   │   └── render.ts
-│   ├── schema/                      (JSON Schema 正本)
-│   │   └── graph.schema.json
-│   ├── merge/                       (HUMAN_MANAGED マージロジック)
-│   │   └── (Phase 1 で実装)
-│   ├── adapters/
-│   │   └── local/                   (LocalSourceAdapter)
-│   ├── graph/                       (SQLite 操作)
-│   └── render/                      (eta テンプレート描画)
-└── tests/
-    ├── unit/
-    └── golden/
+```bash
+npm install -g @yohakuforce/core
+yohaku --help
 ```
 
-## 設計原則
+## Quick start
 
-1. **3 層分離**: 決定的処理は本パッケージで担う。AI 推測はここに混ぜない。
-2. **入出力の決定的性**: 同一入力 → 同一出力 をハッシュで検証 (ゴールデンテスト)
-3. **`force-app/` を読むだけ・書かない**: Layer 1 (正本) を侵さない
-4. **knowledge graph は CLI 経由でしか書き換えない**: AI / hooks から直接 INSERT 禁止
+```bash
+# 1. Initialise the scaffold in your Salesforce DX project
+yohaku init --bootstrap --profile standard
 
-## 関連ドキュメント
+# 2. Build the knowledge graph from force-app/ metadata
+yohaku graph build --incremental
 
-- [`/IMPLEMENTATION_GUIDE.md`](../../IMPLEMENTATION_GUIDE.md) — 実装方針正本
-- [`/AGENTS.md`](../../AGENTS.md) — 自律ループ
-- [`/CONTRIBUTING.md`](../../CONTRIBUTING.md) — 開発フロー
+# 3. Inspect the graph
+yohaku graph schema --tables
+yohaku graph query "SELECT name FROM sobject LIMIT 10"
+
+# 4. Render documentation (deterministic Markdown)
+yohaku render all            # everything
+yohaku render system-index   # project overview
+yohaku render objects        # per-SObject (fields / validation rules / dependencies)
+yohaku render flows          # per-Flow
+yohaku render apex           # per-ApexClass
+```
+
+## Pipeline
+
+```
+Salesforce metadata  →  SQLite knowledge graph  →  deterministic render  →  Markdown docs
+   (SFDX / DX-MCP)        (yohaku graph build)        (yohaku render)
+```
+
+## Optional: Context-Hub context injection
+
+Core can pull abstracted project context from [Context-Hub](https://pypi.org/project/yohakuforce-context-hub/)
+to enrich `explain` / `change-summary` output. It is **opt-in** (default: `none`), configured in
+`.yohaku/config.json`, and only abstracted context is used — customer names, PII and secrets are
+never written into generated artifacts.
+
+```bash
+yohaku context --kind explain --fqn Account
+```
+
+## Design principles
+
+1. **Three-layer separation** — deterministic processing lives here; AI inference does not.
+2. **Deterministic I/O** — same input → same output, verified by golden tests.
+3. **Read `force-app/`, never write it** — the source of truth is never mutated.
+4. **Graph is CLI-only** — no direct INSERTs from AI or hooks.
+
+## The suite
+
+Core is one of three layers (Core / Context-Hub / AI Manager). See the suite documentation
+(`yohakuforce-suite-docs.html`) for how they fit together.
+
+## License
+
+Apache-2.0
