@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadContextProvider } from "./adapters/context/index.js";
 import { DxMcpSourceAdapter } from "./adapters/dx-mcp/index.js";
 import { LocalSourceAdapter } from "./adapters/local/index.js";
 import { computeDiff } from "./diff/index.js";
@@ -178,7 +179,7 @@ async function cmdGraphBuild(args: ParsedArgs): Promise<number> {
     }
     try {
       // 「並行 Edit で取りこぼした最後の変更を 1 回だけ拾う」ループ。無限再実行は防ぐ。
-      const MAX_RERUNS = 1;
+      const maxReruns = 1;
       let rerunCount = 0;
       let keepGoing = true;
       while (keepGoing) {
@@ -208,7 +209,7 @@ async function cmdGraphBuild(args: ParsedArgs): Promise<number> {
         }
         // dirty が立っていれば 1 回だけ再実行
         const release = releaseBuildLock(lockPaths);
-        if (!release.rerunNeeded || rerunCount >= MAX_RERUNS) {
+        if (!release.rerunNeeded || rerunCount >= maxReruns) {
           keepGoing = false;
           break;
         }
@@ -888,6 +889,7 @@ const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map([
   ["onboard state", { handler: cmdOnboardState }],
   ["onboard faq", { handler: cmdOnboardFaqExtract }],
   ["explain-write", { handler: cmdExplainWrite }],
+  ["context", { handler: cmdContext }],
   ["version", { handler: cmdVersion }],
 ]);
 
@@ -950,6 +952,27 @@ async function cmdExplainWrite(args: ParsedArgs): Promise<number> {
     console.log(`[yohaku]   skipped ids: ${result.skipped.join(", ")}`);
   }
   return 0;
+}
+
+async function cmdContext(args: ParsedArgs): Promise<number> {
+  const kind = args.flags.get("kind");
+  const fqn = args.flags.get("fqn");
+  const projectRoot = args.flags.get("project-root") ?? process.cwd();
+
+  if (kind === undefined || fqn === undefined) {
+    console.error("[yohaku] context requires --kind <metadataKind> --fqn <name>");
+    return 2;
+  }
+
+  const provider = loadContextProvider(projectRoot);
+  try {
+    const brief = await provider.relatedContext({ kind, fqn });
+    // explain-writer / change-summary が材料として読む。空でも安全な形で出力する。
+    console.log(JSON.stringify(brief, null, 2));
+    return 0;
+  } finally {
+    await provider.close();
+  }
 }
 
 function findCommand(args: ParsedArgs): { key: string; handler: CommandHandler } | undefined {
@@ -1015,6 +1038,12 @@ Explain (Phase 8 — /yohaku-explain skill 連携):
   yohaku explain-write --kind apexClass|apexTrigger|flow --fqn <name>
                      --input <blocks.json> [--project-root <dir>] [--output-dir <dir>]
                      # AI_MANAGED ブロックだけを安全に上書き。他ブロックには触らない。
+
+Context (opt-in — Context-Hub 連携):
+  yohaku context --kind <metadataKind> --fqn <name> [--project-root <dir>]
+                     # 対象に関連するプロジェクト/顧客コンテキストを Context-Hub から取得し
+                     # JSON(ContextBrief)で出力。.yohaku/config.json の contextProvider を参照。
+                     # 未設定なら空 brief を返す(従来動作のまま)。
 
 Other:
   yohaku validate --target <graph.json>

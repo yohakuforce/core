@@ -54,6 +54,18 @@ argument-hint: [--from <ref>] [--to <ref>] [--output docs/ai-augmented/change-su
 - [ ] ...
 ```
 
+### 2.5. プロジェクト文脈の補強 (opt-in / Context-Hub 連携)
+
+変更された主要エンティティについて `yohaku context --kind <kind> --fqn <fqn>` を実行する。
+`.yohaku/config.json` で Context-Hub が opt-in 設定されている場合のみ、関連する会議の
+決定事項・課題の経緯・要件背景が `ContextBrief`(JSON) で返る(未設定なら `{"empty": true}`)。
+
+- 用途は **AI_MANAGED `overall-summary`(全体所感) と各変更の「業務影響」の WHY 補強に限る**。
+  変更の事実(カテゴリ・件数・差分)は決定的出力が正。文脈は「なぜこの変更が必要か」を肉付けする。
+- **顧客固有名・個人情報・シークレットは書かない**。文脈は「請求要件の変更により」「与信運用の
+  方針変更に伴い」のように **抽象化** して反映する。生の発言・氏名・URL・キーを転記しない。
+- 文脈由来の記述には「要件上」「運用方針として」等、根拠が文脈由来と分かる表現を用いる。
+
 ### 3. 大型差分のサンプリング
 
 `raw_diff.truncated === true` または `categories[*].changes.length > 50` の場合:
@@ -74,6 +86,7 @@ yohaku metrics record --model claude-sonnet-4-6 --command /change-summary --in <
 
 ## 禁則
 
-- **業務文脈の捏造禁止**: HUMAN_MANAGED 領域は空のまま。レビュー担当者が記入する
+- **業務文脈の捏造禁止**: HUMAN_MANAGED 領域は空のまま。レビュー担当者が記入する。Context-Hub 文脈が空(opt-in 未設定)なら WHY を推測で埋めない
+- **顧客データの非転記**: Context-Hub 文脈から得た情報は抽象化して書き、生の顧客固有名 / 個人情報 / シークレットを change-summary に転記しない(成果物は PR に貼られるため)
 - **サンプリング時の bias 抑制**: 各カテゴリから先頭 N 件ではなく、`changeKind` 別 (added / modified / removed) で均等にサンプル
 - **PR テンプレートとの統合**: 利用者の `.github/PULL_REQUEST_TEMPLATE.md` から change-summary を参照する仕組みは Phase 6 で

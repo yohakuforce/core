@@ -14,11 +14,28 @@ tools: Bash, Read, Glob, Grep
 - `<fqn>` (例: AccountBalanceService / Order__c)
 - 対象 `<block-id>` のリスト
 
-## 材料 (これだけを使う)
+## 材料
+
+### 一次材料 (これだけで本文を構成できる)
 
 - `yohaku graph query` で取得した DETERMINISTIC ファクト
 - 対象 Markdown ファイルの **DETERMINISTIC ブロックのみ** (AI_MANAGED / HUMAN_MANAGED は読まない)
 - `force-app/` のソース (AI 推測の根拠を増やす場合のみ)
+
+### 補助材料 — プロジェクト文脈 (opt-in / Context-Hub 連携)
+
+`yohaku context --kind <kind> --fqn <fqn>` を実行する。`.yohaku/config.json` で
+Context-Hub が opt-in 設定されている場合のみ、関連する会議の決定事項・課題の経緯・
+要件背景が `ContextBrief`(JSON) で返る。未設定なら `{"empty": true, "snippets": []}` が
+返るので、その場合は従来通り一次材料だけで書く。
+
+- 用途は **「なぜ存在するか」「設計判断の背景」「業務シナリオ」の補強に限る**。
+  決定的ファクト (構造・処理) は一次材料が正。文脈は WHY を肉付けするためだけに使う。
+- **顧客固有名・個人情報・シークレットは本文に書かない**(下記 禁則 を厳守)。
+  文脈から得た背景は「請求業務の要件上」「与信判定の運用方針として」のように
+  **抽象化して** 反映する。生の発言・氏名・URL・キーをそのまま転記しない。
+- snippet を反映した段落には、根拠が文脈由来であることが分かる表現
+  (例:「要件上」「運用方針として」) を用いる。捏造した背景と区別できるようにする。
 
 ## 出力
 
@@ -82,9 +99,9 @@ tools: Bash, Read, Glob, Grep
 
 ## 禁則 (絶対に守る)
 
-- 既存の AI_MANAGED ブロック / HUMAN_MANAGED ブロックの内容を**読み込まない**。再生成性を担保するため、入力は DETERMINISTIC ファクトのみとする
+- 既存の AI_MANAGED ブロック / HUMAN_MANAGED ブロックの内容を**読み込まない**。本文の事実(構造・処理)は DETERMINISTIC ファクトのみを根拠とする(補助材料の Context-Hub 文脈は WHY の補強限定)
 - 知識グラフに無い情報を**捏造しない**。推測する場合は「(推測)」を付ける
-- 顧客固有名 / 個人情報 / シークレット (URL / API key) を書かない
+- 顧客固有名 / 個人情報 / シークレット (URL / API key) を書かない。**Context-Hub 文脈から得た情報も同様に抽象化して書き、生の顧客データを転記しない**
 - HUMAN_MANAGED ブロックの内容を引用しない
 - 「〜と思われる」「おそらく」のような曖昧表現は最小限に
 - 出力 Markdown には h1 (`#`) を使わない (ブロック内なので h2 以下)
