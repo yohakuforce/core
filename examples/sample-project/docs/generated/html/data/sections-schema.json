@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "componentTypes": [
+    "apex",
+    "trigger",
+    "lwc",
+    "object",
+    "flow"
+  ],
+  "sections": [
+    {
+      "id": "one-line-summary",
+      "label": "一行サマリ",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "business-meaning",
+      "label": "業務的意味づけ",
+      "source": "llm",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "dependencies",
+      "label": "依存関係",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "public-interface",
+      "label": "公開インターフェース",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "not-applicable",
+        "lwc": "required",
+        "object": "required",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "data-model-touchpoints",
+      "label": "データモデル接点",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "not-applicable",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "internal-flow",
+      "label": "内部処理フロー",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "not-applicable",
+        "object": "not-applicable",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "io-contract",
+      "label": "入出力契約",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "not-applicable",
+        "lwc": "required",
+        "object": "not-applicable",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "test-coverage",
+      "label": "テスト被覆",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "not-applicable",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "change-history",
+      "label": "変更履歴",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "impact-hint",
+      "label": "影響範囲ヒント",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    },
+    {
+      "id": "concerns",
+      "label": "既知の懸念",
+      "source": "llm",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "not-applicable",
+        "object": "not-applicable",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "related-domains",
+      "label": "関連ドメイン",
+      "source": "deterministic",
+      "perType": {
+        "apex": "required",
+        "trigger": "required",
+        "lwc": "required",
+        "object": "required",
+        "flow": "required"
+      }
+    }
+  ],
+  "applicableByType": {
+    "apex": [
+      "one-line-summary",
+      "business-meaning",
+      "dependencies",
+      "public-interface",
+      "data-model-touchpoints",
+      "internal-flow",
+      "io-contract",
+      "test-coverage",
+      "change-history",
+      "impact-hint",
+      "concerns",
+      "related-domains"
+    ],
+    "trigger": [
+      "one-line-summary",
+      "business-meaning",
+      "dependencies",
+      "data-model-touchpoints",
+      "internal-flow",
+      "test-coverage",
+      "change-history",
+      "impact-hint",
+      "concerns",
+      "related-domains"
+    ],
+    "lwc": [
+      "one-line-summary",
+      "business-meaning",
+      "dependencies",
+      "public-interface",
+      "data-model-touchpoints",
+      "io-contract",
+      "test-coverage",
+      "change-history",
+      "impact-hint",
+      "related-domains"
+    ],
+    "object": [
+      "one-line-summary",
+      "business-meaning",
+      "dependencies",
+      "public-interface",
+      "change-history",
+      "impact-hint",
+      "related-domains"
+    ],
+    "flow": [
+      "one-line-summary",
+      "business-meaning",
+      "dependencies",
+      "data-model-touchpoints",
+      "internal-flow",
+      "io-contract",
+      "change-history",
+      "impact-hint",
+      "related-domains"
+    ]
+  }
+}

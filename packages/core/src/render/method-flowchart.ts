@@ -56,15 +56,24 @@ export function buildMethodFlowchart(flow: MethodControlFlow): MermaidFlowchart 
   const startId = "n_start";
   const endId = "n_end";
   ctx.lines.push(`  ${startId}([${escapeLabel(flow.methodName)}])`);
-  ctx.lines.push(`  ${endId}([${END_LABEL}])`);
 
   const result = renderSequence(flow.nodes, ctx);
+  let endUsed = false;
   if (result.entryId === "") {
-    // empty body
+    // empty body: start → end のみ
     edge(ctx, startId, endId);
+    endUsed = true;
   } else {
     edge(ctx, startId, result.entryId);
-    if (result.exitId !== null) edge(ctx, result.exitId, endId);
+    if (result.exitId !== null) {
+      // 通常の終端パスがある場合のみ end ノードを使う
+      edge(ctx, result.exitId, endId);
+      endUsed = true;
+    }
+  }
+  // 全パスが return/throw で終端する場合は End ノードを描画しない (orphan 防止)
+  if (endUsed) {
+    ctx.lines.push(`  ${endId}([${END_LABEL}])`);
   }
   return { mermaid: ctx.lines.join("\n"), details: ctx.details };
 }

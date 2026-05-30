@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "object:Order__c",
+      "label": "Order__c",
+      "type": "object"
+    },
+    {
+      "id": "object:Customer__c",
+      "label": "Customer__c",
+      "type": "object"
+    },
+    {
+      "id": "object:Invoice__c",
+      "label": "Invoice__c",
+      "type": "object"
+    },
+    {
+      "id": "apex:CustomerService",
+      "label": "CustomerService",
+      "type": "apex"
+    },
+    {
+      "id": "trigger:OrderTrigger",
+      "label": "OrderTrigger",
+      "type": "trigger"
+    },
+    {
+      "id": "flow:Order_AfterUpdate",
+      "label": "Order_AfterUpdate",
+      "type": "flow"
+    }
+  ],
+  "edges": [
+    {
+      "from": "apex:CustomerService",
+      "to": "object:Customer__c",
+      "kind": "queries"
+    },
+    {
+      "from": "apex:CustomerService",
+      "to": "object:Order__c",
+      "kind": "queries"
+    },
+    {
+      "from": "trigger:OrderTrigger",
+      "to": "object:Order__c",
+      "kind": "triggers"
+    }
+  ]
+}

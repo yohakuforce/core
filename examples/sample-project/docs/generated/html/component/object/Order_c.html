@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SObject: Order__c — yohakuforce</title>
+  <link rel="stylesheet" href="../../assets/styles.css" />
+</head>
+<body>
+  <header class="component-header">
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">/</span>
+      <span>SObject</span>
+      <span class="sep">/</span>
+      <span class="current">Order__c</span>
+    </nav>
+    <h1>SObject: Order__c</h1>
+  </header>
+  <main class="component-main">
+    <aside class="toc">
+      <h2>セクション</h2>
+      <ol>
+        <li><a href="#one-line-summary">一行サマリ</a></li>
+        <li><a href="#business-meaning">業務的意味づけ</a></li>
+        <li><a href="#dependencies">依存関係</a></li>
+        <li><a href="#public-interface">公開インターフェース</a></li>
+        <li><a href="#change-history">変更履歴</a></li>
+        <li><a href="#impact-hint">影響範囲ヒント</a></li>
+        <li><a href="#related-domains">関連ドメイン</a></li>
+      </ol>
+    </aside>
+    <article class="sections">
+      <section id="one-line-summary" class="yohaku-section yohaku-section--one-line-summary">
+        <h2>一行サマリ</h2>
+        
+        <p><strong>Order</strong> (<code>Order__c</code>) — カスタムオブジェクト / 共有: Private / 項目数: 2</p>
+        
+      </section>
+      <section id="business-meaning" class="yohaku-section yohaku-section--business-meaning" data-yohaku-editable="business-meaning">
+        <h2>業務的意味づけ</h2>
+        <!-- yohaku:block kind="ai_managed" id="business-meaning" start -->
+        
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">この SObject が業務上どんな概念を表すかを 2〜3 文で記述してください。</p>
+    </div>
+        <!-- yohaku:block kind="ai_managed" id="business-meaning" end -->
+      </section>
+      <section id="dependencies" class="yohaku-section yohaku-section--dependencies">
+        <h2>依存関係</h2>
+        
+        
+    <h3>このオブジェクトを参照する処理 (3)</h3>
+    <ul><li><code>Apex: CustomerService</code></li><li><code>Trigger: OrderTrigger</code></li><li><code>Flow: Order_AfterUpdate</code></li></ul>
+        
+      </section>
+      <section id="public-interface" class="yohaku-section yohaku-section--public-interface">
+        <h2>公開インターフェース</h2>
+        
+        
+    <p class="muted">Order (Order__c) の項目 (2)</p>
+    <table class="data-table">
+      <thead><tr><th>API 名</th><th>ラベル</th><th>型</th><th>必須</th><th>参照</th></tr></thead>
+      <tbody>
+        <tr>
+    <td><code>Order__c.Customer__c</code></td>
+    <td>Customer</td>
+    <td><code>Lookup</code></td>
+    <td>✓</td>
+    <td><code>Customer__c</code></td>
+  </tr>
+        <tr>
+    <td><code>Order__c.Total__c</code></td>
+    <td>Total Amount</td>
+    <td><code>Currency</code></td>
+    <td></td>
+    <td>—</td>
+  </tr>
+      </tbody>
+    </table>
+        
+      </section>
+      <section id="change-history" class="yohaku-section yohaku-section--change-history">
+        <h2>変更履歴</h2>
+        
+        <p class="muted">git 連携は Phase 4 で追加予定です。</p>
+        
+      </section>
+      <section id="impact-hint" class="yohaku-section yohaku-section--impact-hint">
+        <h2>影響範囲ヒント</h2>
+        
+        
+    <p>このコンポーネントの影響範囲を確認するには:</p>
+    <pre><code>yohaku impact SObject:Order__c</code></pre>
+        
+      </section>
+      <section id="related-domains" class="yohaku-section yohaku-section--related-domains">
+        <h2>関連ドメイン</h2>
+        
+        <p class="muted">未分類 (Phase 5 の <code>yohaku domains init</code> 実行後に自動付与されます)。</p>
+        
+      </section>
+    </article>
+  </main>
+</body>
+</html>

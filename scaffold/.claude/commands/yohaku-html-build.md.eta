@@ -1,0 +1,36 @@
+---
+description: <%= it.projectName %> の HTML 設計書 (component leaf + ホーム) を一括生成する
+argument-hint: [--source local|org] [--types apex,trigger,...] [--strict]
+---
+
+# /yohaku-html-build $ARGUMENTS
+
+知識グラフから人間レビュー用 HTML 設計書を生成する。実行は決定的で、LLM は呼ばない。
+
+## 実行手順
+
+1. **前提確認**
+   - `.yohaku/graph.sqlite` が存在することを確認 (`yohaku graph build` 実行済み)
+   - `--source org` 指定時は `sf org login` で defaultusername 認証済みを確認
+
+2. **HTML 生成**
+   ```bash
+   yohaku render --format md,html $ARGUMENTS
+   ```
+   - `<output>/html/index.html` がホーム (4 タブ: 統計 / アーキテクチャ / ドメインマップ / ホットスポット)
+   - `<output>/html/component/<type>/<name>.html` が各コンポーネントの詳細
+   - `<output>/html/data/*.json` が描画データ (JSON ドリブン、Mermaid 失敗時は HTML/CSS フォールバック)
+
+3. **--strict モード**
+   - `--strict` を付けると 12 セクション (one-line-summary 〜 related-domains) の必須充足を検査
+   - 1 件でも欠落があれば exit code 1
+
+4. **ホーム閲覧**
+   - `<output>/html/index.html` をブラウザで開く (file:// で可)
+   - サイドバーから type → component で辿れる
+   - 上部の検索でインクリメンタル絞り込み
+
+## ガードレール
+
+- `<output>/html/component/.../*.html` のファイル名は `[^A-Za-z0-9._-]` を `_` に置換した安全な形になる
+- LLM セクション (業務的意味づけ / 既知の懸念) は編集マーカー `<!-- yohaku:block kind="ai_managed" ... -->` で囲まれ、AI による上書きが安全

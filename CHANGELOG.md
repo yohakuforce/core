@@ -2,6 +2,32 @@
 
 すべての注目すべき変更は本ファイルに記録される (SemVer 準拠)。
 
+## [0.5.0] - 2026-05-31 (HTML 設計書パイプライン)
+
+> 同じ知識グラフから「AI が読む Markdown」と「人間がレビューする HTML」を二系統で生成し、
+> LLM 充填・ローカルプレビュー・リリースレビュー・カバレッジ統合まで一気通貫にした大型リリース。
+
+### Added
+
+- **HTML 設計書パイプライン** (Phase 0〜7): `yohaku render --format md,html`。5 タイプ (Apex/Trigger/LWC/Object/Flow) の component leaf HTML、JSON ドリブン描画、Mermaid/HTML フォールバック、業務ドメイン階層 (`yohaku domains init/sync/lint`)、組織取得アダプタ (`yohaku graph build --source org`)
+- **LLM ブロック充填** (Phase 8/9): `yohaku explain-prompts --output prompts.json` で充填用 prompt+context を一括生成、`yohaku html-write --input fill.json` で AI-managed ブロックへ書き戻し
+- **ローカル開発サーバ** (Phase 10): `yohaku serve --port 4000`。`--watch` (Phase 12) でソース変更時に自動 rebuild + SSE によるブラウザ自動 reload
+- **Cmd+K グローバル検索** (Phase 11): 全 HTML ページに inline
+- **Release Review HTML** (Phase 13): `yohaku diff --from REF --to REF --format html` → `release-review.html`
+- **テストカバレッジ統合** (Phase 14): `yohaku coverage import/show` で `sf apex run test` の JSON を取込
+- **業務フロー俯瞰タブ** (Phase 15): ホーム 2 番目、domain/object 単位で集約
+- **AI-managed ブロック preservation**: `render` 再実行で充填内容が失われない
+
+### Changed
+
+- HTML render 出力先を `<out>/html/component/<type>/<name>.html` ベースに再編
+- Mermaid テーマを Salesforce 風 (Brand Navy / Blue / SLDS colors) に統一
+- 絵文字を全廃し SVG line-icon に統一
+
+### Fixed
+
+- Apex 抽出器の DML target に変数名が混入する問題を、フロー側で `knownObjects` フィルタにより回避 (extractor 自体の改善は別途 backlog)
+
 ## [0.4.1] - 2026-05-19 (Docs sanitize & npm-first quickstart)
 
 > **v0.4.1 は機能変更なしのドキュメント整備リリース**。OSS 公開後の現実 (`@yohakuforce/core` が npm に publish 済み) に合わせてセットアップ手順を `npm install -g` 起点に改め、合わせて公開ドキュメント・ADR から内部情報を取り除いた。配布物 (`dist`) には変更なし。

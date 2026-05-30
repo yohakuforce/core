@@ -15,6 +15,18 @@ export { DxMcpSourceAdapter, DxMcpNotImplementedError } from "./adapters/dx-mcp/
 export type { DxMcpSourceAdapterOptions } from "./adapters/dx-mcp/index.js";
 
 export {
+  buildPackageManifest,
+  DEFAULT_RETRIEVE_TYPES,
+  retrieveOrgSources,
+  OrgRetrieveError,
+} from "./adapters/org-retrieve/index.js";
+export type {
+  BuildManifestOptions,
+  OrgRetrieveOptions,
+  OrgRetrieveResult,
+} from "./adapters/org-retrieve/index.js";
+
+export {
   buildGraph,
   SqliteGraphStore,
   KnowledgeGraphReader,
@@ -28,6 +40,44 @@ export type {
 
 export { renderSystemIndex, renderObjects, archiveDeleted } from "./render/index.js";
 export type { RenderTarget, RenderResult } from "./render/index.js";
+
+export {
+  parseRenderFormats,
+  isRenderFormat,
+  resolveFormatOutputDir,
+  InvalidRenderFormatError,
+} from "./render/format.js";
+export type { RenderFormat } from "./render/format.js";
+
+export {
+  renderHtmlAll,
+  resolveHtmlOutDir,
+  HtmlAuditFailedError,
+  SECTION_SCHEMA,
+  SECTION_IDS,
+  COMPONENT_TYPES,
+  auditSections,
+  buildApexViewModel,
+  buildTriggerViewModel,
+  buildLwcViewModel,
+  buildObjectViewModel,
+  buildFlowViewModel,
+  renderComponentPage,
+  escapeHtml,
+  escapeAttr,
+  sanitizeFileName,
+} from "./html/index.js";
+export type {
+  ComponentType,
+  ComponentViewModel,
+  HtmlRenderOptions,
+  HtmlRenderResult,
+  SectionAuditResult,
+  SectionDescriptor,
+  SectionId,
+  SectionRequirement,
+  SectionViewModel,
+} from "./html/index.js";
 
 export {
   mergeRender,

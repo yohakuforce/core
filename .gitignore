@@ -16,6 +16,9 @@ dist/
 # オンボーディング状態 (ローカル)
 .yohaku/onboarding-state.json
 
+# 実行時テレメトリ (フック実行時間など、ローカル限定。任意階層の .yohaku/ にマッチ)
+**/.yohaku/hook-timings.jsonl
+
 # Claude Code セッションローカル
 .claude/local/
 .claude/sessions/

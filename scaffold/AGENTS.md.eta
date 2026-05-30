@@ -144,4 +144,106 @@
 
 ---
 
+## 8. 設計書 (Markdown + HTML) の運用
+
+yohaku は同じ知識グラフから 2 種類の設計書を出します:
+
+- **Markdown** (`docs/generated/*.md`): AI が読みやすい一次フォーマット
+- **HTML** (`docs/generated/html/index.html`): 人間がレビューしやすい二次フォーマット
+
+```bash
+yohaku render --format md,html             # 既定: 両方
+yohaku render --format html --strict       # 12 セクション必須充足を検査
+yohaku render --format html --types apex,trigger  # 対象を絞る
+```
+
+### 3 つの実行モード
+
+```
+ローカル全部:    yohaku render --format md,html
+組織から取得:    yohaku graph build --source org && yohaku render --format md,html
+タイプ指定:      yohaku render --format md,html --types apex,object
+```
+
+### 業務ドメイン (HTML の index 階層)
+
+```bash
+yohaku domains init      # 初期 YAML 生成 (ヒューリスティック)
+# ── YAML を人手で見直し ──
+yohaku domains lint      # 重複/多重所属を検出
+yohaku render --format html
+```
+
+### ハーネス別
+
+- **Claude Code**: `/yohaku-html-build`, `/yohaku-domains` スラッシュコマンドを使用
+- **Codex / Antigravity**: `scaffold/prompts/<harness>/AGENTS-snippet.md` をプロジェクトの `AGENTS.md` に取り込む
+- **ローカル LLM**: CLI を直接呼び出せれば動く。プロンプト依存なし
+
+---
+
+## 9. LLM 充填・プレビュー・レビュー・カバレッジ (Phase 8〜15)
+
+設計書を「生成して終わり」にせず、AI に意味を埋めさせ、人間がブラウザで確認し、
+リリース差分とテストカバレッジまで一気通貫で扱うためのワークフロー。
+
+### LLM ブロック充填 (Phase 8/9)
+
+HTML/Markdown 内の AI-managed ブロック (業務的意味・背景など) を LLM に埋めさせる。
+
+```bash
+yohaku explain-prompts --output prompts.json   # 充填対象ごとの prompt + context を一括生成
+# → prompts.json を Claude / Codex / ローカル LLM に渡し、fill.json を得る
+yohaku html-write --input fill.json            # 回答を AI-managed ブロックへ書き戻し
+```
+
+`yohaku render` を再実行しても AI-managed ブロックの充填内容は保持される (preservation)。
+
+### ローカルプレビュー (Phase 10/12)
+
+```bash
+yohaku serve --port 4000           # docs/generated/html/ を配信
+yohaku serve --port 4000 --watch   # ソース変更で自動 rebuild + ブラウザ自動 reload (SSE)
+```
+
+ページ内 `Cmd+K` でグローバル検索 (Phase 11)。
+
+### リリースレビュー (Phase 13)
+
+```bash
+yohaku diff --from v1.0.0 --to HEAD --format html
+# → docs/generated/html/release-review.html (変更コンポーネントを差分表示)
+```
+
+### テストカバレッジ (Phase 14)
+
+```bash
+sf apex run test --code-coverage --result-format json > coverage.json
+yohaku coverage import --input coverage.json    # 各 Apex のカバレッジを設計書に統合
+yohaku coverage show                            # 取込状況を確認
+```
+
+### 業務フロー俯瞰 (Phase 15)
+
+ホーム 2 番目のタブ「業務フロー」で参照 (自動生成)。
+`domains.yaml` + AI-managed business-meaning ブロックを domain/object 単位で集約する。
+
+### ハーネス別
+
+- **Claude Code**: `/yohaku-html-write`, `/yohaku-explain-prompts`, `/yohaku-serve`,
+  `/yohaku-coverage-import`, `/yohaku-diff-html` スラッシュコマンドを使用
+- **Codex / Antigravity**: `scaffold/prompts/<harness>/AGENTS-snippet.md` をプロジェクトの
+  `AGENTS.md` に取り込む (Phase 8〜15 のコマンドも記載済)
+- **ローカル LLM**: `scaffold/prompts/local-llm/README.md` 参照。CLI を直接呼べれば動く
+
+---
+
+## 10. 「使うべきツールを使う」誘導 (今後の検討)
+
+AI が反射的に grep で探索してしまい、せっかくの knowledge graph を活用できない問題は
+[`docs/proposals/guidance-system.md`](./docs/proposals/guidance-system.md) で別 Issue として
+追跡しています。ヒューリスティック / hook / 強制ルールの 3 案を整理済み。
+
+---
+
 **最終的に問うべきこと: そのサイクルは、誰かの余白を 1 mm でも増やしたか?**

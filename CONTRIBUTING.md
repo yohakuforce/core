@@ -123,6 +123,46 @@ PR は必ずレビューを経て main にマージ。
 
 ---
 
+## ハーネス別 動作確認手順 (Phase 6 で追加)
+
+yohaku は Claude Code / Codex / Antigravity / ローカル LLM 全てで動作することを目指しています。
+ハーネス依存は「呼び出し導線 (prompt / skill)」だけに閉じ、CLI 出力は全環境で同一です。
+
+| ハーネス | 動作確認手順 | 配布物 |
+|---|---|---|
+| Claude Code | `/yohaku-html-build` スラッシュを実行 → `docs/generated/html/index.html` が生成される | `scaffold/.claude/commands/yohaku-html-build.md.eta` |
+| Codex | プロジェクト root の `AGENTS.md` に `scaffold/prompts/codex/AGENTS-snippet.md` を取り込み → 「設計書を生成して」と依頼 → 同上の HTML が生成される | `scaffold/prompts/codex/` |
+| Antigravity | 同上 (`scaffold/prompts/antigravity/AGENTS-snippet.md`) | `scaffold/prompts/antigravity/` |
+| ローカル LLM | `yohaku --help` から発見可能なことを確認 → `yohaku render --format md,html` を直接実行 | CLI のみ |
+
+PR を出す際、HTML パイプラインに触れる変更は最低 Claude Code + ローカル LLM 経由の確認を済ませてください。
+Codex / Antigravity は手元で動かす環境のある貢献者に確認を依頼します。
+
+### 追加スラッシュコマンド (Phase 8〜15)
+
+| コマンド | 対応 CLI | 用途 |
+|---|---|---|
+| `/yohaku-domains` | `yohaku domains init/lint` | 業務ドメイン YAML の生成・検査 |
+| `/yohaku-explain-prompts` | `yohaku explain-prompts` | LLM 充填用 prompt を一括生成 |
+| `/yohaku-html-write` | `yohaku html-write` | LLM 回答を AI-managed ブロックへ書き戻し |
+| `/yohaku-serve` | `yohaku serve --watch` | ローカルプレビュー (自動 reload) |
+| `/yohaku-diff-html` | `yohaku diff --format html` | リリースレビュー HTML |
+| `/yohaku-coverage-import` | `yohaku coverage import` | テストカバレッジ取込 |
+
+### 最低限のスモークテスト手順
+
+新規 contributor はこの 5 ステップで一通り触れます (どのハーネスでも CLI は共通):
+
+```bash
+1. yohaku init --bootstrap                                      # scaffold 一式を配置
+2. yohaku graph build                                          # 知識グラフ構築
+3. yohaku render --format md,html                              # 設計書を md+html で生成
+4. yohaku explain-prompts --output prompts.json && head -50 prompts.json  # 充填 prompt 確認
+5. yohaku serve --port 4000                                    # ブラウザでホームが開けば PASS
+```
+
+---
+
 ## 質問・相談
 
 - 議論: GitHub Discussions (Phase 7 で開設)

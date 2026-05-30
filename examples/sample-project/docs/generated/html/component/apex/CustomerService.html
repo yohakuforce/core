@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ApexClass: CustomerService — yohakuforce</title>
+  <link rel="stylesheet" href="../../assets/styles.css" />
+</head>
+<body>
+  <header class="component-header">
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">/</span>
+      <span>ApexClass</span>
+      <span class="sep">/</span>
+      <span class="current">CustomerService</span>
+    </nav>
+    <h1>ApexClass: CustomerService</h1>
+  </header>
+  <main class="component-main">
+    <aside class="toc">
+      <h2>セクション</h2>
+      <ol>
+        <li><a href="#one-line-summary">一行サマリ</a></li>
+        <li><a href="#business-meaning">業務的意味づけ</a></li>
+        <li><a href="#dependencies">依存関係</a></li>
+        <li><a href="#public-interface">公開インターフェース</a></li>
+        <li><a href="#data-model-touchpoints">データモデル接点</a></li>
+        <li><a href="#internal-flow">内部処理フロー</a></li>
+        <li><a href="#io-contract">入出力契約</a></li>
+        <li><a href="#test-coverage">テスト被覆</a></li>
+        <li><a href="#change-history">変更履歴</a></li>
+        <li><a href="#impact-hint">影響範囲ヒント</a></li>
+        <li><a href="#concerns">既知の懸念</a></li>
+        <li><a href="#related-domains">関連ドメイン</a></li>
+      </ol>
+    </aside>
+    <article class="sections">
+      <section id="one-line-summary" class="yohaku-section yohaku-section--one-line-summary">
+        <h2>一行サマリ</h2>
+        
+        <p><strong>2 メソッド</strong> / <strong>SOQL 2 件</strong> を含む 通常クラス。 主要メソッド: <code>totalRevenue</code> (SOQL 1)。</p>
+        
+      </section>
+      <section id="business-meaning" class="yohaku-section yohaku-section--business-meaning" data-yohaku-editable="business-meaning">
+        <h2>業務的意味づけ</h2>
+        <!-- yohaku:block kind="ai_managed" id="business-meaning" start -->
+        
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">このクラスが業務的に何を解決しているかを 2〜3 文で記述してください。</p>
+    </div>
+        <!-- yohaku:block kind="ai_managed" id="business-meaning" end -->
+      </section>
+      <section id="dependencies" class="yohaku-section yohaku-section--dependencies">
+        <h2>依存関係</h2>
+        
+        
+    <div class="grid two-col">
+      <div>
+        <h3>呼び出し先 (0)</h3>
+        <p class="muted">（呼び出し先は検出されませんでした）</p>
+      </div>
+      <div>
+        <h3>呼び出し元 (0)</h3>
+        <p class="muted">（呼び出し元は検出されませんでした）</p>
+      </div>
+    </div>
+        
+      </section>
+      <section id="public-interface" class="yohaku-section yohaku-section--public-interface">
+        <h2>公開インターフェース</h2>
+        
+        
+    <table class="data-table">
+      <thead><tr><th>可視性</th><th>static</th><th>戻り値</th><th>名前</th><th>引数</th><th>注釈</th></tr></thead>
+      <tbody>
+        <tr>
+    <td>public</td>
+    <td>✓</td>
+    <td><code>List&lt;Customer__c&gt;</code></td>
+    <td><code>findGold</code></td>
+    <td><code>—</code></td>
+    <td>—</td>
+  </tr>
+        <tr>
+    <td>public</td>
+    <td>✓</td>
+    <td><code>Decimal</code></td>
+    <td><code>totalRevenue</code></td>
+    <td><code>Id customerId</code></td>
+    <td>—</td>
+  </tr>
+      </tbody>
+    </table>
+        
+      </section>
+      <section id="data-model-touchpoints" class="yohaku-section yohaku-section--data-model-touchpoints">
+        <h2>データモデル接点</h2>
+        
+        
+    <div class="grid two-col">
+      <div>
+        <h3>SOQL 対象 (2)</h3>
+        <ul><li><code>Customer__c</code></li><li><code>Order__c</code></li></ul>
+      </div>
+      <div>
+        <h3>DML 対象 (0)</h3>
+        <p class="muted">（DML は検出されませんでした）</p>
+      </div>
+    </div>
+        
+      </section>
+      <section id="internal-flow" class="yohaku-section yohaku-section--internal-flow">
+        <h2>内部処理フロー</h2>
+        
+        
+    <p class="muted">2 メソッドの制御フローを検出。詳細描画は Phase 3 で対応。</p>
+    <ul>
+      <li><code>findGold</code> (nodes=1)</li>
+      <li><code>totalRevenue</code> (nodes=2)</li>
+    </ul>
+        
+      </section>
+      <section id="io-contract" class="yohaku-section yohaku-section--io-contract">
+        <h2>入出力契約</h2>
+        
+        
+    <table class="data-table">
+      <thead><tr><th>メソッド</th><th>引数</th><th>戻り値</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>findGold</code></td>
+          <td><code>—</code></td>
+          <td><code>List&lt;Customer__c&gt;</code></td>
+        </tr>
+        <tr>
+          <td><code>totalRevenue</code></td>
+          <td><code>Id customerId</code></td>
+          <td><code>Decimal</code></td>
+        </tr>
+      </tbody>
+    </table>
+        
+      </section>
+      <section id="test-coverage" class="yohaku-section yohaku-section--test-coverage">
+        <h2>テスト被覆</h2>
+        
+        <p class="warning">⚠ 対応するテストクラスが見つかりません。</p>
+        
+      </section>
+      <section id="change-history" class="yohaku-section yohaku-section--change-history">
+        <h2>変更履歴</h2>
+        
+        <p class="muted">git 連携は Phase 4 で追加予定です。</p>
+        
+      </section>
+      <section id="impact-hint" class="yohaku-section yohaku-section--impact-hint">
+        <h2>影響範囲ヒント</h2>
+        
+        
+    <p>このコンポーネントの影響範囲を確認するには:</p>
+    <pre><code>yohaku impact ApexClass:CustomerService</code></pre>
+        
+      </section>
+      <section id="concerns" class="yohaku-section yohaku-section--concerns" data-yohaku-editable="concerns">
+        <h2>既知の懸念</h2>
+        <!-- yohaku:block kind="ai_managed" id="concerns" start -->
+        
+    <ul class="concerns">
+      <li class="severity-MEDIUM"><span class="severity-badge">MEDIUM</span> <strong>対応するテストクラスが見つからない</strong> — `CustomerServiceTest` 等の命名で存在するか確認。</li>
+    </ul>
+        <!-- yohaku:block kind="ai_managed" id="concerns" end -->
+      </section>
+      <section id="related-domains" class="yohaku-section yohaku-section--related-domains">
+        <h2>関連ドメイン</h2>
+        
+        <p class="muted">未分類 (Phase 5 の <code>yohaku domains init</code> 実行後に自動付与されます)。</p>
+        
+      </section>
+    </article>
+  </main>
+</body>
+</html>

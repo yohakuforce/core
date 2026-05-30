@@ -7,6 +7,7 @@ import {
   openSync,
   readFileSync,
   realpathSync,
+  writeFileSync,
   writeSync,
 } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -17,6 +18,42 @@ import { LocalSourceAdapter } from "./adapters/local/index.js";
 import { computeDiff } from "./diff/index.js";
 import { EXPLAIN_KINDS, type ExplainKind, applyExplain } from "./explain/index.js";
 import { KnowledgeGraphReader, SqliteGraphStore, buildGraph } from "./graph/index.js";
+import {
+  COMPONENT_TYPES,
+  type ComponentType,
+  HtmlAuditFailedError,
+  renderHtmlAll,
+  resolveHtmlOutDir,
+} from "./html/index.js";
+import {
+  OrgRetrieveError,
+  retrieveOrgSources,
+} from "./adapters/org-retrieve/index.js";
+import {
+  DEFAULT_DOMAINS_PATH,
+  lintDomains,
+  loadDomainsYaml,
+  saveDomainsYaml,
+  suggestInitialDomains,
+  syncDomains,
+} from "./domains/index.js";
+import {
+  HtmlWriteInputError,
+  applyHtmlWrite,
+  validateHtmlWriteInput,
+} from "./html-write/index.js";
+import {
+  buildExplainPrompts,
+  type ExplainBlockKind,
+} from "./explain-prompts/index.js";
+import { createStaticServer, startWatch } from "./serve/index.js";
+import {
+  CoverageParseError,
+  DEFAULT_COVERAGE_PATH,
+  loadCoverageJson,
+  parseCoverageJson,
+  saveCoverageJson,
+} from "./coverage/index.js";
 import { type PrimaryLanguage, type Profile, type Segment, runInit } from "./init/index.js";
 import { MetricsStore, summarize } from "./metrics/index.js";
 import {
@@ -38,6 +75,11 @@ import {
   renderSystemIndex,
   renderValidationRules,
 } from "./render/index.js";
+import {
+  InvalidRenderFormatError,
+  type RenderFormat,
+  parseRenderFormats,
+} from "./render/format.js";
 import { parseSarifFile } from "./sarif/index.js";
 import { loadGraphSchema, validateGraph } from "./schema/validate.js";
 import { cleanStaleLock, releaseBuildLock, tryAcquireBuildLock } from "./util/build-lock.js";
@@ -138,9 +180,9 @@ async function buildAndStore(options: BuildAndStoreOptions): Promise<{
 }
 
 async function cmdGraphBuild(args: ParsedArgs): Promise<number> {
-  const root = args.flags.get("root") ?? process.cwd();
+  let root = args.flags.get("root") ?? process.cwd();
   const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
-  const sourceKind = (args.flags.get("source") ?? "local") as "local" | "dx-mcp";
+  const sourceFlag = args.flags.get("source") ?? "local";
   const incremental = args.flags.get("incremental") === "true";
   const apiVersion = args.flags.get("api") ?? DEFAULT_API;
   const quiet = args.flags.get("quiet") === "true";
@@ -148,10 +190,42 @@ async function cmdGraphBuild(args: ParsedArgs): Promise<number> {
   const asyncMode = args.flags.get("async") === "true";
   const asyncWorker = args.flags.get("async-worker") === "true";
 
-  if (sourceKind !== "local" && sourceKind !== "dx-mcp") {
-    console.error(`Unknown source: ${sourceKind}. Use --source local|dx-mcp.`);
+  if (sourceFlag !== "local" && sourceFlag !== "dx-mcp" && sourceFlag !== "org") {
+    console.error(`Unknown source: ${sourceFlag}. Use --source local|dx-mcp|org.`);
     return 2;
   }
+
+  // --source=org: 事前に sf CLI で manifest 一括 retrieve し、root をその出力に差し替える
+  if (sourceFlag === "org") {
+    try {
+      const typesRaw = args.flags.get("types");
+      const types =
+        typesRaw === undefined || typesRaw.trim() === ""
+          ? undefined
+          : typesRaw
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
+      const targetDir = args.flags.get("retrieve-to");
+      if (!quiet) console.log("[yohaku] org retrieve start (sf project retrieve start)...");
+      const result = await retrieveOrgSources({
+        apiVersion,
+        ...(types !== undefined ? { types } : {}),
+        ...(targetDir !== undefined ? { targetDir: resolve(root, targetDir) } : {}),
+      });
+      root = result.targetDir;
+      if (!quiet) console.log(`[yohaku] org retrieve complete: targetDir=${root}`);
+    } catch (err) {
+      if (err instanceof OrgRetrieveError) {
+        console.error(`[yohaku] ${err.message}`);
+        return 1;
+      }
+      throw err;
+    }
+  }
+
+  // 以降の buildAndStore には常に "local" として渡す (org は事前 retrieve で local に統合済み)
+  const sourceKind: "local" | "dx-mcp" = sourceFlag === "dx-mcp" ? "dx-mcp" : "local";
 
   const lockPaths = {
     lockPath: resolve(root, args.flags.get("lock-file") ?? DEFAULT_BUILD_LOCK),
@@ -306,12 +380,140 @@ async function cmdSync(args: ParsedArgs): Promise<number> {
   // sync はデフォルトで incremental (full は --full-rebuild で明示)
   const incremental = args.flags.get("full-rebuild") !== "true";
 
+  const formats = parseFormatsOrError(args);
+  if (formats === null) return 2;
+
   await buildAndStore({ root, dbPath, apiVersion, incremental, quiet });
 
   const graph = readGraphFromStore(dbPath);
-  // Phase 7-A: sync で全種 Markdown 化
-  reportRender(renderAll(graph, outDir));
+  if (formats.includes("md")) {
+    // Phase 7-A: sync で全種 Markdown 化
+    reportRender(renderAll(graph, outDir));
+  }
+  if (formats.includes("html")) {
+    if (!runHtmlOrReport(graph, outDir, args)) return 1;
+  }
   return 0;
+}
+
+/**
+ * `--format md|html|md,html` を解釈する共通ヘルパ。
+ * 不正値の場合は stderr に出力して null を返す (呼び側が exit code 2 を返す)。
+ */
+function parseFormatsOrError(args: ParsedArgs): readonly RenderFormat[] | null {
+  try {
+    return parseRenderFormats(args.flags.get("format"));
+  } catch (err) {
+    if (err instanceof InvalidRenderFormatError) {
+      console.error(`[yohaku] ${err.message}`);
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * `--strict` / `--types` を ParsedArgs から組み立てる。
+ * --types は CSV、空白許容、不正値はエラー扱い (stderr に警告して空 filter)。
+ */
+function buildHtmlOptions(args: ParsedArgs): {
+  strict?: boolean;
+  typesFilter?: readonly ComponentType[];
+  domainsConfig?: ReturnType<typeof loadDomainsYaml>;
+  gitCwd?: string;
+  coverage?: ReturnType<typeof loadCoverageJson>;
+} {
+  const opt: {
+    strict?: boolean;
+    typesFilter?: readonly ComponentType[];
+    domainsConfig?: ReturnType<typeof loadDomainsYaml>;
+    gitCwd?: string;
+    coverage?: ReturnType<typeof loadCoverageJson>;
+  } = {};
+  opt.gitCwd = args.flags.get("root") ?? process.cwd();
+  if (args.flags.get("strict") === "true") opt.strict = true;
+  const typesRaw = args.flags.get("types");
+  if (typesRaw !== undefined && typesRaw.trim() !== "") {
+    const parsed = typesRaw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => s.length > 0);
+    const valid: ComponentType[] = [];
+    for (const p of parsed) {
+      if ((COMPONENT_TYPES as readonly string[]).includes(p)) {
+        valid.push(p as ComponentType);
+      } else {
+        console.warn(`[yohaku] --types: unknown component type "${p}" ignored`);
+      }
+    }
+    if (valid.length > 0) opt.typesFilter = valid;
+  }
+  const root = args.flags.get("root") ?? process.cwd();
+  const domainsPath = resolve(root, args.flags.get("domains-path") ?? DEFAULT_DOMAINS_PATH);
+  if (existsSync(domainsPath)) {
+    try {
+      opt.domainsConfig = loadDomainsYaml(domainsPath);
+    } catch (err) {
+      console.warn(`[yohaku] domains.yaml load failed, falling back to tags: ${(err as Error).message}`);
+    }
+  }
+  const coveragePath = resolve(root, args.flags.get("coverage-path") ?? DEFAULT_COVERAGE_PATH);
+  if (existsSync(coveragePath)) {
+    try {
+      opt.coverage = loadCoverageJson(coveragePath);
+    } catch (err) {
+      console.warn(`[yohaku] coverage.json load failed: ${(err as Error).message}`);
+    }
+  }
+  return opt;
+}
+
+/**
+ * HTML レンダ実行 + 失敗報告。
+ * - HtmlAuditFailedError が出れば失敗として false を返す。
+ * - それ以外は reportHtmlRender でサマリを出して true。
+ */
+function runHtmlOrReport(
+  graph: ReturnType<typeof readGraphFromStore>,
+  outDir: string,
+  args: ParsedArgs,
+): boolean {
+  try {
+    reportHtmlRender(
+      renderHtmlAll(graph, resolveHtmlOutDir(outDir), buildHtmlOptions(args)),
+    );
+    return true;
+  } catch (err) {
+    if (err instanceof HtmlAuditFailedError) {
+      console.error(`[yohaku] html render aborted (strict): ${err.failures.length} audit failures`);
+      for (const f of err.failures) {
+        console.error(
+          `  audit_failure: ${f.type}/${f.componentName} missing=[${f.missing.join(",")}]`,
+        );
+      }
+      return false;
+    }
+    throw err;
+  }
+}
+
+function reportHtmlRender(result: {
+  written: readonly string[];
+  skipped: readonly string[];
+  auditFailures: readonly { type: string; componentName: string; missing: readonly string[] }[];
+  warnings: readonly { code: string; message: string }[];
+}): void {
+  console.log(
+    `[yohaku] html render complete: written=${result.written.length} skipped=${result.skipped.length} audit_failures=${result.auditFailures.length}`,
+  );
+  for (const w of result.warnings) {
+    console.warn(`  ${w.code}: ${w.message}`);
+  }
+  for (const f of result.auditFailures) {
+    console.warn(
+      `  audit_failure: ${f.type}/${f.componentName} missing=[${f.missing.join(",")}]`,
+    );
+  }
 }
 
 async function cmdGraphQuery(args: ParsedArgs): Promise<number> {
@@ -494,6 +696,9 @@ async function cmdRender(args: ParsedArgs): Promise<number> {
   const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
   const renderAllFlag = args.flags.get("all") === "true";
 
+  const formats = parseFormatsOrError(args);
+  if (formats === null) return 2;
+
   if (!existsSync(dbPath)) {
     console.error(`Knowledge graph not found at ${dbPath}. Run "yohaku graph build" first.`);
     return 2;
@@ -501,55 +706,79 @@ async function cmdRender(args: ParsedArgs): Promise<number> {
 
   const graph = readGraphFromStore(dbPath);
 
+  // HTML はターゲット指定に依らず graph 全体から生成する (Phase 0 stub)。
+  // ターゲット別の HTML 部分生成は Phase 3 で domain/component フィルタとして再設計する。
+  let htmlFailed = false;
+  const runHtml = (): void => {
+    if (formats.includes("html")) {
+      if (!runHtmlOrReport(graph, outDir, args)) htmlFailed = true;
+    }
+  };
+  const includeMd = formats.includes("md");
+
   if (target === undefined && renderAllFlag) {
-    reportRender(renderAll(graph, outDir));
-    return 0;
+    if (includeMd) reportRender(renderAll(graph, outDir));
+    runHtml();
+    return htmlFailed ? 1 : 0;
   }
   if (target === undefined) {
-    // 後方互換: 引数省略時は system-index + objects (Phase 2.5 仕様)
-    const r1 = renderSystemIndex(graph, outDir);
-    const r2 = renderObjects(graph, outDir);
-    reportRender({
-      written: [...r1.written, ...r2.written],
-      archived: [...r1.archived, ...r2.archived],
-      warnings: [...r1.warnings, ...r2.warnings],
-    });
-    return 0;
+    if (includeMd) {
+      // 後方互換: 引数省略時は system-index + objects (Phase 2.5 仕様)
+      const r1 = renderSystemIndex(graph, outDir);
+      const r2 = renderObjects(graph, outDir);
+      reportRender({
+        written: [...r1.written, ...r2.written],
+        archived: [...r1.archived, ...r2.archived],
+        warnings: [...r1.warnings, ...r2.warnings],
+      });
+    }
+    runHtml();
+    return htmlFailed ? 1 : 0;
   }
   if (target === "all") {
-    reportRender(renderAll(graph, outDir));
-    return 0;
+    if (includeMd) reportRender(renderAll(graph, outDir));
+    runHtml();
+    return htmlFailed ? 1 : 0;
   }
-  if (target === "system-index") {
-    reportRender(renderSystemIndex(graph, outDir));
-    return 0;
+  // 単一ターゲット指定: md レンダラを呼び、その後で html も走らせる。
+  const singleTargetMd = (): boolean => {
+    if (!includeMd) return true; // md 不要なら success とみなす
+    if (target === "system-index") {
+      reportRender(renderSystemIndex(graph, outDir));
+      return true;
+    }
+    if (target === "objects") {
+      reportRender(renderObjects(graph, outDir));
+      return true;
+    }
+    if (target === "flows") {
+      reportRender(renderFlows(graph, outDir));
+      return true;
+    }
+    if (target === "apex") {
+      reportRender(renderApex(graph, outDir));
+      return true;
+    }
+    if (target === "triggers") {
+      reportRender(renderApexTriggers(graph, outDir));
+      return true;
+    }
+    if (target === "permissions") {
+      reportRender(renderPermissions(graph, outDir));
+      return true;
+    }
+    if (target === "validation-rules") {
+      reportRender(renderValidationRules(graph, outDir));
+      return true;
+    }
+    return false;
+  };
+  if (!singleTargetMd()) {
+    console.error(`Unknown render target: ${target}`);
+    return 2;
   }
-  if (target === "objects") {
-    reportRender(renderObjects(graph, outDir));
-    return 0;
-  }
-  if (target === "flows") {
-    reportRender(renderFlows(graph, outDir));
-    return 0;
-  }
-  if (target === "apex") {
-    reportRender(renderApex(graph, outDir));
-    return 0;
-  }
-  if (target === "triggers") {
-    reportRender(renderApexTriggers(graph, outDir));
-    return 0;
-  }
-  if (target === "permissions") {
-    reportRender(renderPermissions(graph, outDir));
-    return 0;
-  }
-  if (target === "validation-rules") {
-    reportRender(renderValidationRules(graph, outDir));
-    return 0;
-  }
-  console.error(`Unknown render target: ${target}`);
-  return 2;
+  runHtml();
+  return htmlFailed ? 1 : 0;
 }
 
 function reportRender(result: {
@@ -601,6 +830,39 @@ async function cmdDiff(args: ParsedArgs): Promise<number> {
   const findings = sarifPath !== undefined ? parseSarifFile(resolve(root, sarifPath)) : [];
 
   const json = args.flags.get("json") === "true";
+  const format = args.flags.get("format");
+
+  // Phase 13: --format html — release-review.html を出力
+  if (format === "html") {
+    const outRoot = resolve(root, args.flags.get("out") ?? DEFAULT_OUT);
+    const htmlOutDir = resolve(outRoot, "html");
+    const outputPath =
+      args.flags.get("output") !== undefined
+        ? resolve(root, args.flags.get("output") as string)
+        : resolve(htmlOutDir, "release-review.html");
+
+    // graph (任意): あれば component leaf へのリンクを生成
+    let graph: ReturnType<typeof readGraphFromStore> | undefined;
+    const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+    if (existsSync(dbPath)) graph = readGraphFromStore(dbPath);
+
+    // diff.css を assets/ に出す (idempotent)
+    const assetsDir = resolve(htmlOutDir, "assets");
+    if (!existsSync(assetsDir)) mkdirSync(assetsDir, { recursive: true });
+    writeFileSync(resolve(assetsDir, "diff.css"), (await import("./diff/index.js")).DIFF_CSS, "utf8");
+
+    const html = (await import("./diff/index.js")).renderDiffHtml(diff, {
+      title: `Release Review (${fromRef}..${toRef})`,
+      ...(graph !== undefined ? { graph } : {}),
+    });
+    mkdirSync(dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, html, "utf8");
+    console.log(
+      `[yohaku] diff ${fromRef}..${toRef}: files=${diff.totals.files} +${diff.totals.addedLines} -${diff.totals.removedLines} → ${outputPath}`,
+    );
+    return 0;
+  }
+
   if (json) {
     console.log(JSON.stringify({ ...diff, staticAnalysisFindings: findings }, null, 2));
   } else {
@@ -890,6 +1152,14 @@ const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map([
   ["onboard faq", { handler: cmdOnboardFaqExtract }],
   ["explain-write", { handler: cmdExplainWrite }],
   ["context", { handler: cmdContext }],
+  ["domains init", { handler: cmdDomainsInit }],
+  ["domains sync", { handler: cmdDomainsSync }],
+  ["domains lint", { handler: cmdDomainsLint }],
+  ["html-write", { handler: cmdHtmlWrite }],
+  ["explain-prompts", { handler: cmdExplainPrompts }],
+  ["serve", { handler: cmdServe }],
+  ["coverage import", { handler: cmdCoverageImport }],
+  ["coverage show", { handler: cmdCoverageShow }],
   ["version", { handler: cmdVersion }],
 ]);
 
@@ -984,6 +1254,361 @@ function findCommand(args: ParsedArgs): { key: string; handler: CommandHandler }
   return undefined;
 }
 
+// ----------------------------------------------------------------------------
+// domains init / sync / lint
+// ----------------------------------------------------------------------------
+
+async function cmdDomainsInit(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+  const path = resolve(root, args.flags.get("path") ?? DEFAULT_DOMAINS_PATH);
+  const force = args.flags.get("force") === "true";
+  if (!existsSync(dbPath)) {
+    console.error(`Knowledge graph not found at ${dbPath}. Run "yohaku graph build" first.`);
+    return 2;
+  }
+  if (existsSync(path) && !force) {
+    console.error(`${path} already exists. Use --force to overwrite.`);
+    return 2;
+  }
+  const graph = readGraphFromStore(dbPath);
+  const config = suggestInitialDomains(graph);
+  saveDomainsYaml(path, config);
+  console.log(
+    `[yohaku] domains init: wrote ${config.domains.length} domain(s) to ${path}`,
+  );
+  return 0;
+}
+
+async function cmdDomainsSync(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+  const path = resolve(root, args.flags.get("path") ?? DEFAULT_DOMAINS_PATH);
+  if (!existsSync(dbPath)) {
+    console.error(`Knowledge graph not found at ${dbPath}. Run "yohaku graph build" first.`);
+    return 2;
+  }
+  const existing = loadDomainsYaml(path);
+  if (existing === null) {
+    console.error(`${path} not found. Run "yohaku domains init" first.`);
+    return 2;
+  }
+  const graph = readGraphFromStore(dbPath);
+  const synced = syncDomains(existing, graph);
+  saveDomainsYaml(path, synced);
+  const beforeCount = countMembers(existing);
+  const afterCount = countMembers(synced);
+  console.log(
+    `[yohaku] domains sync: members ${beforeCount} → ${afterCount} (added ${afterCount - beforeCount})`,
+  );
+  return 0;
+}
+
+async function cmdDomainsLint(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+  const path = resolve(root, args.flags.get("path") ?? DEFAULT_DOMAINS_PATH);
+  if (!existsSync(dbPath)) {
+    console.error(`Knowledge graph not found at ${dbPath}. Run "yohaku graph build" first.`);
+    return 2;
+  }
+  const config = loadDomainsYaml(path);
+  if (config === null) {
+    console.error(`${path} not found. Run "yohaku domains init" first.`);
+    return 2;
+  }
+  const graph = readGraphFromStore(dbPath);
+  const report = lintDomains(config, graph);
+  for (const f of report.findings) {
+    const where = f.domain !== undefined ? ` [${f.domain}]` : "";
+    console.log(`  ${f.severity.toUpperCase()} ${f.code}${where}: ${f.message}`);
+  }
+  console.log(
+    `[yohaku] domains lint: ${report.findings.length} finding(s), errors=${report.hasErrors ? "yes" : "no"}`,
+  );
+  return report.hasErrors ? 1 : 0;
+}
+
+function countMembers(config: { domains: readonly { members: readonly unknown[] }[] }): number {
+  return config.domains.reduce((sum, d) => sum + d.members.length, 0);
+}
+
+// ----------------------------------------------------------------------------
+// html-write (Phase 8)
+// ----------------------------------------------------------------------------
+
+async function cmdHtmlWrite(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const inputPath = args.flags.get("input");
+  if (inputPath === undefined) {
+    console.error(
+      'Usage: yohaku html-write --input <fill.json> [--out <docs/generated>] [--dry-run]',
+    );
+    return 2;
+  }
+  const absInput = resolve(root, inputPath);
+  if (!existsSync(absInput)) {
+    console.error(`[yohaku] input not found: ${absInput}`);
+    return 2;
+  }
+  const outRoot = resolve(root, args.flags.get("out") ?? DEFAULT_OUT);
+  const htmlOutDir = resolve(outRoot, "html");
+  if (!existsSync(htmlOutDir)) {
+    console.error(`[yohaku] html output dir not found: ${htmlOutDir}. Run "yohaku render --format html" first.`);
+    return 2;
+  }
+  const dryRun = args.flags.get("dry-run") === "true";
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(absInput, "utf8"));
+  } catch (err) {
+    console.error(`[yohaku] JSON parse error: ${(err as Error).message}`);
+    return 2;
+  }
+  let input: ReturnType<typeof validateHtmlWriteInput>;
+  try {
+    input = validateHtmlWriteInput(raw);
+  } catch (err) {
+    if (err instanceof HtmlWriteInputError) {
+      console.error(`[yohaku] ${err.message}`);
+      return 2;
+    }
+    throw err;
+  }
+
+  const result = applyHtmlWrite({ htmlOutDir, input, dryRun });
+  console.log(
+    `[yohaku] html-write ${dryRun ? "(dry-run) " : ""}complete: updated=${result.updated.length} missing_components=${result.missingComponents.length} missing_blocks=${result.missingBlocks.length} rejected=${result.rejectedBlocks.length}`,
+  );
+  for (const m of result.missingComponents) {
+    console.warn(`  missing_component: ${m.type}/${m.name}`);
+  }
+  for (const m of result.missingBlocks) {
+    console.warn(`  missing_block: ${m.componentName}#${m.blockId}`);
+  }
+  for (const r of result.rejectedBlocks) {
+    console.warn(`  rejected: ${r.componentName}#${r.blockId} (${r.reason})`);
+  }
+  return 0;
+}
+
+// ----------------------------------------------------------------------------
+// explain-prompts (Phase 9)
+// ----------------------------------------------------------------------------
+
+async function cmdExplainPrompts(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+  if (!existsSync(dbPath)) {
+    console.error(`Knowledge graph not found at ${dbPath}. Run "yohaku graph build" first.`);
+    return 2;
+  }
+
+  const kindsRaw = args.flags.get("kind");
+  const typesRaw = args.flags.get("types");
+  const namesRaw = args.flags.get("names");
+  const maxItemsRaw = args.flags.get("max-items");
+  const outputPath = args.flags.get("output");
+
+  const kinds =
+    kindsRaw === undefined || kindsRaw.trim() === ""
+      ? undefined
+      : (kindsRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s === "business-meaning" || s === "concerns") as ExplainBlockKind[]);
+
+  const typesFilter =
+    typesRaw === undefined || typesRaw.trim() === ""
+      ? undefined
+      : (typesRaw
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter((s) =>
+            (COMPONENT_TYPES as readonly string[]).includes(s),
+          ) as ComponentType[]);
+
+  const namesFilter =
+    namesRaw === undefined || namesRaw.trim() === ""
+      ? undefined
+      : namesRaw.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+
+  const maxItems = maxItemsRaw !== undefined ? Number(maxItemsRaw) : undefined;
+  if (maxItems !== undefined && Number.isNaN(maxItems)) {
+    console.error("--max-items must be a number");
+    return 2;
+  }
+
+  const graph = readGraphFromStore(dbPath);
+  const result = buildExplainPrompts(graph, {
+    ...(kinds !== undefined ? { kinds } : {}),
+    ...(typesFilter !== undefined ? { typesFilter } : {}),
+    ...(namesFilter !== undefined ? { namesFilter } : {}),
+    ...(maxItems !== undefined ? { maxItems } : {}),
+  });
+
+  const json = JSON.stringify(result, null, 2);
+  if (outputPath !== undefined) {
+    const abs = resolve(root, outputPath);
+    writeFileSync(abs, json, "utf8");
+    console.log(
+      `[yohaku] explain-prompts: ${result.items.length} item(s) written to ${abs}`,
+    );
+  } else {
+    process.stdout.write(json);
+  }
+  return 0;
+}
+
+// ----------------------------------------------------------------------------
+// serve (Phase 10)
+// ----------------------------------------------------------------------------
+
+async function cmdServe(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const outRoot = resolve(root, args.flags.get("out") ?? DEFAULT_OUT);
+  const explicitDir = args.flags.get("dir");
+  const rootDir = explicitDir !== undefined
+    ? resolve(root, explicitDir)
+    : resolve(outRoot, "html");
+  if (!existsSync(rootDir)) {
+    console.error(`[yohaku] serve: directory not found: ${rootDir}`);
+    console.error(`Hint: run "yohaku render --format html" first, or pass --dir <path>.`);
+    return 2;
+  }
+  const portRaw = args.flags.get("port");
+  const port = portRaw !== undefined ? Number(portRaw) : 4000;
+  if (Number.isNaN(port) || port <= 0 || port > 65535) {
+    console.error(`[yohaku] serve: invalid port: ${portRaw}`);
+    return 2;
+  }
+  const host = args.flags.get("host") ?? "127.0.0.1";
+  const quiet = args.flags.get("quiet") === "true";
+  const watchMode = args.flags.get("watch") === "true";
+  const watchDir = args.flags.get("watch-dir")
+    ? resolve(root, args.flags.get("watch-dir") as string)
+    : resolve(root, "force-app");
+  const dbPath = resolve(root, args.flags.get("db") ?? DEFAULT_DB);
+  const apiVersion = args.flags.get("api") ?? DEFAULT_API;
+
+  let watchHandle: ReturnType<typeof startWatch> | null = null;
+  if (watchMode) {
+    if (!existsSync(watchDir)) {
+      console.error(`[yohaku] serve --watch: watchDir not found: ${watchDir}`);
+      return 2;
+    }
+    watchHandle = startWatch({
+      watchDir,
+      log: quiet ? undefined : (m) => console.log(m),
+      rebuild: async () => {
+        // 1. incremental graph rebuild
+        await buildAndStore({
+          root,
+          dbPath,
+          apiVersion,
+          incremental: true,
+          quiet: true,
+        });
+        // 2. HTML 再生成 (md は serve では使わないので skip)
+        const graph = readGraphFromStore(dbPath);
+        const domainsPath = resolve(root, DEFAULT_DOMAINS_PATH);
+        const domainsConfig = existsSync(domainsPath) ? loadDomainsYaml(domainsPath) : null;
+        renderHtmlAll(graph, resolveHtmlOutDir(outRoot), {
+          ...(domainsConfig !== null ? { domainsConfig } : {}),
+          gitCwd: root,
+        });
+      },
+    });
+  }
+
+  const handle = createStaticServer({
+    rootDir,
+    host,
+    port,
+    logRequests: !quiet,
+    ...(watchHandle !== null ? { sse: watchHandle.sse } : {}),
+  });
+  console.log(`[yohaku] serving ${rootDir}`);
+  console.log(`[yohaku] → ${handle.url}`);
+  if (watchMode) {
+    console.log(`[yohaku] watching ${watchDir} (changes trigger graph+html rebuild + browser reload)`);
+  }
+  if (host === "0.0.0.0") {
+    console.log("[yohaku] WARNING: bound to 0.0.0.0 — accessible to your LAN");
+  }
+  console.log("[yohaku] press Ctrl+C to stop");
+
+  // SIGINT / SIGTERM できれいに閉じる
+  await new Promise<void>((resolveFn) => {
+    let closing = false;
+    const shutdown = (signal: string): void => {
+      if (closing) return;
+      closing = true;
+      console.log(`\n[yohaku] received ${signal}, shutting down...`);
+      if (watchHandle !== null) watchHandle.close();
+      handle.close().then(() => resolveFn()).catch(() => resolveFn());
+    };
+    process.once("SIGINT", () => shutdown("SIGINT"));
+    process.once("SIGTERM", () => shutdown("SIGTERM"));
+  });
+  return 0;
+}
+
+// ----------------------------------------------------------------------------
+// coverage (Phase 14)
+// ----------------------------------------------------------------------------
+
+async function cmdCoverageImport(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const inputPath = args.flags.get("input");
+  if (inputPath === undefined) {
+    console.error('Usage: yohaku coverage import --input <coverage.json> [--out .yohaku/coverage.json]');
+    return 2;
+  }
+  const absInput = resolve(root, inputPath);
+  if (!existsSync(absInput)) {
+    console.error(`[yohaku] input not found: ${absInput}`);
+    return 2;
+  }
+  const outPath = resolve(root, args.flags.get("out") ?? DEFAULT_COVERAGE_PATH);
+  let report: ReturnType<typeof parseCoverageJson>;
+  try {
+    report = parseCoverageJson(readFileSync(absInput, "utf8"), inputPath);
+  } catch (err) {
+    if (err instanceof CoverageParseError) {
+      console.error(`[yohaku] ${err.message}`);
+      return 2;
+    }
+    throw err;
+  }
+  saveCoverageJson(outPath, report);
+  console.log(
+    `[yohaku] coverage import: ${report.entries.length} entries → ${outPath} (orgWide=${report.orgWideCoverage ?? "n/a"}, run=${report.testRunCoverage ?? "n/a"})`,
+  );
+  return 0;
+}
+
+async function cmdCoverageShow(args: ParsedArgs): Promise<number> {
+  const root = args.flags.get("root") ?? process.cwd();
+  const path = resolve(root, args.flags.get("path") ?? DEFAULT_COVERAGE_PATH);
+  const report = loadCoverageJson(path);
+  if (report === null) {
+    console.error(`[yohaku] coverage not found at ${path}. Run "yohaku coverage import" first.`);
+    return 2;
+  }
+  console.log(
+    `[yohaku] coverage: ${report.entries.length} entries (source=${report.source}, generatedAt=${report.generatedAt})`,
+  );
+  if (report.orgWideCoverage !== undefined) console.log(`  org-wide: ${report.orgWideCoverage}%`);
+  if (report.testRunCoverage !== undefined) console.log(`  test-run: ${report.testRunCoverage}%`);
+  for (const e of report.entries.slice().sort((a, b) => a.coveredPercent - b.coveredPercent).slice(0, 10)) {
+    console.log(`  ${e.coveredPercent}%  ${e.type}  ${e.apexName}  (covered=${e.numLinesCovered} / uncovered=${e.numLinesUncovered})`);
+  }
+  if (report.entries.length > 10) console.log(`  …他 ${report.entries.length - 10} 件 (低カバレッジ順 10 件のみ表示)`);
+  return 0;
+}
+
 function printHelp(): void {
   console.log(`yohaku ${YOHAKU_VERSION} — Salesforce AI-driven knowledge graph CLI
 
@@ -1000,7 +1625,10 @@ Setup:
             [--segment enterprise|smb|vendor] [--conflict skip|overwrite|rename]
 
 Knowledge graph:
-  yohaku graph build [--incremental] [--source local|dx-mcp] [--quiet]
+  yohaku graph build [--incremental] [--source local|dx-mcp|org] [--quiet]
+                   [--types ApexClass,Flow,...] [--retrieve-to <dir>]
+                   # --source=org: sf CLI 認証済みの defaultusername から
+                   #                package.xml 一括 retrieve (Phase 4)
                    [--async] [--no-timing-log]
                    # --async: 子プロセスを detach、即座に戻る (Claude Code hook 向け)
                    # 実行時間ログ: .yohaku/hook-timings.jsonl (--no-timing-log で抑止)
@@ -1021,10 +1649,16 @@ Render (Phase 1〜7-A 全 7 ターゲット):
   yohaku render permissions           # PermissionSet + Profile (Phase 7-A4)
   yohaku render validation-rules      # ValidationRule 個別 (Phase 7-A4)
   yohaku render --output <dir>
+  yohaku render --format md|html|md,html
+                                       # 既定: md (後方互換)。html は <output>/html/ に配置。
+                                       # Phase 0 時点で html はホーム plate + sections schema のみ生成。
 
-Diff (Phase 3):
+Diff (Phase 3 / 13):
   yohaku diff --from <ref> [--to <ref>] [--json] [--path-prefix force-app/]
             [--limit 1000] [--include-static-analysis <sarif-file>]
+            [--format html] [--output release-review.html]
+                                       # --format html: リリースレビュー用 HTML 出力
+                                       # 各 changed file から component leaf へリンク
 
 Onboarding (Phase 5):
   yohaku onboard context --role <new_joiner|reviewer|release_manager|customer_facing>
@@ -1044,6 +1678,38 @@ Context (opt-in — Context-Hub 連携):
                      # 対象に関連するプロジェクト/顧客コンテキストを Context-Hub から取得し
                      # JSON(ContextBrief)で出力。.yohaku/config.json の contextProvider を参照。
                      # 未設定なら空 brief を返す(従来動作のまま)。
+
+HTML edit (Phase 8):
+  yohaku html-write --input <fill.json> [--out docs/generated] [--dry-run]
+                                       # AI-managed ブロック (<!-- yohaku:block kind="ai_managed" ... -->)
+                                       # を JSON 入力で安全に上書き
+
+Coverage (Phase 14):
+  yohaku coverage import --input <coverage.json> [--out .yohaku/coverage.json]
+                                       # sf apex run test --code-coverage --result-format json
+                                       # の出力を取り込み正規化
+  yohaku coverage show [--path .yohaku/coverage.json]
+                                       # 取り込み済カバレッジサマリ (低カバレッジ順 top 10)
+
+Local preview (Phase 10 / 12):
+  yohaku serve [--port 4000] [--host 127.0.0.1] [--dir docs/generated/html] [--quiet]
+              [--watch] [--watch-dir force-app]
+                                       # docs/generated/html を配信する軽量 HTTP サーバ
+                                       # --watch: ソース変更時に graph+HTML 再生成 + ブラウザ auto-reload (SSE)
+
+LLM prompts (Phase 9):
+  yohaku explain-prompts [--kind business-meaning,concerns]
+                         [--types apex,trigger,...] [--names X,Y,...]
+                         [--max-items N] [--output prompts.json]
+                                       # 空 AI-managed ブロックを LLM に埋めてもらうための
+                                       # prompt + context を JSON 出力。
+                                       # 受け取った fill.json は html-write で適用。
+
+Domains (Phase 5):
+  yohaku domains init [--path <yaml>] [--force]
+                                       # graph からヒューリスティックで初期 domains.yaml を生成
+  yohaku domains sync [--path <yaml>]  # graph に追加されたメンバを Unclassified に追記
+  yohaku domains lint [--path <yaml>]  # 重複 id / 多重所属 / 孤立メンバ / 未分類を検出
 
 Other:
   yohaku validate --target <graph.json>

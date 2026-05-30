@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>yohakuforce — Knowledge Hub</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <link rel="stylesheet" href="./assets/home.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
+  <script src="./assets/home.js" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h1 style="font-size:14px;margin:0 0 8px;">yohakuforce</h1>
+      <div class="search-bar"><input id="global-search" type="search" placeholder="検索 (例: Account)" /></div>
+      <h3>Apex Classes (1)</h3>
+      <ul class="type-list">
+        <li><a href="./component/apex/CustomerService.html">CustomerService</a></li>
+        
+      </ul>
+      <h3>Triggers (1)</h3>
+      <ul class="type-list">
+        <li><a href="./component/trigger/OrderTrigger.html">OrderTrigger</a></li>
+        
+      </ul>
+      <h3>LWC (0)</h3>
+      <ul class="type-list">
+        
+        
+      </ul>
+      <h3>Objects (3)</h3>
+      <ul class="type-list">
+        <li><a href="./component/object/Customer_c.html">Customer__c</a></li>
+        <li><a href="./component/object/Invoice_c.html">Invoice__c</a></li>
+        <li><a href="./component/object/Order_c.html">Order__c</a></li>
+        
+      </ul>
+      <h3>Flows (1)</h3>
+      <ul class="type-list">
+        <li><a href="./component/flow/Order_AfterUpdate.html">Order_AfterUpdate</a></li>
+        
+      </ul>
+    </aside>
+    <div>
+      <header class="component-header">
+        <h1>Knowledge Hub</h1>
+        <div id="stats-totals" class="breadcrumb"></div>
+      </header>
+      <main class="home-main">
+        <div class="tabs" role="tablist">
+          <button class="tab-button" data-tab="stats" aria-selected="true">① 統計</button>
+          <button class="tab-button" data-tab="architecture" aria-selected="false">② アーキテクチャ</button>
+          <button class="tab-button" data-tab="domains" aria-selected="false">③ ドメインマップ</button>
+          <button class="tab-button" data-tab="hotspots" aria-selected="false">④ ホットスポット</button>
+        </div>
+
+        <div class="tab-panel" data-panel="stats" data-active="true">
+          <div id="stats-grid" class="stats-grid"></div>
+        </div>
+
+        <div class="tab-panel" data-panel="architecture" data-active="false">
+          <div class="diagram-switcher">
+            <button data-mode="mermaid" aria-selected="true">Mermaid</button>
+            <button data-mode="html" aria-selected="false">HTML (safe)</button>
+            <span class="fallback-note"></span>
+          </div>
+          <div id="arch-mermaid" class="mermaid-container"></div>
+          <div id="arch-html" class="arch-canvas" style="display:none;"></div>
+        </div>
+
+        <div class="tab-panel" data-panel="domains" data-active="false">
+          <p class="muted"><span id="unclassified-count"></span></p>
+          <ul id="domain-list" class="domain-list"></ul>
+        </div>
+
+        <div class="tab-panel" data-panel="hotspots" data-active="false">
+          <div id="hotspots-list"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -21,4 +21,9 @@ describe("CLI smoke", () => {
     const code = await main(["version"]);
     expect(code).toBe(0);
   });
+
+  it("render --format pdf で code 2 (不正値)", async () => {
+    const code = await main(["render", "--format", "pdf"]);
+    expect(code).toBe(2);
+  });
 });

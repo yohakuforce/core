@@ -1,0 +1,35 @@
+---
+description: <%= it.projectName %> の業務ドメイン定義 (domains.yaml) を init / sync / lint する
+argument-hint: init | sync | lint
+---
+
+# /yohaku-domains $ARGUMENTS
+
+業務ドメイン分類は HTML 設計書の index 階層と関連ドメインセクションを駆動する。
+domains.yaml が正本、ビルドは決定的に読み込む。
+
+## 実行手順
+
+- **init** (初回): `yohaku domains init` でヒューリスティック初期案を出力
+  ```bash
+  yohaku domains init
+  ```
+  → `.yohaku/domains.yaml` が生成される。label / 分割を人手で見直しコミット。
+
+- **sync** (グラフ更新後): 新規メンバを Unclassified に追記
+  ```bash
+  yohaku domains sync
+  ```
+
+- **lint** (コミット前): 重複 ID / 多重 primary / 孤立メンバ / 未分類を検出
+  ```bash
+  yohaku domains lint
+  ```
+  → エラーがあれば exit code 1。
+
+## domains.yaml 編集ガイド
+
+- 1 component は primary domain 1 つに所属 (lint がエラー)
+- `id` は英小文字 + ハイフン推奨 (e.g. `account-management`)
+- `label` は人間向け表示名 (日本語可)
+- 未分類は `unclassified` ドメインに自動集約される
