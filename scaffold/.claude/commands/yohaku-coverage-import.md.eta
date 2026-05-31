@@ -1,0 +1,37 @@
+---
+description: <%= it.projectName %> の Apex テストカバレッジ (sf CLI JSON) を設計書に取り込む
+argument-hint: import --input coverage.json | show
+---
+
+# /yohaku-coverage-import $ARGUMENTS
+
+`sf apex run test` が出力する JSON カバレッジを取り込み、Apex コンポーネントの設計書に
+カバレッジ情報を統合する。
+
+## 実行手順
+
+1. **テスト実行 + JSON 取得**
+   ```bash
+   sf apex run test --code-coverage --result-format json > coverage.json
+   ```
+
+2. **取り込み**
+   ```bash
+   yohaku coverage import --input coverage.json
+   ```
+   - `.yohaku/coverage.json` に正規化して保存 (`--out` で変更可)
+   - orgWide / testRun カバレッジと各クラスのエントリ数が表示される
+
+3. **確認**
+   ```bash
+   yohaku coverage show
+   ```
+   - 取り込み済みカバレッジの件数・source・生成時刻を表示
+
+4. **設計書へ反映**
+   - `yohaku render --format html` を再実行すると Apex 詳細にカバレッジが載る
+
+## ガードレール
+
+- 取り込み前に `coverage show` で前回値を確認 (誤った JSON の上書きを防ぐ)
+- カバレッジ未取得でも render は動く (カバレッジ欄が空になるだけ)

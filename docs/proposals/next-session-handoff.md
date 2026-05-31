@@ -261,11 +261,12 @@ LocalLLM / Claude Code / Codex / Antigravity の **全 4 環境で yohaku が同
 
 ### 3.4 アウトプット成果物
 
-- [ ] `scaffold/.claude/commands/yohaku-*.md.eta` 追加 (新 5 件)
-- [ ] `scaffold/prompts/codex/AGENTS-snippet.md` 更新 (Phase 8〜15 反映)
-- [ ] `scaffold/prompts/antigravity/AGENTS-snippet.md` 更新 (同上)
-- [ ] `scaffold/prompts/local-llm/README.md` 新規作成 (Ollama 等向け CLI ガイド)
-- [ ] `docs/cross-harness-validation.md` 新規作成 (検証結果スナップショット)
+- [x] `scaffold/.claude/commands/yohaku-*.md.eta` 追加 (新 5 件: explain-prompts / html-write / serve / diff-html / coverage-import) — 2026-05-31
+- [x] `scaffold/prompts/codex/AGENTS-snippet.md` 更新 (Phase 8〜15 反映) — 2026-05-31
+- [x] `scaffold/prompts/antigravity/AGENTS-snippet.md` 更新 (同上 + 自律実行ワークフロー) — 2026-05-31
+- [x] `scaffold/prompts/local-llm/README.md` 新規作成 (Ollama 等向け CLI ガイド) — 2026-05-31
+- [x] `docs/cross-harness-validation.md` 新規作成 (検証結果スナップショット) — 2026-05-31
+- [ ] **実機検証** (Codex / Antigravity / LocalLLM): Mac mini 到着後。Claude Code は sfai-trial で実証済
 
 ### 3.5 想定工数
 

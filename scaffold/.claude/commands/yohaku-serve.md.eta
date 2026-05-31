@@ -1,0 +1,35 @@
+---
+description: <%= it.projectName %> の HTML 設計書をローカル配信する (--watch で自動 reload)
+argument-hint: [--port 4000] [--watch] [--dir docs/generated/html]
+---
+
+# /yohaku-serve $ARGUMENTS
+
+生成済み HTML 設計書をローカル HTTP で配信する。`--watch` を付けるとソース変更を検知して
+graph + HTML を自動再生成し、ブラウザを SSE で自動 reload する。
+
+## 実行手順
+
+1. **前提確認**
+   - `docs/generated/html/` が存在すること (`yohaku render --format html` 実行済み)
+
+2. **配信**
+   ```bash
+   yohaku serve --port 4000 $ARGUMENTS
+   ```
+   - http://127.0.0.1:4000/ でホームが開く
+   - `--host` で待受ホスト、`--dir` で配信ディレクトリを変更可
+   - ページ内 `Cmd+K` / `Ctrl+K` でグローバル検索
+
+3. **watch モード (開発時)**
+   ```bash
+   yohaku serve --port 4000 --watch
+   ```
+   - `force-app/` (既定) の変更で graph+HTML を再生成しブラウザ自動 reload
+   - `--watch-dir` で監視対象を変更可
+
+## ガードレール
+
+- ブラウザでホームが開けば PASS (各ハーネス共通のスモークテスト終点)
+- `docs/generated/html/` が無い場合は先に `yohaku render --format html` を実行する
+- 停止は Ctrl+C (バックグラウンド起動時は該当 PID を kill)

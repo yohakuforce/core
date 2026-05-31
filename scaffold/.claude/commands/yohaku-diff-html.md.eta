@@ -1,0 +1,32 @@
+---
+description: <%= it.projectName %> の 2 リビジョン間の変更を Release Review HTML にする
+argument-hint: --from <ref> [--to <ref>] [--output release-review.html]
+---
+
+# /yohaku-diff-html $ARGUMENTS
+
+git の 2 リビジョン間で変更されたコンポーネントを抽出し、リリースレビュー用の HTML を出力する。
+レビュー対象を「変更があったものだけ」に絞れる。
+
+## 実行手順
+
+1. **前提確認**
+   - git リポジトリであること、`--from` に有効な ref (タグ / ブランチ / SHA) を渡せること
+
+2. **Release Review HTML 生成**
+   ```bash
+   yohaku diff --from v1.0.0 --to HEAD --format html
+   ```
+   - `--to` 省略時は作業ツリー (HEAD 相当) と比較
+   - `--output` で出力先を変更可 (既定 `docs/generated/html/release-review.html`)
+   - `--path-prefix force-app/` で対象パスを限定可
+
+3. **レビュー**
+   - `release-review.html` をブラウザで開く (file:// 可、または `yohaku serve` 経由)
+   - 変更ファイル数 / 追加・削除行数 / カテゴリ別件数のサマリと差分が並ぶ
+
+## ガードレール
+
+- `--format html` を付けないと JSON 出力になる (レビュー用途では html を指定)
+- 出力は決定的。LLM は呼ばない
+- 大規模差分は truncated される場合がある (サマリの truncated フラグを確認)

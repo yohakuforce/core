@@ -1,0 +1,34 @@
+---
+description: <%= it.projectName %> の AI-managed ブロック充填用 prompt + context を一括生成する
+argument-hint: [--kind business-meaning,concerns] [--types apex,object] [--output prompts.json]
+---
+
+# /yohaku-explain-prompts $ARGUMENTS
+
+設計書の AI-managed ブロック (業務的意味づけ / 既知の懸念) を LLM に埋めさせるための
+prompt と必要 context を、コンポーネントごとに一括生成する。生成自体は決定的で LLM を呼ばない。
+
+## 実行手順
+
+1. **前提確認**
+   - `.yohaku/graph.sqlite` が存在すること (`yohaku graph build` 実行済み)
+
+2. **prompt 生成**
+   ```bash
+   yohaku explain-prompts $ARGUMENTS --output prompts.json
+   ```
+   - `--kind` で対象ブロックを限定 (`business-meaning` / `concerns`、未指定なら両方)
+   - `--types apex,object` で対象コンポーネントタイプを絞る
+   - `--names <fqn,...>` で個別指定、`--max-items N` で件数上限
+   - `--output` 省略時は stdout に JSON を出力
+
+3. **LLM へ渡す**
+   - `prompts.json` の各 item を Claude / Codex / ローカル LLM に渡し、回答を集約して
+     `fill.json` (html-write 入力形式) を作る
+   - 充填の書き戻しは `/yohaku-html-write` で行う
+
+## ガードレール
+
+- このコマンドは設計書を書き換えない。出力は prompt + context のみ
+- context は知識グラフ由来の決定的な抜粋。生 XML を別途 grep する必要はない
+- 充填対象が 0 件なら何も出力されない (既に埋まっている / 対象なし)

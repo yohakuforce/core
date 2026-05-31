@@ -7,6 +7,7 @@ yohaku を使うためのプロンプト群です。
 |---|---|---|
 | `codex/`        | OpenAI Codex CLI / Codex Web | プロジェクト root の `AGENTS.md` に取り込む |
 | `antigravity/`  | Google Antigravity            | プロジェクト root の `AGENTS.md` に取り込む |
+| `local-llm/`    | Ollama / llama.cpp / 自前 SDK | system prompt にチートシートを貼る (`local-llm/README.md` 参照) |
 | `shared/`       | 全ハーネス共通                | コピペで使用 |
 
 ## 設計方針

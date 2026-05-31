@@ -39,6 +39,30 @@ yohaku domains lint     # 重複・多重所属の検査
 yohaku render --format html  # ホームの "ドメインマップ" に反映される
 ```
 
+## New workflows (Phase 8〜15)
+
+長時間の自律実行に向いているので、生成 → 充填 → 確認まで一気通貫で回せます:
+
+```bash
+# 1. LLM 充填: prompt 生成 → (自分で回答を埋める) → 書き戻し
+yohaku explain-prompts --output prompts.json
+yohaku html-write --input fill.json --dry-run    # まず dry-run で rejected を確認
+yohaku html-write --input fill.json
+
+# 2. リリースレビュー HTML
+yohaku diff --from <ref> --to HEAD --format html
+
+# 3. テストカバレッジ取込
+sf apex run test --code-coverage --result-format json > coverage.json
+yohaku coverage import --input coverage.json
+
+# 4. ローカルプレビュー (自律実行の最後に人間へ渡す導線)
+yohaku serve --port 4000 --watch
+```
+
+- 自律ループで render を繰り返しても AI-managed ブロックの充填は保持される (preservation)
+- watch モードは長時間セッションと相性が良い (保存のたびに自動再生成 + reload)
+
 ## Diagram fallback
 
 HTML ホームのアーキテクチャ図は Mermaid → HTML/CSS の 2 段構え。

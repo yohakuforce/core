@@ -34,6 +34,21 @@ yohaku render --format md,html --types apex,object
 - Markdown (AI 入力向け): `docs/generated/*.md`
 - HTML (人間レビュー用): `docs/generated/html/index.html`
 
+## New workflows (Phase 8〜15)
+
+CLI 直接呼び出しで提示する (スラッシュ相当の概念はないので「次のコマンドを実行してください」と案内):
+
+| ユーザーの問い | 実行するコマンド |
+|---|---|
+| 「業務的意味を AI に埋めてほしい」 | `yohaku explain-prompts --output prompts.json` → 回答を集約し `fill.json` → `yohaku html-write --input fill.json` |
+| 「ブラウザで設計書を見たい」 | `yohaku serve --port 4000` (開発中は `--watch` で自動 reload) |
+| 「このリリースの変更点をレビューしたい」 | `yohaku diff --from <ref> --to HEAD --format html` |
+| 「テストカバレッジを設計書に載せたい」 | `sf apex run test --code-coverage --result-format json > coverage.json` → `yohaku coverage import --input coverage.json` |
+| 「業務フロー全体を俯瞰したい」 | `yohaku serve` → ホーム 2 番目の「業務フロー」タブ |
+
+- `html-write` は書き戻し前に `--dry-run` で rejected が無いことを必ず確認する
+- `serve` でブラウザのホームが開けば一通りのスモークテストは PASS
+
 ## Editing AI-managed sections
 
 業務的意味づけ / 既知の懸念は HTML 内の `<!-- yohaku:block kind="ai_managed" id="..." start -->` ブロックでのみ編集する。決定的セクションには触らない。

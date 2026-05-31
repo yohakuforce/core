@@ -1,0 +1,34 @@
+---
+description: <%= it.projectName %> の HTML 設計書の AI-managed ブロックに LLM 回答を安全に書き戻す
+argument-hint: --input fill.json [--dry-run]
+---
+
+# /yohaku-html-write $ARGUMENTS
+
+`/yohaku-explain-prompts` で得た LLM 回答 (`fill.json`) を、HTML 設計書の編集マーカー
+ブロックにのみ書き戻す。決定的セクションには一切触れない。
+
+## 実行手順
+
+1. **前提確認**
+   - `docs/generated/html/` が存在すること (`yohaku render --format html` 実行済み)
+   - `fill.json` が用意できていること (`/yohaku-explain-prompts` → LLM 回答)
+
+2. **dry-run で確認 (推奨)**
+   ```bash
+   yohaku html-write --input fill.json --dry-run
+   ```
+   - `updated` / `missing_components` / `missing_blocks` / `rejected` の件数を確認
+
+3. **書き戻し**
+   ```bash
+   yohaku html-write --input fill.json
+   ```
+   - `<!-- yohaku:block kind="ai_managed" id="..." start -->` ブロック内のみ置換
+   - `--out` で出力ディレクトリを変更可 (既定 `docs/generated`)
+
+## ガードレール
+
+- 編集マーカー外は書き換え不可 (rejected として弾かれる)
+- `yohaku render` を再実行しても充填内容は保持される (preservation)
+- 書き戻し前に必ず `--dry-run` で rejected が無いことを確認する
