@@ -42,10 +42,7 @@ export function emptyLlmPlaceholderSection(
  * 変更履歴セクション。sourcePath が指定されていれば `git log -- <path>` を引く。
  * git が無い / repo 外 / 履歴無しの場合はプレースホルダにフォールバック。
  */
-export function changeHistorySection(
-  sourcePath?: string,
-  gitCwd?: string,
-): SectionViewModel {
+export function changeHistorySection(sourcePath?: string, gitCwd?: string): SectionViewModel {
   if (sourcePath === undefined || sourcePath === "") {
     return {
       id: "change-history",
@@ -122,10 +119,7 @@ export function relatedDomainsSection(
   return { id: "related-domains", title: "関連ドメイン", htmlContent };
 }
 
-export function listOrPlaceholderHtml(
-  items: readonly string[],
-  emptyText: string,
-): string {
+export function listOrPlaceholderHtml(items: readonly string[], emptyText: string): string {
   if (items.length === 0) {
     return emptyText === "" ? "" : `<p class="muted">${escapeHtml(emptyText)}</p>`;
   }

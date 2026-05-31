@@ -4,7 +4,7 @@ import type { ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SseHub, startWatch, type WatchFactory } from "../../../src/serve/watch.js";
+import { SseHub, type WatchFactory, startWatch } from "../../../src/serve/watch.js";
 
 // 実 fs.watch のイベント配送タイミングに依存せず、変更イベントを合成注入する
 // フェイク watcher。並列実行時の CPU starvation による flaky を構造的に排除する。
@@ -26,11 +26,7 @@ function makeFakeWatcher(): {
 
 // 固定 setTimeout ではなく条件成立を polling で待つ。並列実行時に fs.watch の
 // イベント配送が一時的に遅延しても、本当に成立するまで待つので race で落ちない。
-async function waitFor(
-  predicate: () => boolean,
-  timeoutMs = 2000,
-  intervalMs = 20,
-): Promise<void> {
+async function waitFor(predicate: () => boolean, timeoutMs = 2000, intervalMs = 20): Promise<void> {
   const start = Date.now();
   while (!predicate()) {
     if (Date.now() - start > timeoutMs) {
@@ -67,8 +63,12 @@ describe("SseHub", () => {
     hub.broadcast("reload", "");
     const aWrites = (a.write as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
     const bWrites = (b.write as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
-    expect(aWrites.some((s: unknown) => typeof s === "string" && s.includes("event: reload"))).toBe(true);
-    expect(bWrites.some((s: unknown) => typeof s === "string" && s.includes("event: reload"))).toBe(true);
+    expect(aWrites.some((s: unknown) => typeof s === "string" && s.includes("event: reload"))).toBe(
+      true,
+    );
+    expect(bWrites.some((s: unknown) => typeof s === "string" && s.includes("event: reload"))).toBe(
+      true,
+    );
   });
 
   it("close 時にクライアントが解除される", () => {

@@ -51,7 +51,19 @@ export const PROFILE_DEFAULTS: ReadonlyMap<
   [
     "standard",
     {
-      enabledCommands: ["onboard", "explain", "impact", "classify-diff", "change-summary"],
+      enabledCommands: [
+        "onboard",
+        "explain",
+        "impact",
+        "classify-diff",
+        "change-summary",
+        // v0.5.0 HTML 設計書パイプライン (日常運用)
+        "yohaku-html-build",
+        "yohaku-serve",
+        "yohaku-domains",
+        "yohaku-explain-prompts",
+        "yohaku-html-write",
+      ],
       enabledAgents: [
         "graph-querier",
         "object-documenter",
@@ -76,6 +88,15 @@ export const PROFILE_DEFAULTS: ReadonlyMap<
         "change-summary",
         "release-prep",
         "manual-steps",
+        // v0.5.0 HTML 設計書パイプライン (日常運用)
+        "yohaku-html-build",
+        "yohaku-serve",
+        "yohaku-domains",
+        "yohaku-explain-prompts",
+        "yohaku-html-write",
+        // v0.5.0 HTML パイプライン (リリース / QA 系、full のみ)
+        "yohaku-diff-html",
+        "yohaku-coverage-import",
       ],
       enabledAgents: [
         "graph-querier",

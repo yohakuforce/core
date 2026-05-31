@@ -6,11 +6,7 @@ import type { ComponentType } from "../html/sections.js";
 import type { KnowledgeGraph } from "../types/graph.js";
 import { buildContextFor } from "./context-builder.js";
 import { buildOverallInstructions, buildPrompt } from "./prompt-builder.js";
-import type {
-  ExplainBlockKind,
-  ExplainPromptItem,
-  ExplainPromptsOutput,
-} from "./types.js";
+import type { ExplainBlockKind, ExplainPromptItem, ExplainPromptsOutput } from "./types.js";
 
 export type { ExplainBlockKind, ExplainPromptItem, ExplainPromptsOutput } from "./types.js";
 export { buildContextFor } from "./context-builder.js";
@@ -36,8 +32,7 @@ export function buildExplainPrompts(
 ): ExplainPromptsOutput {
   const kinds = (options?.kinds ?? DEFAULT_KINDS).filter((k) => VALID_KINDS.has(k));
   const typesFilter = options?.typesFilter;
-  const namesFilter =
-    options?.namesFilter !== undefined ? new Set(options.namesFilter) : undefined;
+  const namesFilter = options?.namesFilter !== undefined ? new Set(options.namesFilter) : undefined;
 
   const items: ExplainPromptItem[] = [];
   const addCandidate = (type: ComponentType, name: string): void => {

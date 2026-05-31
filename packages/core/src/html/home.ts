@@ -5,14 +5,9 @@
 // で行う。サイドバーのリンクツリーだけはサーバ側で展開する (No-JS でも辿れる)。
 // ----------------------------------------------------------------------------
 
-import type { KnowledgeGraph } from "../types/graph.js";
-import {
-  buildArchitecture,
-  buildDomains,
-  buildHotspots,
-  buildStats,
-} from "./data-builder.js";
 import type { DomainsConfig } from "../domains/types.js";
+import type { KnowledgeGraph } from "../types/graph.js";
+import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./data-builder.js";
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
 

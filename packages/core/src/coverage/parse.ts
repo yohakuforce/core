@@ -34,9 +34,12 @@ export function parseCoverageJson(raw: string, source: string): CoverageReport {
   }
 
   // Form 1: sf apex run test
-  const form1 = (value as Record<string, unknown> | null)?.result as Record<string, unknown> | undefined;
+  const form1 = (value as Record<string, unknown> | null)?.result as
+    | Record<string, unknown>
+    | undefined;
   if (form1 !== undefined) {
-    const arr = (form1.codecoverage as unknown[] | undefined) ?? (form1.coverage as unknown[] | undefined);
+    const arr =
+      (form1.codecoverage as unknown[] | undefined) ?? (form1.coverage as unknown[] | undefined);
     if (Array.isArray(arr) && arr.length >= 0) {
       const summary = form1.summary as Record<string, unknown> | undefined;
       const orgWide = parsePercent(summary?.orgWideCoverage);

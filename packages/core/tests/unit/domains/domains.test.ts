@@ -62,11 +62,7 @@ describe("suggestInitialDomains", () => {
   it("同一プレフィックス >=2 件で 1 ドメインに束ねる", () => {
     const graph: KnowledgeGraph = {
       ...BASE,
-      apexClasses: [
-        apex("AccountService"),
-        apex("AccountController"),
-        apex("OrderService"),
-      ],
+      apexClasses: [apex("AccountService"), apex("AccountController"), apex("OrderService")],
     };
     const cfg = suggestInitialDomains(graph);
     const accountDomain = cfg.domains.find((d) => d.id === "account");
@@ -103,9 +99,7 @@ describe("loadDomainsYaml / saveDomainsYaml", () => {
   it("round trip で同じ構造が得られる", () => {
     const cfg: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "sales", label: "Sales", members: [{ type: "apex", name: "X" }] },
-      ],
+      domains: [{ id: "sales", label: "Sales", members: [{ type: "apex", name: "X" }] }],
     };
     const p = join(outRoot, "d.yaml");
     saveDomainsYaml(p, cfg);
@@ -178,9 +172,7 @@ describe("lintDomains", () => {
   it("孤立メンバ参照は warning", () => {
     const cfg: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "NotInGraph" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "NotInGraph" }] }],
     };
     const report = lintDomains(cfg, baseGraph);
     expect(report.findings.some((f) => f.code === "orphan_member")).toBe(true);

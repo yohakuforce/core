@@ -2,9 +2,9 @@ import { EventEmitter } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  buildPackageManifest,
   DEFAULT_RETRIEVE_TYPES,
   OrgRetrieveError,
+  buildPackageManifest,
   retrieveOrgSources,
 } from "../../../src/adapters/org-retrieve/index.js";
 

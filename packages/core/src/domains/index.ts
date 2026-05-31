@@ -1,6 +1,4 @@
-export {
-  DEFAULT_DOMAINS_PATH,
-} from "./types.js";
+export { DEFAULT_DOMAINS_PATH } from "./types.js";
 export type {
   DomainsConfig,
   DomainDef,

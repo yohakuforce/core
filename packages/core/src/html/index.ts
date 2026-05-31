@@ -9,29 +9,24 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { buildCoverageLookup } from "../coverage/index.js";
 import type { KnowledgeGraph } from "../types/graph.js";
 import { HOME_CSS_EXTRA, HOME_JS } from "./assets.js";
-import { CMDK_CSS, CMDK_JS } from "./cmdk.js";
-import { buildSearchIndex } from "./search-index.js";
-import { buildCoverageLookup } from "../coverage/index.js";
 import { buildBusinessFlows } from "./business-flow-builder.js";
 import { extractBusinessMeanings } from "./business-meaning-extractor.js";
+import { CMDK_CSS, CMDK_JS } from "./cmdk.js";
+import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./data-builder.js";
+import { renderHomeHtml } from "./home.js";
+import { renderComponentPage } from "./page-template.js";
 import { preserveAiManagedBlocks } from "./preserve-blocks.js";
 import { METHOD_FLOWCHART_JS } from "./render-method-flow.js";
 import { TYPE_INDEX_JS, renderTypeIndexPage } from "./render-type-index.js";
+import { buildSearchIndex } from "./search-index.js";
 import {
-  buildArchitecture,
-  buildDomains,
-  buildHotspots,
-  buildStats,
-} from "./data-builder.js";
-import { renderHomeHtml } from "./home.js";
-import { renderComponentPage } from "./page-template.js";
-import {
+  COMPONENT_TYPES,
   SECTION_SCHEMA,
   applicableSectionsFor,
   auditSections,
-  COMPONENT_TYPES,
 } from "./sections.js";
 import type {
   ComponentType,
@@ -175,12 +170,25 @@ export function renderHtmlAll(
       skipped.push(`${t} (filtered)`);
       continue;
     }
-    const r = renderComponentsForType(t, graph, htmlOutDir, options?.gitCwd, searchIndexJson, coverageLookup, preservedBlocks);
+    const r = renderComponentsForType(
+      t,
+      graph,
+      htmlOutDir,
+      options?.gitCwd,
+      searchIndexJson,
+      coverageLookup,
+      preservedBlocks,
+    );
     written.push(...r.written);
     auditFailures.push(...r.audit);
 
     // タイプ index ページ (component/<type>/index.html)
-    const typeIndexHtml = renderTypeIndexPage(t, graph, options?.domainsConfig ?? null, searchIndexJson);
+    const typeIndexHtml = renderTypeIndexPage(
+      t,
+      graph,
+      options?.domainsConfig ?? null,
+      searchIndexJson,
+    );
     const typeIndexPath = join(htmlOutDir, "component", t, "index.html");
     writeFileSync(typeIndexPath, typeIndexHtml, "utf8");
     written.push(typeIndexPath);
@@ -212,10 +220,7 @@ export function renderHtmlAll(
   return { written, skipped, auditFailures, warnings };
 }
 
-function typeIncluded(
-  type: ComponentType,
-  filter: readonly ComponentType[] | undefined,
-): boolean {
+function typeIncluded(type: ComponentType, filter: readonly ComponentType[] | undefined): boolean {
   if (filter === undefined || filter.length === 0) return true;
   return filter.includes(type);
 }
@@ -327,9 +332,7 @@ function buildSectionSchemaPayload(): unknown {
       source: s.source,
       perType: s.perType,
     })),
-    applicableByType: Object.fromEntries(
-      COMPONENT_TYPES.map((t) => [t, applicableSectionsFor(t)]),
-    ),
+    applicableByType: Object.fromEntries(COMPONENT_TYPES.map((t) => [t, applicableSectionsFor(t)])),
   };
 }
 
@@ -623,4 +626,3 @@ strong { color: var(--fg-strong); }
   box-shadow: var(--shadow-sm);
 }
 `;
-

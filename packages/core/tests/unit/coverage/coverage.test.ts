@@ -67,7 +67,15 @@ describe("parseCoverageJson", () => {
       version: 1,
       generatedAt: "2026-05-30T00:00:00Z",
       source: "manual",
-      entries: [{ apexName: "X", type: "ApexClass", numLinesCovered: 1, numLinesUncovered: 1, coveredPercent: 50 }],
+      entries: [
+        {
+          apexName: "X",
+          type: "ApexClass",
+          numLinesCovered: 1,
+          numLinesUncovered: 1,
+          coveredPercent: 50,
+        },
+      ],
     };
     const report = parseCoverageJson(JSON.stringify(orig), "raw");
     expect(report.entries).toHaveLength(1);
@@ -98,7 +106,13 @@ describe("load / save / lookup", () => {
       generatedAt: "2026-05-30T00:00:00Z",
       source: "test",
       entries: [
-        { apexName: "Foo", type: "ApexClass" as const, numLinesCovered: 5, numLinesUncovered: 5, coveredPercent: 50 },
+        {
+          apexName: "Foo",
+          type: "ApexClass" as const,
+          numLinesCovered: 5,
+          numLinesUncovered: 5,
+          coveredPercent: 50,
+        },
       ],
     };
     const p = join(dir, "coverage.json");
@@ -113,8 +127,20 @@ describe("load / save / lookup", () => {
       generatedAt: "x",
       source: "x",
       entries: [
-        { apexName: "A", type: "ApexClass" as const, numLinesCovered: 1, numLinesUncovered: 1, coveredPercent: 50 },
-        { apexName: "B", type: "ApexClass" as const, numLinesCovered: 2, numLinesUncovered: 0, coveredPercent: 100 },
+        {
+          apexName: "A",
+          type: "ApexClass" as const,
+          numLinesCovered: 1,
+          numLinesUncovered: 1,
+          coveredPercent: 50,
+        },
+        {
+          apexName: "B",
+          type: "ApexClass" as const,
+          numLinesCovered: 2,
+          numLinesUncovered: 0,
+          coveredPercent: 100,
+        },
       ],
     };
     const m = buildCoverageLookup(report);

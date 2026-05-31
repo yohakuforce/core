@@ -10,9 +10,9 @@
 // 依存追加なし (node:fs.watch + node:http のみ)。
 // ----------------------------------------------------------------------------
 
-import { watch, type FSWatcher } from "node:fs";
-import { resolve } from "node:path";
+import { type FSWatcher, watch } from "node:fs";
 import type { ServerResponse } from "node:http";
+import { resolve } from "node:path";
 
 /** 監視ハンドル (close できれば実体は問わない)。 */
 export interface RawWatcher {
@@ -24,10 +24,7 @@ export interface RawWatcher {
  * `onChange` には変更ファイル名 (recursive watch の相対パス) を渡す。filename 不明時は null。
  * 既定は node:fs.watch だが、テストでは合成イベントを注入するために差し替えられる。
  */
-export type WatchFactory = (
-  dir: string,
-  onChange: (filename: string | null) => void,
-) => RawWatcher;
+export type WatchFactory = (dir: string, onChange: (filename: string | null) => void) => RawWatcher;
 
 export interface WatchOptions {
   /** 監視対象のディレクトリ (絶対パス) */
@@ -100,10 +97,14 @@ export function startWatch(options: WatchOptions): WatchHandle {
   };
 
   const onChange = (filename: string | null): void => {
-    if (filename === null) return trigger(null);
+    if (filename === null) {
+      trigger(null);
+      return;
+    }
     const name = filename;
     // ノイズフィルタ: dot ファイル、.swp、~ 末尾、node_modules、.git
-    if (name.startsWith(".") || name.startsWith("node_modules/") || name.startsWith(".git/")) return;
+    if (name.startsWith(".") || name.startsWith("node_modules/") || name.startsWith(".git/"))
+      return;
     if (name.endsWith("~") || name.endsWith(".swp") || name.endsWith(".swx")) return;
     // 自分自身 (docs/generated/html) の変更は無視 (rebuild が起こした書き込みでループしないように)
     if (name.startsWith("docs/generated/")) return;

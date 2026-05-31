@@ -5,17 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ApexTrigger: OrderTrigger — yohakuforce</title>
   <link rel="stylesheet" href="../../assets/styles.css" />
+  <link rel="stylesheet" href="../../assets/home.css" />
+  <link rel="stylesheet" href="../../assets/cmdk.css" />
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
+  <script src="../../assets/method-flowchart.js" defer></script>
+  <script src="../../assets/cmdk.js" defer></script>
 </head>
-<body>
+<body data-href-prefix="../../">
+  <header class="global-header">
+    <div class="brand">
+      <a href="../../index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+        <span class="brand-dot">y</span>
+        <span class="brand-name">yohakuforce</span>
+        <span class="brand-sub">Knowledge Hub</span>
+      </a>
+    </div>
+  </header>
   <header class="component-header">
     <nav class="breadcrumb">
       <a href="../../index.html">Home</a>
       <span class="sep">/</span>
-      <span>ApexTrigger</span>
+      <a href="./index.html">ApexTrigger</a>
       <span class="sep">/</span>
       <span class="current">OrderTrigger</span>
     </nav>
-    <h1>ApexTrigger: OrderTrigger</h1>
+    <h1>
+      <span class="type-pill t-trigger">trigger</span>
+      OrderTrigger
+    </h1>
   </header>
   <main class="component-main">
     <aside class="toc">
@@ -79,19 +97,31 @@
       <section id="internal-flow" class="yohaku-section yohaku-section--internal-flow">
         <h2>内部処理フロー</h2>
         
-        <p class="muted">トリガ内に制御フローは検出されませんでした。詳細描画は Phase 3 で対応。</p>
+        <p class="muted">制御フロー情報がありません (トリガ本体がハンドラへの委譲のみ等)。</p>
         
       </section>
       <section id="test-coverage" class="yohaku-section yohaku-section--test-coverage">
         <h2>テスト被覆</h2>
         
-        <p class="warning">⚠ 対応するテストクラスが見つかりません。</p>
+        <p class="warning">対応するテストクラスが見つかりません。</p>
         
       </section>
       <section id="change-history" class="yohaku-section yohaku-section--change-history">
         <h2>変更履歴</h2>
         
-        <p class="muted">git 連携は Phase 4 で追加予定です。</p>
+        
+    <p class="muted">直近 1 件 (<code>force-app/main/default/triggers/OrderTrigger.trigger</code>)</p>
+    <table class="data-table">
+      <thead><tr><th>SHA</th><th>日時</th><th>Author</th><th>Subject</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>ce4a3c4</code></td>
+          <td>2026-05-10</td>
+          <td>Demo Enviroment</td>
+          <td>chore: initial publish at v0.2.0 with phase scope discipline</td>
+        </tr>
+      </tbody>
+    </table>
         
       </section>
       <section id="impact-hint" class="yohaku-section yohaku-section--impact-hint">
@@ -106,9 +136,10 @@
         <h2>既知の懸念</h2>
         <!-- yohaku:block kind="ai_managed" id="concerns" start -->
         
-    <ul class="concerns">
+        <ul class="concerns">
       <li class="severity-MEDIUM"><span class="severity-badge">MEDIUM</span> <strong>トリガー本体にクラス委譲が見られない</strong> — ロジックを Apex クラス (Handler / Service) に切り出すと保守性が向上。</li>
     </ul>
+        
         <!-- yohaku:block kind="ai_managed" id="concerns" end -->
       </section>
       <section id="related-domains" class="yohaku-section yohaku-section--related-domains">

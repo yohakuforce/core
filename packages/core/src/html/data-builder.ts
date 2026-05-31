@@ -28,9 +28,7 @@ export interface StatsPayload {
 export function buildStats(graph: KnowledgeGraph): StatsPayload {
   const apexSizes = graph.apexClasses.map((c) => c.linesOfCode ?? 0);
   const triggerSizes = graph.apexTriggers.map((t) => t.body?.methods.length ?? 0);
-  const lwcSizes = graph.lwcs.map(
-    (l) => l.publicProperties.length + l.customEvents.length,
-  );
+  const lwcSizes = graph.lwcs.map((l) => l.publicProperties.length + l.customEvents.length);
   const objectSizes = graph.objects.map(
     (o) => graph.fields.filter((f) => f.object === o.fullyQualifiedName).length,
   );
@@ -173,10 +171,7 @@ function dedupeEdges(edges: readonly ArchEdge[]): ArchEdge[] {
   return out;
 }
 
-function topNObjectsByConnectivity(
-  graph: KnowledgeGraph,
-  n: number,
-): KnowledgeGraph["objects"] {
+function topNObjectsByConnectivity(graph: KnowledgeGraph, n: number): KnowledgeGraph["objects"] {
   const score = new Map<string, number>();
   for (const cls of graph.apexClasses) {
     for (const q of cls.body?.soqlQueries ?? []) {
@@ -197,18 +192,11 @@ function topNObjectsByConnectivity(
     }
   }
   return [...graph.objects]
-    .sort(
-      (a, b) =>
-        (score.get(b.fullyQualifiedName) ?? 0) -
-        (score.get(a.fullyQualifiedName) ?? 0),
-    )
+    .sort((a, b) => (score.get(b.fullyQualifiedName) ?? 0) - (score.get(a.fullyQualifiedName) ?? 0))
     .slice(0, n);
 }
 
-function topNApexByReferences(
-  graph: KnowledgeGraph,
-  n: number,
-): KnowledgeGraph["apexClasses"] {
+function topNApexByReferences(graph: KnowledgeGraph, n: number): KnowledgeGraph["apexClasses"] {
   const score = new Map<string, number>();
   for (const cls of graph.apexClasses) {
     score.set(
@@ -220,11 +208,7 @@ function topNApexByReferences(
   }
   return [...graph.apexClasses]
     .filter((c) => !c.isTest)
-    .sort(
-      (a, b) =>
-        (score.get(b.fullyQualifiedName) ?? 0) -
-        (score.get(a.fullyQualifiedName) ?? 0),
-    )
+    .sort((a, b) => (score.get(b.fullyQualifiedName) ?? 0) - (score.get(a.fullyQualifiedName) ?? 0))
     .slice(0, n);
 }
 
@@ -319,7 +303,11 @@ function entityKindToType(kind: string): string {
 // ----------------------------------------------------------------------------
 
 export interface HotspotsPayload {
-  readonly items: readonly { readonly type: string; readonly name: string; readonly reason: string }[];
+  readonly items: readonly {
+    readonly type: string;
+    readonly name: string;
+    readonly reason: string;
+  }[];
   readonly note: string;
 }
 

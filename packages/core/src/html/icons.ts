@@ -22,7 +22,7 @@ type IconName =
   | "tag";
 
 const SVG_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">`;
-const SVG_CLOSE = `</svg>`;
+const SVG_CLOSE = "</svg>";
 
 const ICON_BODIES: Record<IconName, string> = {
   search: `<circle cx="10.5" cy="10.5" r="6"/><path d="m20 20-5.4-5.4"/>`,

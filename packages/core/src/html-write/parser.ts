@@ -9,13 +9,10 @@
 // は触らない。同一ファイル内に同 id のブロックが複数あればエラー (仕様逸脱)。
 // ----------------------------------------------------------------------------
 
-const MARKER_START_PATTERN =
-  /<!--\s*yohaku:block\s+kind="([^"]+)"\s+id="([^"]+)"\s+start\s*-->/g;
+const MARKER_START_PATTERN = /<!--\s*yohaku:block\s+kind="([^"]+)"\s+id="([^"]+)"\s+start\s*-->/g;
 const MARKER_END_PATTERN_FN = (id: string): RegExp =>
   // 同じ id の end マーカーを matching する。
-  new RegExp(
-    `<!--\\s*yohaku:block\\s+kind="[^"]+"\\s+id="${escapeRegex(id)}"\\s+end\\s*-->`,
-  );
+  new RegExp(`<!--\\s*yohaku:block\\s+kind="[^"]+"\\s+id="${escapeRegex(id)}"\\s+end\\s*-->`);
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

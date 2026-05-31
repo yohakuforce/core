@@ -23,10 +23,7 @@ export interface PageRenderOptions {
   readonly searchIndexJson?: string;
 }
 
-export function renderComponentPage(
-  vm: ComponentViewModel,
-  options: PageRenderOptions,
-): string {
+export function renderComponentPage(vm: ComponentViewModel, options: PageRenderOptions): string {
   const title = `${typeLabel(vm.type)}: ${vm.name}`;
   const typeIndexHref = "./index.html"; // 同タイプ index ページは同ディレクトリ内
   return `<!doctype html>
@@ -71,10 +68,7 @@ export function renderComponentPage(
       <h2>セクション</h2>
       <ol>
         ${vm.sections
-          .map(
-            (s) =>
-              `<li><a href="#${escapeAttr(s.id)}">${escapeHtml(s.title)}</a></li>`,
-          )
+          .map((s) => `<li><a href="#${escapeAttr(s.id)}">${escapeHtml(s.title)}</a></li>`)
           .join("\n        ")}
       </ol>
     </aside>

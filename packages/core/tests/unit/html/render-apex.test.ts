@@ -9,11 +9,7 @@ import {
   resolveHtmlOutDir,
 } from "../../../src/html/index.js";
 import { requiredSectionsFor } from "../../../src/html/sections.js";
-import type {
-  ApexClass,
-  ApexMethodInfo,
-  KnowledgeGraph,
-} from "../../../src/types/graph.js";
+import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../../src/types/graph.js";
 
 const META: KnowledgeGraph["meta"] = {
   yohakuVersion: "test",
@@ -53,10 +49,7 @@ function graphWith(apexClasses: ApexClass[]): KnowledgeGraph {
   return { ...EMPTY_GRAPH_BASE, apexClasses };
 }
 
-function method(
-  name: string,
-  visibility: ApexMethodInfo["visibility"] = "public",
-): ApexMethodInfo {
+function method(name: string, visibility: ApexMethodInfo["visibility"] = "public"): ApexMethodInfo {
   return {
     name,
     visibility,
@@ -77,9 +70,7 @@ function makeClass(overrides: Partial<ApexClass> = {}): ApexClass {
     body: {
       methods: [method("save"), method("validate", "private")],
       soqlQueries: [{ raw: "SELECT Id FROM Account", primaryObject: "Account" }],
-      dmlOperations: [
-        { kind: "insert", target: "Account", viaDatabaseClass: false },
-      ],
+      dmlOperations: [{ kind: "insert", target: "Account", viaDatabaseClass: false }],
       classReferences: [],
       classAnnotations: [],
       hasTryCatch: false,
@@ -166,10 +157,7 @@ describe("renderHtmlAll (Phase 1: Apex 出力)", () => {
     const cls = makeClass();
     const htmlOut = resolveHtmlOutDir(outRoot);
     renderHtmlAll(graphWith([cls]), htmlOut);
-    const html = readFileSync(
-      join(htmlOut, "component", "apex", "AccountService.html"),
-      "utf8",
-    );
+    const html = readFileSync(join(htmlOut, "component", "apex", "AccountService.html"), "utf8");
     expect(html).toContain("breadcrumb");
     expect(html).toContain('id="one-line-summary"');
     expect(html).toContain('id="business-meaning"');
@@ -180,16 +168,9 @@ describe("renderHtmlAll (Phase 1: Apex 出力)", () => {
     const cls = makeClass();
     const htmlOut = resolveHtmlOutDir(outRoot);
     renderHtmlAll(graphWith([cls]), htmlOut);
-    const html = readFileSync(
-      join(htmlOut, "component", "apex", "AccountService.html"),
-      "utf8",
-    );
-    expect(html).toContain(
-      'yohaku:block kind="ai_managed" id="business-meaning" start',
-    );
-    expect(html).toContain(
-      'yohaku:block kind="ai_managed" id="business-meaning" end',
-    );
+    const html = readFileSync(join(htmlOut, "component", "apex", "AccountService.html"), "utf8");
+    expect(html).toContain('yohaku:block kind="ai_managed" id="business-meaning" start');
+    expect(html).toContain('yohaku:block kind="ai_managed" id="business-meaning" end');
   });
 
   it("ホームページに Apex 一覧へのリンクが出る", () => {
@@ -209,9 +190,7 @@ describe("renderHtmlAll (Phase 1: Apex 出力)", () => {
       typesFilter: ["trigger"],
     });
     expect(result.skipped).toContain("apex (filtered)");
-    expect(existsSync(join(htmlOut, "component", "apex", "AccountService.html"))).toBe(
-      false,
-    );
+    expect(existsSync(join(htmlOut, "component", "apex", "AccountService.html"))).toBe(false);
   });
 
   it("ファイル名はサニタイズされる (危険文字は _ に)", () => {
@@ -234,9 +213,7 @@ describe("--strict mode", () => {
   it("Apex は全 required を満たすので strict でも throw しない", () => {
     const cls = makeClass();
     const htmlOut = resolveHtmlOutDir(outRoot);
-    expect(() =>
-      renderHtmlAll(graphWith([cls]), htmlOut, { strict: true }),
-    ).not.toThrow();
+    expect(() => renderHtmlAll(graphWith([cls]), htmlOut, { strict: true })).not.toThrow();
   });
 
   it("HtmlAuditFailedError は failures を保持する (構造テスト)", () => {

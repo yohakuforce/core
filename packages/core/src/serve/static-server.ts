@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------
 
 import { createReadStream, readFileSync, statSync } from "node:fs";
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
 import type { SseHub } from "./watch.js";
 import { WATCH_CLIENT_SCRIPT } from "./watch.js";
@@ -63,7 +63,10 @@ function mimeOf(path: string): string {
  * パス解決: rootDir 外へ出ようとする要求は 403。
  * dotfile は 404 (列挙されない・配信されない)。
  */
-function resolveSafePath(rootDir: string, urlPath: string): { ok: true; abs: string } | { ok: false; status: number } {
+function resolveSafePath(
+  rootDir: string,
+  urlPath: string,
+): { ok: true; abs: string } | { ok: false; status: number } {
   let decoded: string;
   try {
     decoded = decodeURIComponent(urlPath);
@@ -227,7 +230,7 @@ function injectWatchClient(html: string): string {
   if (html.includes(tag)) return html;
   const closeBody = html.lastIndexOf("</body>");
   if (closeBody < 0) return html + tag;
-  return html.slice(0, closeBody) + tag + "\n" + html.slice(closeBody);
+  return `${html.slice(0, closeBody) + tag}\n${html.slice(closeBody)}`;
 }
 
 function readFileSyncUtf8(path: string): string {

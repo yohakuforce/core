@@ -1,0 +1,18 @@
+yohakuforce
+Copyright 2026 yohakuforce contributors
+
+This product includes software developed by yohakuforce contributors
+under the Apache License, Version 2.0.
+
+---
+
+This product is designed to integrate with the following Salesforce
+ecosystem tools, all of which retain their respective licenses:
+
+- @salesforce/cli — BSD-3-Clause, Salesforce, Inc.
+- @salesforce/source-deploy-retrieve — BSD-3-Clause, Salesforce, Inc.
+- Salesforce Code Analyzer — BSD-3-Clause, Salesforce, Inc.
+- Salesforce DX MCP Server — Apache-2.0, Salesforce, Inc. (optional adapter)
+
+This product does NOT redistribute the above tools. Users install them
+separately via npm / sf plugins.

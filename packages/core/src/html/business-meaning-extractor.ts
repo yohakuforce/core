@@ -11,18 +11,11 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { ComponentType } from "./sections.js";
 
-const COMPONENT_TYPES_LIST: readonly ComponentType[] = [
-  "apex",
-  "trigger",
-  "lwc",
-  "object",
-  "flow",
-];
+const COMPONENT_TYPES_LIST: readonly ComponentType[] = ["apex", "trigger", "lwc", "object", "flow"];
 
 const MARKER_START =
   /<!--\s*yohaku:block\s+kind="ai_managed"\s+id="business-meaning"\s+start\s*-->/;
-const MARKER_END =
-  /<!--\s*yohaku:block\s+kind="ai_managed"\s+id="business-meaning"\s+end\s*-->/;
+const MARKER_END = /<!--\s*yohaku:block\s+kind="ai_managed"\s+id="business-meaning"\s+end\s*-->/;
 const PLACEHOLDER_HINT = "（このセクションは LLM で生成されます）";
 
 /**

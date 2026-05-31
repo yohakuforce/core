@@ -53,20 +53,17 @@ function renderSummary(obj: SObject, fields: readonly Field[]): string {
 function dependenciesSection(obj: SObject, graph: KnowledgeGraph): SectionViewModel {
   const name = obj.fullyQualifiedName;
   const apexUsers = graph.apexClasses
-    .filter((c) =>
-      (c.body?.soqlQueries ?? []).some((q) => q.primaryObject === name) ||
-      (c.body?.dmlOperations ?? []).some((d) => d.target === name),
+    .filter(
+      (c) =>
+        (c.body?.soqlQueries ?? []).some((q) => q.primaryObject === name) ||
+        (c.body?.dmlOperations ?? []).some((d) => d.target === name),
     )
     .map((c) => `Apex: ${c.fullyQualifiedName}`);
   const triggerUsers = graph.apexTriggers
     .filter((t) => t.object === name)
     .map((t) => `Trigger: ${t.fullyQualifiedName}`);
   const flowUsers = graph.flows
-    .filter(
-      (f) =>
-        f.triggeringObject === name ||
-        (f.body?.recordObjects ?? []).includes(name),
-    )
+    .filter((f) => f.triggeringObject === name || (f.body?.recordObjects ?? []).includes(name))
     .map((f) => `Flow: ${f.fullyQualifiedName}`);
   const users = unique([...apexUsers, ...triggerUsers, ...flowUsers]);
 
@@ -79,10 +76,7 @@ function dependenciesSection(obj: SObject, graph: KnowledgeGraph): SectionViewMo
   };
 }
 
-function publicInterfaceSection(
-  obj: SObject,
-  fields: readonly Field[],
-): SectionViewModel {
+function publicInterfaceSection(obj: SObject, fields: readonly Field[]): SectionViewModel {
   if (fields.length === 0) {
     return {
       id: "public-interface",
@@ -105,9 +99,10 @@ function publicInterfaceSection(
 }
 
 function fieldRow(f: Field): string {
-  const refs = f.referenceTo !== undefined && f.referenceTo.length > 0
-    ? f.referenceTo.map((r) => `<code>${escapeHtml(r)}</code>`).join(", ")
-    : "—";
+  const refs =
+    f.referenceTo !== undefined && f.referenceTo.length > 0
+      ? f.referenceTo.map((r) => `<code>${escapeHtml(r)}</code>`).join(", ")
+      : "—";
   return `<tr>
     <td><code>${escapeHtml(f.fullyQualifiedName)}</code></td>
     <td>${escapeHtml(f.label ?? "—")}</td>

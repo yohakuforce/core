@@ -13,11 +13,7 @@ const TYPE_LABEL: Record<ComponentType, string> = {
   flow: "Flow",
 };
 
-export function buildPrompt(
-  type: ComponentType,
-  name: string,
-  blockId: ExplainBlockKind,
-): string {
+export function buildPrompt(type: ComponentType, name: string, blockId: ExplainBlockKind): string {
   if (blockId === "business-meaning") {
     return buildBusinessMeaningPrompt(type, name);
   }

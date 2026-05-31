@@ -116,7 +116,8 @@ describe("buildArchitecture", () => {
     expect(arch.nodes.some((n) => n.id === "apex:AccountService")).toBe(true);
     expect(
       arch.edges.some(
-        (e) => e.from === "apex:AccountService" && e.to === "object:Account" && e.kind === "queries",
+        (e) =>
+          e.from === "apex:AccountService" && e.to === "object:Account" && e.kind === "queries",
       ),
     ).toBe(true);
   });
@@ -185,9 +186,7 @@ describe("buildDomains", () => {
     const result = buildDomains(graph);
     expect(result.domains).toHaveLength(1);
     expect(result.domains[0]?.label).toBe("sales");
-    expect(result.domains[0]?.members).toEqual([
-      { type: "apex", name: "AccountService" },
-    ]);
+    expect(result.domains[0]?.members).toEqual([{ type: "apex", name: "AccountService" }]);
   });
 
   it("ドメイン未割当は unclassifiedCount に出る", () => {

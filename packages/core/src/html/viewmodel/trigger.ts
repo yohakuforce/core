@@ -2,10 +2,10 @@
 // Trigger ComponentViewModel builder
 // ----------------------------------------------------------------------------
 
+import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForTrigger } from "../../render/concerns.js";
 import { summaryForApexTrigger } from "../../render/summary.js";
 import type { ApexTrigger, KnowledgeGraph } from "../../types/graph.js";
-import type { CoverageEntry } from "../../coverage/types.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
@@ -67,9 +67,7 @@ function dependenciesSection(trg: ApexTrigger): SectionViewModel {
 function dataModelTouchpointsSection(trg: ApexTrigger): SectionViewModel {
   const body = trg.body;
   const soqlObjects = unique(
-    (body?.soqlQueries ?? [])
-      .map((q) => q.primaryObject)
-      .filter((o): o is string => o !== null),
+    (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
   );
   const dmlTargets = unique((body?.dmlOperations ?? []).map((d) => d.target));
   return {
@@ -115,9 +113,7 @@ function testCoverageSection(
   const referencingTests = graph.apexClasses
     .filter((c) => c.isTest)
     .filter((c) =>
-      (c.body?.classReferences ?? []).some(
-        (r) => r.className === trg.fullyQualifiedName,
-      ),
+      (c.body?.classReferences ?? []).some((r) => r.className === trg.fullyQualifiedName),
     )
     .map((c) => c.fullyQualifiedName);
   const coverageBlock = coverage !== undefined ? renderCoverageBlock(coverage) : "";

@@ -2,12 +2,12 @@
 // domains.yaml の load / save
 // ----------------------------------------------------------------------------
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import YAML from "yaml";
 import type { ComponentType } from "../html/sections.js";
 import { COMPONENT_TYPES } from "../html/sections.js";
-import type { DomainsConfig, DomainDef, DomainMemberRef } from "./types.js";
+import type { DomainDef, DomainMemberRef, DomainsConfig } from "./types.js";
 
 export class DomainsYamlError extends Error {
   constructor(message: string) {
@@ -23,9 +23,7 @@ export function loadDomainsYaml(path: string): DomainsConfig | null {
   try {
     parsed = YAML.parse(raw);
   } catch (err) {
-    throw new DomainsYamlError(
-      `${path}: YAML parse error: ${(err as Error).message}`,
-    );
+    throw new DomainsYamlError(`${path}: YAML parse error: ${(err as Error).message}`);
   }
   return validateConfig(parsed, path);
 }
@@ -50,9 +48,7 @@ function validateConfig(parsed: unknown, path: string): DomainsConfig {
   }
   const domains: DomainDef[] = rawDomains.map((d, i) => validateDomain(d, `${path}.domains[${i}]`));
   const notes = typeof obj.notes === "string" ? obj.notes : undefined;
-  return notes === undefined
-    ? { version: 1, domains }
-    : { version: 1, domains, notes };
+  return notes === undefined ? { version: 1, domains } : { version: 1, domains, notes };
 }
 
 function validateDomain(d: unknown, where: string): DomainDef {
@@ -82,9 +78,7 @@ function validateMember(m: unknown, where: string): DomainMemberRef {
   }
   const obj = m as Record<string, unknown>;
   if (typeof obj.type !== "string" || !(COMPONENT_TYPES as readonly string[]).includes(obj.type)) {
-    throw new DomainsYamlError(
-      `${where}.type must be one of: ${COMPONENT_TYPES.join(", ")}`,
-    );
+    throw new DomainsYamlError(`${where}.type must be one of: ${COMPONENT_TYPES.join(", ")}`);
   }
   if (typeof obj.name !== "string" || obj.name.trim() === "") {
     throw new DomainsYamlError(`${where}.name must be a non-empty string`);

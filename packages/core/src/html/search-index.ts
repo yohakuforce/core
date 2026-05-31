@@ -49,11 +49,7 @@ export function buildSearchIndex(
       nameLc: name.toLowerCase(),
       href,
     };
-    entries.push(
-      domain === undefined
-        ? base
-        : { ...base, domain, domainLc: domain.toLowerCase() },
-    );
+    entries.push(domain === undefined ? base : { ...base, domain, domainLc: domain.toLowerCase() });
   };
   for (const c of graph.apexClasses) push("apex", c.fullyQualifiedName);
   for (const t of graph.apexTriggers) push("trigger", t.fullyQualifiedName);

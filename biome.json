@@ -11,7 +11,8 @@
       "**/*.eta",
       "tests/golden/**/expected/**",
       "tests/golden/**/input/**",
-      "packages/**/tests/golden/**"
+      "packages/**/tests/golden/**",
+      "examples/**/docs/generated/**"
     ]
   },
   "formatter": {

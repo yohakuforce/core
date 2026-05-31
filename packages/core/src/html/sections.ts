@@ -6,13 +6,7 @@
 // in-memory ViewModel に揃わない場合に fail させる (Phase 1+ で enforce)。
 // ----------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = [
-  "apex",
-  "trigger",
-  "lwc",
-  "object",
-  "flow",
-] as const;
+export const COMPONENT_TYPES = ["apex", "trigger", "lwc", "object", "flow"] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 export const SECTION_IDS = [

@@ -6,8 +6,8 @@
 // 最小限に絞る。
 // ----------------------------------------------------------------------------
 
-import { concernsForApex, concernsForFlow, concernsForTrigger } from "../render/concerns.js";
 import type { ComponentType } from "../html/sections.js";
+import { concernsForApex, concernsForFlow, concernsForTrigger } from "../render/concerns.js";
 import type {
   ApexClass,
   ApexTrigger,
@@ -17,7 +17,10 @@ import type {
   SObject,
 } from "../types/graph.js";
 
-export function buildContextForApex(cls: ApexClass, graph: KnowledgeGraph): Record<string, unknown> {
+export function buildContextForApex(
+  cls: ApexClass,
+  graph: KnowledgeGraph,
+): Record<string, unknown> {
   const body = cls.body;
   return {
     sourcePath: cls.sourcePath,
@@ -35,12 +38,16 @@ export function buildContextForApex(cls: ApexClass, graph: KnowledgeGraph): Reco
       parameters: m.parameters,
       annotations: m.annotations,
     })),
-    soqlObjects: unique((body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null)),
+    soqlObjects: unique(
+      (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
+    ),
     dmlTargets: unique((body?.dmlOperations ?? []).map((d) => `${d.kind} ${d.target}`)),
     callees: unique((body?.classReferences ?? []).map((r) => r.className)),
     callers: graph.apexClasses
       .filter((c) => c.fullyQualifiedName !== cls.fullyQualifiedName)
-      .filter((c) => (c.body?.classReferences ?? []).some((r) => r.className === cls.fullyQualifiedName))
+      .filter((c) =>
+        (c.body?.classReferences ?? []).some((r) => r.className === cls.fullyQualifiedName),
+      )
       .map((c) => c.fullyQualifiedName),
     autoDetectedConcerns: concernsForApex(cls, graph).map((c) => ({
       severity: c.severity,
@@ -50,7 +57,10 @@ export function buildContextForApex(cls: ApexClass, graph: KnowledgeGraph): Reco
   };
 }
 
-export function buildContextForTrigger(trg: ApexTrigger, graph: KnowledgeGraph): Record<string, unknown> {
+export function buildContextForTrigger(
+  trg: ApexTrigger,
+  graph: KnowledgeGraph,
+): Record<string, unknown> {
   return {
     sourcePath: trg.sourcePath,
     apiVersion: trg.apiVersion,
@@ -58,7 +68,9 @@ export function buildContextForTrigger(trg: ApexTrigger, graph: KnowledgeGraph):
     events: trg.events,
     handlers: unique((trg.body?.classReferences ?? []).map((r) => r.className)),
     soqlObjects: unique(
-      (trg.body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
+      (trg.body?.soqlQueries ?? [])
+        .map((q) => q.primaryObject)
+        .filter((o): o is string => o !== null),
     ),
     dmlTargets: unique((trg.body?.dmlOperations ?? []).map((d) => `${d.kind} ${d.target}`)),
     siblingsOnSameObject: graph.apexTriggers
@@ -89,7 +101,10 @@ export function buildContextForLwc(
   };
 }
 
-export function buildContextForObject(obj: SObject, graph: KnowledgeGraph): Record<string, unknown> {
+export function buildContextForObject(
+  obj: SObject,
+  graph: KnowledgeGraph,
+): Record<string, unknown> {
   const name = obj.fullyQualifiedName;
   const fields = graph.fields.filter((f) => f.object === name);
   const apexUsers = graph.apexClasses
@@ -99,11 +114,11 @@ export function buildContextForObject(obj: SObject, graph: KnowledgeGraph): Reco
         (c.body?.dmlOperations ?? []).some((d) => d.target === name),
     )
     .map((c) => c.fullyQualifiedName);
-  const triggers = graph.apexTriggers.filter((t) => t.object === name).map((t) => t.fullyQualifiedName);
+  const triggers = graph.apexTriggers
+    .filter((t) => t.object === name)
+    .map((t) => t.fullyQualifiedName);
   const flows = graph.flows
-    .filter(
-      (f) => f.triggeringObject === name || (f.body?.recordObjects ?? []).includes(name),
-    )
+    .filter((f) => f.triggeringObject === name || (f.body?.recordObjects ?? []).includes(name))
     .map((f) => f.fullyQualifiedName);
   return {
     sourcePath: obj.sourcePath,

@@ -37,9 +37,7 @@ export class OrgRetrieveError extends Error {
   readonly exitCode: number;
   readonly stderr: string;
   constructor(exitCode: number, stderr: string) {
-    super(
-      `sf project retrieve start failed (exit=${exitCode}): ${stderr.trim().slice(0, 500)}`,
-    );
+    super(`sf project retrieve start failed (exit=${exitCode}): ${stderr.trim().slice(0, 500)}`);
     this.exitCode = exitCode;
     this.stderr = stderr;
     this.name = "OrgRetrieveError";
@@ -53,9 +51,7 @@ export class OrgRetrieveError extends Error {
  * 2. sf project retrieve start --manifest <path> --target-metadata-dir <targetDir>
  * 3. 成功時は targetDir を返す。LocalSourceAdapter に root として渡せる
  */
-export async function retrieveOrgSources(
-  options: OrgRetrieveOptions,
-): Promise<OrgRetrieveResult> {
+export async function retrieveOrgSources(options: OrgRetrieveOptions): Promise<OrgRetrieveResult> {
   const targetDir = options.targetDir ?? mkdtempSync(join(tmpdir(), "yohaku-org-"));
   if (!existsSync(targetDir)) mkdirSync(targetDir, { recursive: true });
 
@@ -92,9 +88,7 @@ export async function retrieveOrgSources(
       stderr += chunk.toString();
     });
     child.on("error", (err) => {
-      rejectFn(
-        new OrgRetrieveError(-1, `failed to spawn ${sfBin}: ${(err as Error).message}`),
-      );
+      rejectFn(new OrgRetrieveError(-1, `failed to spawn ${sfBin}: ${(err as Error).message}`));
     });
     child.on("close", (code) => {
       const exitCode = code ?? 0;

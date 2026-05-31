@@ -94,9 +94,9 @@ my-trial/
 ```
 
 プロファイル選択:
-- `minimal`: コア 3 コマンドのみ (Phase 1 構造化)
-- `standard`: + 差分分類 + persona 別 onboarding (Phase 3 以降)
-- `full`: + リリース準備 + DX MCP アダプタ (Phase 4-6 で順次)
+- `minimal`: コア 3 コマンド (`/onboard` `/explain` `/impact`) のみ
+- `standard`: + 差分分類 + persona 別 onboarding + **HTML 設計書パイプライン** (`/yohaku-html-build` `/yohaku-serve` `/yohaku-domains` `/yohaku-explain-prompts` `/yohaku-html-write`)
+- `full`: + リリース準備 (`/release-prep` `/manual-steps`) + リリースレビュー HTML / カバレッジ取込 (`/yohaku-diff-html` `/yohaku-coverage-import`)
 
 ---
 
@@ -158,7 +158,40 @@ yohaku render objects
 
 ---
 
-## 7. Claude Code から使う
+## 8. HTML 設計書をプレビュー (v0.5.0)
+
+Markdown は AI 向け、HTML は人間のレビュー向け。同じグラフから二系統で生成する。
+
+```bash
+# Markdown と HTML を同時生成
+yohaku render --format md,html
+
+# ローカルサーバで開く (http://localhost:4000)。--watch で保存→自動 reload
+yohaku serve --port 4000 --watch
+```
+
+出力:
+- `docs/generated/html/index.html` — ホーム (タブ: システム全体像 / 業務フロー俯瞰)
+- `docs/generated/html/component/<type>/<Name>.html` — Apex / Trigger / LWC / Object / Flow の個別設計書
+
+主な機能:
+- **Cmd+K / Ctrl+K** でグローバル検索
+- **業務フロー俯瞰タブ** — `yohaku domains init` で定義した業務ドメイン単位の集約
+- Mermaid が描けない環境でも HTML/CSS フォールバックで図が出る
+
+LLM にレビュー観点や業務説明ブロックを充填させたい場合:
+
+```bash
+yohaku explain-prompts --output prompts.json   # 充填用 prompt+context を一括生成
+# → LLM に prompts.json を渡し fill.json を得る
+yohaku html-write --input fill.json            # AI-managed ブロックへ安全に書き戻し
+```
+
+`render` を再実行しても AI 充填ブロックは保持される (preservation)。
+
+---
+
+## 9. Claude Code から使う
 
 `my-trial/` を Claude Code で開き、persona に応じて使い分け:
 
@@ -185,6 +218,13 @@ yohaku render objects
 ```
 /classify-diff --from main --to HEAD     # 7 分類で意味づけ
 /change-summary                            # PR レビュー用 Markdown 生成
+
+# HTML 設計書パイプライン (v0.5.0)
+/yohaku-html-build                          # md + HTML を生成
+/yohaku-serve                               # ローカルプレビュー (--watch 対応)
+/yohaku-domains                             # 業務ドメイン定義 init/sync/lint
+/yohaku-explain-prompts                     # LLM 充填用 prompt+context 生成
+/yohaku-html-write                          # AI-managed ブロックへ書き戻し
 ```
 
 ### full のみ
@@ -192,11 +232,13 @@ yohaku render objects
 ```
 /release-prep --from v1.0.0 --to v1.1.0   # 6 セクションのリリース doc
 /manual-steps                               # 手動作業レジストリ参照
+/yohaku-diff-html                           # リリースレビュー用の差分 HTML
+/yohaku-coverage-import                     # sf apex run test の JSON 取込
 ```
 
 ---
 
-## 8. オンボーディング進捗 / FAQ 蓄積 (Phase 5)
+## 10. オンボーディング進捗 / FAQ 蓄積 (Phase 5)
 
 ```bash
 # 進捗記録
@@ -216,7 +258,7 @@ yohaku onboard faq extract --input dialogs.md --topic general
 
 ---
 
-## 9. メトリクスの確認
+## 11. メトリクスの確認
 
 ```bash
 yohaku metrics show --period month
@@ -225,7 +267,7 @@ yohaku metrics record --model claude-sonnet-4-6 --command /onboard --in 1500 --o
 
 ---
 
-## 10. 差分意味づけ (Phase 3)
+## 12. 差分意味づけ (Phase 3)
 
 ```bash
 yohaku diff --from main --to HEAD --json

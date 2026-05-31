@@ -151,9 +151,7 @@ function apexSummary(c: import("../types/graph.js").ApexClass): string {
   return `${methods} methods${soql > 0 ? ` / SOQL ${soql}` : ""}${dml > 0 ? ` / DML ${dml}` : ""}${c.isTest ? " / Test" : ""}`;
 }
 
-function buildDomainMap(
-  config: DomainsConfig | null | undefined,
-): Map<string, string> {
+function buildDomainMap(config: DomainsConfig | null | undefined): Map<string, string> {
   const m = new Map<string, string>();
   if (config === null || config === undefined) return m;
   for (const d of config.domains) {

@@ -50,9 +50,7 @@ describe("applyBlockUpdates", () => {
     });
     expect(result.updatedIds).toEqual(["business-meaning"]);
     expect(result.missingIds).toEqual([]);
-    expect(result.updatedHtml).toContain(
-      "<p>このクラスは口座残高を再計算する。</p>",
-    );
+    expect(result.updatedHtml).toContain("<p>このクラスは口座残高を再計算する。</p>");
     expect(result.updatedHtml).toContain(
       'yohaku:block kind="ai_managed" id="business-meaning" start',
     );

@@ -7,14 +7,10 @@
 // パスで埋める前提。
 // ----------------------------------------------------------------------------
 
+import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForApex } from "../../render/concerns.js";
 import { summaryForApex } from "../../render/summary.js";
-import type {
-  ApexClass,
-  ApexMethodInfo,
-  KnowledgeGraph,
-} from "../../types/graph.js";
-import type { CoverageEntry } from "../../coverage/types.js";
+import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
@@ -102,9 +98,7 @@ function renderDependencies(cls: ApexClass, graph: KnowledgeGraph): string {
   const incoming = graph.apexClasses
     .filter((c) => c.fullyQualifiedName !== cls.fullyQualifiedName)
     .filter((c) =>
-      (c.body?.classReferences ?? []).some(
-        (r) => r.className === cls.fullyQualifiedName,
-      ),
+      (c.body?.classReferences ?? []).some((r) => r.className === cls.fullyQualifiedName),
     )
     .map((c) => c.fullyQualifiedName);
 
@@ -151,9 +145,7 @@ function methodRow(m: ApexMethodInfo): string {
 function renderDataModelTouchpoints(cls: ApexClass): string {
   const body = cls.body;
   const soqlObjects = unique(
-    (body?.soqlQueries ?? [])
-      .map((q) => q.primaryObject)
-      .filter((o): o is string => o !== null),
+    (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
   );
   const dmlTargets = unique((body?.dmlOperations ?? []).map((d) => d.target));
   return `
@@ -216,9 +208,7 @@ function renderTestCoverage(
   const referencingTests = graph.apexClasses
     .filter((c) => c.isTest && c.fullyQualifiedName !== testFqn)
     .filter((c) =>
-      (c.body?.classReferences ?? []).some(
-        (r) => r.className === cls.fullyQualifiedName,
-      ),
+      (c.body?.classReferences ?? []).some((r) => r.className === cls.fullyQualifiedName),
     );
   const all = [
     ...(conventionalTest !== undefined ? [conventionalTest.fullyQualifiedName] : []),
@@ -316,9 +306,7 @@ function unique<T>(arr: readonly T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-function uniqueClassNames(
-  refs: readonly { readonly className: string }[],
-): string[] {
+function uniqueClassNames(refs: readonly { readonly className: string }[]): string[] {
   return unique(refs.map((r) => r.className));
 }
 

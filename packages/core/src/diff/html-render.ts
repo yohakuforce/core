@@ -11,7 +11,7 @@ import { escapeAttr, escapeHtml, sanitizeFileName } from "../html/escape.js";
 import { icon } from "../html/icons.js";
 import type { ComponentType } from "../html/sections.js";
 import type { KnowledgeGraph } from "../types/graph.js";
-import type { ChangedFile, ChangeKind, DiffCategory, RawDiff } from "./types.js";
+import type { ChangeKind, ChangedFile, DiffCategory, RawDiff } from "./types.js";
 
 const METADATA_TO_INTERNAL: Record<string, ComponentType> = {
   ApexClass: "apex",
@@ -64,8 +64,7 @@ export function renderDiffHtml(diff: RawDiff, options?: DiffHtmlOptions): string
   const fileMap = options?.graph !== undefined ? buildExistsMap(options.graph) : null;
 
   const filesByCategory = groupBy(diff.files, (f) => f.category);
-  const sections = CATEGORY_ORDER
-    .filter((cat) => (filesByCategory.get(cat)?.length ?? 0) > 0)
+  const sections = CATEGORY_ORDER.filter((cat) => (filesByCategory.get(cat)?.length ?? 0) > 0)
     .map((cat) => renderCategorySection(cat, filesByCategory.get(cat) ?? [], fileMap))
     .join("\n      ");
 
@@ -173,22 +172,28 @@ function renderFileCard(f: ChangedFile, fileMap: Map<string, true> | null): stri
   const fqn = f.fullyQualifiedName ?? extractFqn(f.path) ?? f.path;
   const internalType = f.metadataType !== null ? METADATA_TO_INTERNAL[f.metadataType] : undefined;
   const link =
-    internalType !== undefined && f.fullyQualifiedName !== null && fileMap !== null && fileMap.has(`${internalType}:${f.fullyQualifiedName}`)
+    internalType !== undefined &&
+    f.fullyQualifiedName !== null &&
+    fileMap !== null &&
+    fileMap.has(`${internalType}:${f.fullyQualifiedName}`)
       ? `./component/${escapeAttr(internalType)}/${escapeAttr(sanitizeFileName(f.fullyQualifiedName))}.html`
       : null;
   const searchKey = `${fqn} ${f.path} ${f.metadataType ?? ""}`.toLowerCase();
-  const typePill = internalType !== undefined
-    ? `<span class="type-pill t-${escapeAttr(internalType)}">${escapeHtml(internalType)}</span>`
-    : f.metadataType !== null
-    ? `<span class="type-pill" style="background: var(--bg-alt); color: var(--muted);">${escapeHtml(f.metadataType)}</span>`
-    : "";
+  const typePill =
+    internalType !== undefined
+      ? `<span class="type-pill t-${escapeAttr(internalType)}">${escapeHtml(internalType)}</span>`
+      : f.metadataType !== null
+        ? `<span class="type-pill" style="background: var(--bg-alt); color: var(--muted);">${escapeHtml(f.metadataType)}</span>`
+        : "";
   return `<div class="diff-card diff-change-${escapeAttr(f.changeKind)}" data-search="${escapeAttr(searchKey)}">
             <div class="diff-card-row">
               <span class="diff-change-pill diff-change-${escapeAttr(f.changeKind)}">${escapeHtml(CHANGE_LABEL[f.changeKind])}</span>
               ${typePill}
-              ${link !== null
-                ? `<a class="diff-card-name" href="${escapeAttr(link)}">${escapeHtml(fqn)}</a>`
-                : `<span class="diff-card-name muted-link">${escapeHtml(fqn)}</span>`}
+              ${
+                link !== null
+                  ? `<a class="diff-card-name" href="${escapeAttr(link)}">${escapeHtml(fqn)}</a>`
+                  : `<span class="diff-card-name muted-link">${escapeHtml(fqn)}</span>`
+              }
             </div>
             <div class="diff-card-meta">
               <code class="diff-card-path">${escapeHtml(f.path)}</code>

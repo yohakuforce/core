@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "domainFlows": [],
+  "objectFlows": [
+    {
+      "id": "object:Customer__c",
+      "label": "Customer (Customer__c)",
+      "scope": "object",
+      "entryPoints": [],
+      "processing": [
+        {
+          "type": "apex",
+          "name": "CustomerService",
+          "role": "process",
+          "evidence": "SOQL 1"
+        }
+      ],
+      "affectedData": [
+        {
+          "type": "object",
+          "name": "Customer__c",
+          "role": "data",
+          "evidence": "対象オブジェクト"
+        }
+      ],
+      "downstream": []
+    },
+    {
+      "id": "object:Invoice__c",
+      "label": "Invoice (Invoice__c)",
+      "scope": "object",
+      "entryPoints": [],
+      "processing": [],
+      "affectedData": [
+        {
+          "type": "object",
+          "name": "Invoice__c",
+          "role": "data",
+          "evidence": "対象オブジェクト"
+        }
+      ],
+      "downstream": []
+    },
+    {
+      "id": "object:Order__c",
+      "label": "Order (Order__c)",
+      "scope": "object",
+      "entryPoints": [
+        {
+          "type": "trigger",
+          "name": "OrderTrigger",
+          "role": "entry",
+          "evidence": "beforeInsert / beforeUpdate"
+        }
+      ],
+      "processing": [
+        {
+          "type": "apex",
+          "name": "CustomerService",
+          "role": "process",
+          "evidence": "SOQL 1"
+        }
+      ],
+      "affectedData": [
+        {
+          "type": "object",
+          "name": "Order__c",
+          "role": "data",
+          "evidence": "対象オブジェクト"
+        }
+      ],
+      "downstream": [
+        {
+          "type": "flow",
+          "name": "Order_AfterUpdate",
+          "role": "downstream",
+          "evidence": "Order__c を参照"
+        }
+      ]
+    }
+  ]
+}

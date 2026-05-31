@@ -46,7 +46,14 @@ function apex(name: string, isTest = false): ApexClass {
     contentHash: "h",
     body: {
       methods: [
-        { name: "run", visibility: "public", isStatic: true, returnType: "void", parameters: "", annotations: [] },
+        {
+          name: "run",
+          visibility: "public",
+          isStatic: true,
+          returnType: "void",
+          parameters: "",
+          annotations: [],
+        },
       ],
       soqlQueries: [{ raw: "SELECT Id FROM Account", primaryObject: "Account" }],
       dmlOperations: [{ kind: "insert", target: "Account", viaDatabaseClass: false }],

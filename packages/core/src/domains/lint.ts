@@ -27,10 +27,7 @@ export interface LintReport {
   readonly hasErrors: boolean;
 }
 
-export function lintDomains(
-  config: DomainsConfig,
-  graph: KnowledgeGraph,
-): LintReport {
+export function lintDomains(config: DomainsConfig, graph: KnowledgeGraph): LintReport {
   const findings: LintFinding[] = [];
   const seenIds = new Set<string>();
   const memberOwners = new Map<string, string[]>();
@@ -115,10 +112,7 @@ function parseKey(key: string): { type: string; name: string } {
  * domains.yaml に存在しない graph メンバを "unclassified" ドメインに追記して
  * 同期させた DomainsConfig を返す。既存ドメインの並びは保つ。
  */
-export function syncDomains(
-  config: DomainsConfig,
-  graph: KnowledgeGraph,
-): DomainsConfig {
+export function syncDomains(config: DomainsConfig, graph: KnowledgeGraph): DomainsConfig {
   const graphMembers = collectGraphMembers(graph);
   const known = new Set<string>();
   for (const d of config.domains) {
@@ -140,9 +134,7 @@ export function syncDomains(
   const unclassified = {
     id: "unclassified",
     label: "Unclassified",
-    description:
-      existingUnclassified?.description ??
-      "Components not yet assigned to a domain.",
+    description: existingUnclassified?.description ?? "Components not yet assigned to a domain.",
     members: [...(existingUnclassified?.members ?? []), ...missing],
   };
   return {

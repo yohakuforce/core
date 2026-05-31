@@ -61,9 +61,7 @@ describe("renderHtmlAll (Phase 0 stub)", () => {
   it("sections-schema.json は 12 セクション + 5 コンポーネントタイプを含む", () => {
     const htmlOut = resolveHtmlOutDir(outRoot);
     renderHtmlAll(emptyGraph(), htmlOut);
-    const schema = JSON.parse(
-      readFileSync(join(htmlOut, "data", "sections-schema.json"), "utf8"),
-    );
+    const schema = JSON.parse(readFileSync(join(htmlOut, "data", "sections-schema.json"), "utf8"));
     expect(schema.version).toBe(1);
     expect(schema.componentTypes).toHaveLength(5);
     expect(schema.sections).toHaveLength(12);

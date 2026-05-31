@@ -86,7 +86,8 @@ function classifyApexEntry(cls: ApexClass): EntryClassification {
   }
   // クラス名末尾の Batch / Schedule ヒューリスティック (Phase 15 では弱い signal として採用)
   if (/Batch$/.test(cls.fullyQualifiedName)) return { isEntry: true, evidence: "Batchable 候補" };
-  if (/Schedul/i.test(cls.fullyQualifiedName)) return { isEntry: true, evidence: "Schedulable 候補" };
+  if (/Schedul/i.test(cls.fullyQualifiedName))
+    return { isEntry: true, evidence: "Schedulable 候補" };
   return { isEntry: false, evidence: "" };
 }
 
@@ -98,10 +99,13 @@ export function buildBusinessFlows(
   // 実在 SObject 名のセット (Apex 抽出器が DML target に変数名を拾うことがあるため
   // フロー側で実在チェックして除外する)
   const knownObjects = new Set(graph.objects.map((o) => o.fullyQualifiedName));
-  const domainFlows = domainsConfig === null || domainsConfig === undefined
-    ? []
-    : domainsConfig.domains.map((d) => buildDomainFlow(d, graph, meaningLookup, knownObjects));
-  const objectFlows = graph.objects.map((o) => buildObjectFlow(o, graph, meaningLookup, knownObjects));
+  const domainFlows =
+    domainsConfig === null || domainsConfig === undefined
+      ? []
+      : domainsConfig.domains.map((d) => buildDomainFlow(d, graph, meaningLookup, knownObjects));
+  const objectFlows = graph.objects.map((o) =>
+    buildObjectFlow(o, graph, meaningLookup, knownObjects),
+  );
   return { version: 1, domainFlows, objectFlows };
 }
 
@@ -141,9 +145,19 @@ function buildDomainFlow(
     if (cls === undefined) continue;
     const c = classifyApexEntry(cls);
     if (c.isEntry) {
-      entryPoints.push({ type: "apex", name: cls.fullyQualifiedName, role: "entry", evidence: c.evidence });
+      entryPoints.push({
+        type: "apex",
+        name: cls.fullyQualifiedName,
+        role: "entry",
+        evidence: c.evidence,
+      });
     } else if (!cls.isTest) {
-      processing.push({ type: "apex", name: cls.fullyQualifiedName, role: "process", evidence: methodSummary(cls) });
+      processing.push({
+        type: "apex",
+        name: cls.fullyQualifiedName,
+        role: "process",
+        evidence: methodSummary(cls),
+      });
     }
   }
   for (const lwcName of memberLwc) {
@@ -204,12 +218,14 @@ function buildDomainFlow(
       }
     }
   }
-  const downstream: FlowStep[] = Array.from(downstreamSet.entries()).map(([keyOrName, evidence]) => {
-    if (keyOrName.startsWith("flow:")) {
-      return { type: "flow", name: keyOrName.slice(5), role: "downstream", evidence };
-    }
-    return { type: "trigger", name: keyOrName, role: "downstream", evidence };
-  });
+  const downstream: FlowStep[] = Array.from(downstreamSet.entries()).map(
+    ([keyOrName, evidence]) => {
+      if (keyOrName.startsWith("flow:")) {
+        return { type: "flow", name: keyOrName.slice(5), role: "downstream", evidence };
+      }
+      return { type: "trigger", name: keyOrName, role: "downstream", evidence };
+    },
+  );
 
   // meaning は entry の最初の Apex/Trigger/LWC から拾う (ない場合は domain 名のみ)
   const meaning = pickMeaning(entryPoints.concat(processing), meaningLookup);

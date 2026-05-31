@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildBusinessFlows } from "../../../src/html/business-flow-builder.js";
 import type { DomainsConfig } from "../../../src/domains/types.js";
-import type {
-  ApexClass,
-  ApexTrigger,
-  KnowledgeGraph,
-  SObject,
-} from "../../../src/types/graph.js";
+import { buildBusinessFlows } from "../../../src/html/business-flow-builder.js";
+import type { ApexClass, ApexTrigger, KnowledgeGraph, SObject } from "../../../src/types/graph.js";
 
 const META: KnowledgeGraph["meta"] = {
   yohakuVersion: "test",
@@ -124,9 +119,11 @@ describe("buildBusinessFlows — domain scope", () => {
 
   it("@RestResource クラスは entry に分類", () => {
     const base = apex("InvoiceRest");
+    const body = base.body;
+    if (!body) throw new Error("apex() should always produce a body");
     const cls: ApexClass = {
       ...base,
-      body: { ...base.body!, classAnnotations: ["RestResource"] },
+      body: { ...body, classAnnotations: ["RestResource"] },
     };
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls] };
     const domains: DomainsConfig = {
@@ -144,9 +141,7 @@ describe("buildBusinessFlows — domain scope", () => {
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls] };
     const domains: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "Controller" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "Controller" }] }],
     };
     const out = buildBusinessFlows(graph, domains);
     expect(out.domainFlows[0]?.entryPoints[0]?.evidence).toContain("@AuraEnabled");
@@ -157,9 +152,7 @@ describe("buildBusinessFlows — domain scope", () => {
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls] };
     const domains: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "Helper" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "Helper" }] }],
     };
     const out = buildBusinessFlows(graph, domains);
     expect(out.domainFlows[0]?.processing).toHaveLength(1);
@@ -182,9 +175,7 @@ describe("buildBusinessFlows — domain scope", () => {
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls], objects: [obj("Account")] };
     const domains: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "Helper" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "Helper" }] }],
     };
     const out = buildBusinessFlows(graph, domains);
     const names = out.domainFlows[0]?.affectedData.map((s) => s.name) ?? [];
@@ -196,9 +187,7 @@ describe("buildBusinessFlows — domain scope", () => {
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls] };
     const domains: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "HelperTest" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "HelperTest" }] }],
     };
     const out = buildBusinessFlows(graph, domains);
     expect(out.domainFlows[0]?.entryPoints).toEqual([]);
@@ -210,9 +199,7 @@ describe("buildBusinessFlows — domain scope", () => {
     const graph: KnowledgeGraph = { ...BASE, apexClasses: [cls] };
     const domains: DomainsConfig = {
       version: 1,
-      domains: [
-        { id: "x", label: "X", members: [{ type: "apex", name: "Foo" }] },
-      ],
+      domains: [{ id: "x", label: "X", members: [{ type: "apex", name: "Foo" }] }],
     };
     const lookup = new Map<string, string>([["apex:Foo", "<p>業務的意味</p>"]]);
     const out = buildBusinessFlows(graph, domains, lookup);

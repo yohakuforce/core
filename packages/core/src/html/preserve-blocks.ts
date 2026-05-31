@@ -15,13 +15,7 @@ import type { ComponentType } from "./sections.js";
 
 export type PreservedBlocksMap = Map<string, Map<string, string>>;
 
-const COMPONENT_TYPES_LIST: readonly ComponentType[] = [
-  "apex",
-  "trigger",
-  "lwc",
-  "object",
-  "flow",
-];
+const COMPONENT_TYPES_LIST: readonly ComponentType[] = ["apex", "trigger", "lwc", "object", "flow"];
 const PLACEHOLDER_HINT = "（このセクションは LLM で生成されます）";
 
 export function preserveAiManagedBlocks(htmlOutDir: string): PreservedBlocksMap {

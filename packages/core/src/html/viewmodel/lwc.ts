@@ -3,10 +3,7 @@
 // ----------------------------------------------------------------------------
 
 import { summaryForLwc } from "../../render/summary.js";
-import type {
-  KnowledgeGraph,
-  LightningWebComponent,
-} from "../../types/graph.js";
+import type { KnowledgeGraph, LightningWebComponent } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import {
@@ -88,9 +85,7 @@ function publicInterfaceSection(lwc: LightningWebComponent): SectionViewModel {
   };
 }
 
-function dataModelTouchpointsSection(
-  lwc: LightningWebComponent,
-): SectionViewModel {
+function dataModelTouchpointsSection(lwc: LightningWebComponent): SectionViewModel {
   const wires = unique(lwc.wires.map((w) => w.target));
   return {
     id: "data-model-touchpoints",

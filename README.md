@@ -5,7 +5,7 @@
 [![CI](https://github.com/yohakuforce/core/actions/workflows/ci.yml/badge.svg)](https://github.com/yohakuforce/core/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Node.js >=20](https://img.shields.io/badge/Node.js-%3E%3D20-green.svg)](https://nodejs.org/)
-[![Tests: 310 passing](https://img.shields.io/badge/Tests-310%20passing-brightgreen.svg)](./packages/core/)
+[![Tests: 501 passing](https://img.shields.io/badge/Tests-501%20passing-brightgreen.svg)](./packages/core/)
 
 ---
 
@@ -30,6 +30,24 @@ npx -p @yohakuforce/core yohaku init --bootstrap --profile minimal
 ```
 
 30 分で導入完了する詳細手順: [`docs/01-getting-started/quickstart.md`](./docs/01-getting-started/quickstart.md)
+
+### v0.5.0 の目玉: HTML 設計書パイプライン
+
+同じ知識グラフから「AI が読む Markdown」と「人間がレビューする HTML 設計書」を二系統で生成し、ブラウザでプレビューできる。
+
+```bash
+# Markdown と HTML を同時生成 (docs/generated/html/index.html がホーム)
+yohaku render --format md,html
+
+# ローカルサーバで開く。--watch でソース変更時に自動 rebuild + ブラウザ自動 reload
+yohaku serve --port 4000 --watch
+
+# LLM にブロックを充填させる prompt+context を一括生成 → 書き戻し
+yohaku explain-prompts --output prompts.json
+yohaku html-write --input fill.json
+```
+
+生成される HTML は Apex / Trigger / LWC / Object / Flow の component leaf、Cmd+K グローバル検索、業務フロー俯瞰タブ、Mermaid/HTML フォールバック描画を備える。リリースレビュー用の差分 HTML (`yohaku diff --format html`) とテストカバレッジ統合 (`yohaku coverage import`) も同梱。
 
 ### コントリビュータ向け (ソースから)
 

@@ -12,9 +12,7 @@ import type { ApexControlFlowNode, ApexMethodControlFlow } from "../types/graph.
 import { escapeAttr, escapeHtml } from "./escape.js";
 import { icon } from "./icons.js";
 
-export function renderMethodFlowcharts(
-  flows: readonly ApexMethodControlFlow[],
-): string {
+export function renderMethodFlowcharts(flows: readonly ApexMethodControlFlow[]): string {
   if (flows.length === 0) return "";
   return flows.map(renderOneFlow).join("\n    ");
 }
@@ -64,10 +62,7 @@ function renderNode(n: ApexControlFlowNode): string {
       return `<li class="node-while">while (${escapeHtml(truncate(n.header, 60))})${renderTree(n.body)}</li>`;
     case "try":
       return `<li class="node-try">try${renderTree(n.tryNodes)}${n.catches
-        .map(
-          (c) =>
-            `<ul>catch (${escapeHtml(c.exceptionType)})${renderTree(c.nodes)}</ul>`,
-        )
+        .map((c) => `<ul>catch (${escapeHtml(c.exceptionType)})${renderTree(c.nodes)}</ul>`)
         .join("")}${
         n.finallyNodes.length > 0 ? `<ul>finally${renderTree(n.finallyNodes)}</ul>` : ""
       }</li>`;
@@ -82,7 +77,7 @@ function renderNode(n: ApexControlFlowNode): string {
 
 function truncate(s: string, max: number): string {
   const t = s.replace(/\s+/g, " ").trim();
-  return t.length <= max ? t : t.slice(0, max - 1) + "…";
+  return t.length <= max ? t : `${t.slice(0, max - 1)}…`;
 }
 
 function sanitize(s: string): string {

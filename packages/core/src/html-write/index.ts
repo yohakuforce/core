@@ -7,11 +7,7 @@ import { join } from "node:path";
 import { sanitizeFileName } from "../html/escape.js";
 import type { ComponentType } from "../html/sections.js";
 import { applyBlockUpdates } from "./parser.js";
-import type {
-  HtmlWriteInput,
-  HtmlWriteResult,
-  HtmlWriteComponentEntry,
-} from "./types.js";
+import type { HtmlWriteComponentEntry, HtmlWriteInput, HtmlWriteResult } from "./types.js";
 import { HtmlWriteInputError } from "./types.js";
 
 export {
@@ -20,22 +16,14 @@ export {
   HtmlBlockParseError,
 } from "./parser.js";
 export type { ParsedBlock } from "./parser.js";
-export {
-  HtmlWriteInputError,
-} from "./types.js";
+export { HtmlWriteInputError } from "./types.js";
 export type {
   HtmlWriteInput,
   HtmlWriteResult,
   HtmlWriteComponentEntry,
 } from "./types.js";
 
-const COMPONENT_TYPES: readonly ComponentType[] = [
-  "apex",
-  "trigger",
-  "lwc",
-  "object",
-  "flow",
-];
+const COMPONENT_TYPES: readonly ComponentType[] = ["apex", "trigger", "lwc", "object", "flow"];
 
 export interface ApplyHtmlWriteOptions {
   /** docs/generated/html などのホームディレクトリ */
@@ -98,15 +86,13 @@ export function validateHtmlWriteInput(raw: unknown): HtmlWriteInput {
   }
   const obj = raw as Record<string, unknown>;
   if (obj.version !== 1) {
-    throw new HtmlWriteInputError(
-      `unsupported version ${String(obj.version)}, expected 1`,
-    );
+    throw new HtmlWriteInputError(`unsupported version ${String(obj.version)}, expected 1`);
   }
   if (!Array.isArray(obj.components)) {
     throw new HtmlWriteInputError("components must be an array");
   }
-  const components: HtmlWriteComponentEntry[] = obj.components.map(
-    (c, i) => validateEntry(c, `components[${i}]`),
+  const components: HtmlWriteComponentEntry[] = obj.components.map((c, i) =>
+    validateEntry(c, `components[${i}]`),
   );
   return { version: 1, components };
 }
@@ -117,9 +103,7 @@ function validateEntry(c: unknown, where: string): HtmlWriteComponentEntry {
   }
   const o = c as Record<string, unknown>;
   if (typeof o.type !== "string" || !COMPONENT_TYPES.includes(o.type as ComponentType)) {
-    throw new HtmlWriteInputError(
-      `${where}.type must be one of: ${COMPONENT_TYPES.join(", ")}`,
-    );
+    throw new HtmlWriteInputError(`${where}.type must be one of: ${COMPONENT_TYPES.join(", ")}`);
   }
   if (typeof o.name !== "string" || o.name.trim() === "") {
     throw new HtmlWriteInputError(`${where}.name must be a non-empty string`);

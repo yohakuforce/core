@@ -1,0 +1,77 @@
+
+.cmdk-root {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(8, 7, 7, 0.42); backdrop-filter: blur(2px);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 18vh; animation: cmdk-fade 0.15s ease;
+}
+.cmdk-root[data-open="true"] { display: flex; }
+@keyframes cmdk-fade { from { opacity: 0; } to { opacity: 1; } }
+.cmdk-modal {
+  width: min(640px, 92vw);
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+  overflow: hidden; display: flex; flex-direction: column; max-height: 60vh;
+}
+.cmdk-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.cmdk-input-row .cmdk-search-icon { color: var(--muted); width: 18px; height: 18px; }
+.cmdk-input-row input {
+  flex: 1; border: 0; outline: 0; font-size: 16px;
+  font-family: var(--font-sans); background: transparent; color: var(--fg-strong);
+}
+.cmdk-input-row input::placeholder { color: var(--muted-soft); }
+.cmdk-input-row .cmdk-kbd {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 6px; font-size: 10px; color: var(--muted);
+  font-family: var(--font-mono); background: var(--bg-alt);
+}
+.cmdk-results {
+  list-style: none; margin: 0; padding: 6px 0;
+  overflow-y: auto; flex: 1;
+}
+.cmdk-results li {
+  padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; border-left: 3px solid transparent;
+}
+.cmdk-results li[aria-selected="true"] {
+  background: var(--accent-bg); border-left-color: var(--accent);
+}
+.cmdk-results li:hover { background: var(--accent-bg); }
+.cmdk-results li .name { font-weight: 500; color: var(--fg-strong); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmdk-results li .meta { font-size: 11px; color: var(--muted); }
+.cmdk-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+.cmdk-footer {
+  padding: 8px 16px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted); display: flex; gap: 14px; justify-content: flex-end;
+  background: var(--bg-alt);
+}
+.cmdk-footer .cmdk-kbd {
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 1px 5px; font-size: 10px; font-family: var(--font-mono); background: #fff;
+}
+
+/* グローバルヘッダ右に出る検索ボタン (キーボード競合のフォールバック) */
+.global-header .cmdk-trigger {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 12px;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer;
+  color: var(--muted); font-family: var(--font-sans); font-size: 12.5px;
+  transition: all 0.12s;
+}
+.global-header .cmdk-trigger:hover {
+  border-color: var(--accent); background: var(--bg-surface); color: var(--accent);
+}
+.global-header .cmdk-trigger .cmdk-trigger-kbd {
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 1px 6px; font-size: 10.5px; color: var(--muted);
+  font-family: var(--font-mono); background: var(--bg-surface);
+}
+.global-header .cmdk-trigger:hover .cmdk-trigger-kbd {
+  background: var(--bg-alt); border-color: var(--accent);
+}

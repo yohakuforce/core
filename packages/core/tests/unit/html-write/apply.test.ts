@@ -83,10 +83,7 @@ describe("applyHtmlWrite", () => {
     });
     expect(result.updated).toHaveLength(1);
     expect(result.missingComponents).toHaveLength(0);
-    const html = readFileSync(
-      join(htmlOutDir, "component", "apex", "AccountService.html"),
-      "utf8",
-    );
+    const html = readFileSync(join(htmlOutDir, "component", "apex", "AccountService.html"), "utf8");
     expect(html).toContain("<p>業務的意味</p>");
     expect(html).not.toContain("(placeholder)");
   });
@@ -107,10 +104,7 @@ describe("applyHtmlWrite", () => {
       dryRun: true,
     });
     expect(result.updated).toHaveLength(1);
-    const html = readFileSync(
-      join(htmlOutDir, "component", "apex", "AccountService.html"),
-      "utf8",
-    );
+    const html = readFileSync(join(htmlOutDir, "component", "apex", "AccountService.html"), "utf8");
     expect(html).toContain("(placeholder)");
     expect(html).not.toContain("<p>X</p>");
   });
@@ -120,9 +114,7 @@ describe("applyHtmlWrite", () => {
       htmlOutDir,
       input: {
         version: 1,
-        components: [
-          { type: "apex", name: "NoSuch", blocks: { "business-meaning": "<p>x</p>" } },
-        ],
+        components: [{ type: "apex", name: "NoSuch", blocks: { "business-meaning": "<p>x</p>" } }],
       },
     });
     expect(result.missingComponents).toHaveLength(1);
@@ -135,9 +127,7 @@ describe("applyHtmlWrite", () => {
       htmlOutDir,
       input: {
         version: 1,
-        components: [
-          { type: "apex", name: "Foo/Bar", blocks: { "business-meaning": "<p>z</p>" } },
-        ],
+        components: [{ type: "apex", name: "Foo/Bar", blocks: { "business-meaning": "<p>z</p>" } }],
       },
     });
     expect(result.updated).toHaveLength(1);
