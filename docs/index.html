@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>余白フォース — yohakuforce suite documentation</title>
+<style>
+  /* ============================================================
+     余白フォース suite — full documentation
+     Design: minimal / premium / 黒・白・紅 / 余白 / 禅
+     Diagrams: pure CSS/HTML (auto-sizing, no text overflow, responsive).
+     Self-contained (no external assets).
+     ============================================================ */
+  :root {
+    --ink:#0b0b0c; --ink-soft:#2a2a2e; --paper:#fbfaf8; --paper-2:#f2efea;
+    --line:#e4ded5; --line-ink:#23232a; --crimson:#b51b2e; --crimson-d:#8c1322;
+    --earth:#7c6a55; --muted:#6f6a62; --muted-2:#9a948b;
+    --maxw:1080px; --r:3px; --t:200ms cubic-bezier(.4,0,.2,1);
+    --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+    --mono:"SF Mono","JetBrains Mono","Roboto Mono","Noto Sans Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased;letter-spacing:.01em;}
+  ::selection{background:var(--crimson);color:#fff;}
+
+  /* header / tabs */
+  header{position:sticky;top:0;z-index:50;background:rgba(251,250,248,.86);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--line);}
+  .bar{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:24px;padding:0 26px;height:62px;}
+  .brand{display:flex;align-items:baseline;gap:11px;white-space:nowrap;}
+  .brand .mark{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.04em;position:relative;padding-left:15px;}
+  .brand .mark::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:5px;height:21px;background:var(--crimson);}
+  .brand .en{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted-2);}
+  nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap;}
+  nav.tabs button{font-family:var(--sans);cursor:pointer;background:none;border:0;color:var(--muted);padding:7px 13px;border-radius:var(--r);position:relative;transition:color var(--t);text-align:center;}
+  nav.tabs button .jp{display:block;font-weight:600;font-size:13px;letter-spacing:.03em;}
+  nav.tabs button .en{display:block;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);margin-top:1px;}
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button[aria-selected="true"]{color:var(--ink);}
+  nav.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:13px;right:13px;bottom:-1px;height:2px;background:var(--crimson);}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:0 26px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade var(--t);}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  section{padding:50px 0;border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:0;}
+
+  /* type */
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(29px,5vw,48px);line-height:1.26;margin:0 0 18px;}
+  h2{font-family:var(--serif);font-weight:600;font-size:25px;margin:0 0 6px;letter-spacing:.02em;}
+  h3{font-size:14px;font-weight:700;letter-spacing:.05em;margin:30px 0 12px;color:var(--ink);}
+  h3 .x{color:var(--crimson-d);font-family:var(--mono);margin-right:8px;font-weight:700;}
+  .eyebrow{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--crimson);font-weight:700;margin:0 0 14px;}
+  .lead{font-size:18px;color:var(--ink-soft);max-width:66ch;}
+  p{max-width:72ch;}
+  .muted{color:var(--muted);}
+  .section-head{margin-bottom:26px;}
+  .section-head .num{font-family:var(--mono);font-size:12px;color:var(--muted-2);letter-spacing:.1em;}
+  a{color:var(--crimson-d);text-decoration:none;border-bottom:1px solid var(--line);}
+  a:hover{border-color:var(--crimson);}
+
+  /* hero */
+  .hero{padding:70px 0 50px;}
+  .hero .kicker{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted-2);margin-bottom:22px;}
+  .chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:26px;}
+  .chip{font-size:12.5px;letter-spacing:.04em;border:1px solid var(--line);padding:6px 13px;border-radius:100px;color:var(--ink-soft);background:#fff;}
+  .chip b{color:var(--crimson-d);}
+
+  /* cards */
+  .grid{display:grid;gap:16px;}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:820px){.g3,.g2{grid-template-columns:1fr;}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px 22px;transition:border-color var(--t),transform var(--t);}
+  .card:hover{border-color:var(--ink);transform:translateY(-2px);}
+  .card h3{margin:0 0 8px;font-size:16px;letter-spacing:.02em;}
+  .card p{font-size:13.5px;color:var(--muted);margin:0;}
+  .card .tag{font-family:var(--mono);font-size:11px;color:var(--crimson-d);letter-spacing:.05em;display:block;margin-bottom:6px;}
+  .role{border-left:3px solid var(--crimson);padding-left:20px;}
+  .role .layer{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted-2);text-transform:uppercase;}
+  .role h3{margin:4px 0 8px;font-size:18px;font-family:var(--serif);font-weight:600;}
+
+  /* steps */
+  ol.steps{list-style:none;counter-reset:s;padding:0;margin:18px 0 0;}
+  ol.steps>li{counter-increment:s;position:relative;padding:0 0 24px 54px;margin:0 0 0 16px;border-left:1px solid var(--line);}
+  ol.steps>li:last-child{border-left-color:transparent;padding-bottom:0;}
+  ol.steps>li::before{content:counter(s);position:absolute;left:-16px;top:-3px;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--mono);font-size:13px;display:grid;place-items:center;}
+  ol.steps>li h4{margin:4px 0 6px;font-size:15px;}
+  ol.steps>li p{margin:0 0 10px;font-size:14px;color:var(--muted);}
+
+  /* code */
+  pre{background:var(--ink);color:#ededed;border-radius:var(--r);padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.7;margin:12px 0;border:1px solid var(--line-ink);}
+  pre .c{color:#7e8a7e;} pre .k{color:#e9a6ad;} pre .s{color:#cfc09a;}
+  code.inl{font-family:var(--mono);font-size:.86em;background:var(--paper-2);padding:1px 6px;border-radius:var(--r);color:var(--crimson-d);white-space:nowrap;}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.7px;}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+  td:first-child{white-space:nowrap;}
+  td b{color:var(--ink);}
+
+  /* meta pills */
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0;}
+  .pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink-soft);border:1px solid var(--line);padding:4px 10px;border-radius:100px;background:#fff;}
+  .pill .d{color:var(--crimson);}
+
+  /* callout */
+  .note{border:1px solid var(--line);border-left:3px solid var(--earth);background:#fff;padding:15px 19px;border-radius:var(--r);margin:18px 0;font-size:14px;color:var(--ink-soft);}
+  .note b{color:var(--ink);}
+  .note.boundary{border-left-color:var(--crimson);}
+
+  /* ---------- CSS DIAGRAMS (replaces SVG) ---------- */
+  .figure{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;margin:22px 0;}
+  .figcap{font-size:12.5px;color:var(--muted);margin-top:16px;text-align:center;letter-spacing:.02em;}
+
+  /* linear pipeline */
+  .pipe{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;}
+  .pnode{flex:1 1 130px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:15px 13px;text-align:center;min-width:0;}
+  .pnode.em{background:#fff;border-color:var(--crimson);box-shadow:inset 0 0 0 1px var(--crimson);}
+  .pnode .t{font-weight:700;font-size:13.5px;line-height:1.4;}
+  .pnode .s{font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono);word-break:break-word;}
+  .pgo{flex:0 0 34px;display:flex;align-items:center;justify-content:center;color:var(--crimson);font-size:17px;font-weight:700;}
+  .pgo::before{content:"→";}
+  @media(max-width:720px){.pipe{flex-direction:column;}.pnode{flex-basis:auto;}.pgo{flex-basis:24px;height:24px;}.pgo::before{content:"↓";}}
+
+  /* hub-centric architecture */
+  .arch{display:flex;flex-wrap:wrap;align-items:center;gap:0;justify-content:center;}
+  .arch .col{display:flex;flex-direction:column;gap:8px;flex:0 1 auto;}
+  .arch .anode{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:11px 15px;text-align:center;font-size:13px;font-weight:600;min-width:130px;}
+  .arch .anode .s{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:400;margin-top:3px;}
+  .arch .hub{background:#fff;border:1.5px solid var(--crimson);border-radius:var(--r);padding:18px 20px;text-align:center;min-width:190px;box-shadow:0 1px 0 var(--crimson);}
+  .arch .hub .t{font-family:var(--serif);font-weight:600;font-size:17px;}
+  .arch .hub .s{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:4px;}
+  .arch .hub ul{list-style:none;margin:10px 0 0;padding:0;text-align:left;border-top:1px solid var(--line);padding-top:9px;}
+  .arch .hub ul li{font-size:11.5px;color:var(--ink-soft);padding:1px 0;}
+  .arch .conn{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10px;color:var(--muted);min-width:78px;}
+  .arch .conn .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;}
+  .arch .conn .ln{color:var(--crimson);font-size:16px;font-weight:700;line-height:1;}
+  @media(max-width:860px){.arch{flex-direction:column;}.arch .conn{padding:6px 0;}.arch .conn .ln{transform:rotate(90deg);}}
+  .branch{display:flex;justify-content:center;align-items:center;gap:0;margin-top:10px;}
+  .branch .conn{min-width:120px;}
+
+  /* feature list rows */
+  .frow{display:grid;grid-template-columns:170px 1fr;gap:18px;padding:13px 0;border-bottom:1px solid var(--line);}
+  .frow:last-child{border-bottom:0;}
+  .frow .k{font-weight:700;font-size:14px;}
+  .frow .k .s{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);font-weight:400;margin-top:3px;letter-spacing:.02em;}
+  .frow .v{font-size:14px;color:var(--ink-soft);}
+  @media(max-width:680px){.frow{grid-template-columns:1fr;gap:4px;}}
+
+  /* quick chips for flows */
+  .flowtags{display:flex;gap:0;flex-wrap:wrap;align-items:center;margin:16px 0;}
+  .flowtags .ft{font-family:var(--mono);font-size:12px;border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:100px;}
+  .flowtags .ar{color:var(--crimson);padding:0 7px;font-weight:700;}
+
+  /* vertical operating timeline */
+  .timeline{margin:20px 0 0;}
+  .tl-row{display:grid;grid-template-columns:108px 1fr;gap:20px;}
+  .tl-when{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--crimson-d);text-align:right;padding-top:1px;}
+  .tl-when .sub{display:block;font-weight:400;font-size:10px;color:var(--muted-2);margin-top:3px;letter-spacing:.04em;}
+  .tl-body{position:relative;border-left:1px solid var(--line);padding:0 0 26px 24px;}
+  .tl-row:last-child .tl-body{border-left-color:transparent;padding-bottom:2px;}
+  .tl-body::before{content:"";position:absolute;left:-5px;top:4px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--crimson);}
+  .tl-body.auto::before{background:var(--crimson);}
+  .tl-body h4{margin:0 0 5px;font-size:15px;}
+  .tl-body h4 .who{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin-left:9px;vertical-align:middle;border:1px solid var(--line);padding:1px 6px;border-radius:100px;}
+  .tl-body p{margin:0;font-size:13.5px;color:var(--muted);}
+  .tl-body .api{font-family:var(--mono);font-size:11px;color:var(--ink-soft);background:var(--paper-2);padding:2px 8px;border-radius:var(--r);display:inline-block;margin-top:8px;}
+  @media(max-width:680px){.tl-row{grid-template-columns:70px 1fr;gap:12px;}.tl-when{font-size:12px;}}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 0;font-size:12px;color:var(--muted);}
+  .legend span{display:flex;align-items:center;gap:7px;}
+  .legend .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--crimson);}
+  .legend .dot.fill{background:var(--crimson);}
+
+  /* lifecycle loop hint under a pipe */
+  .loopnote{display:flex;align-items:center;gap:9px;justify-content:center;margin-top:14px;font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:center;}
+  .loopnote .rt{color:var(--crimson);font-weight:700;}
+
+  .toc{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+  .toc button{font-family:var(--sans);font-size:12.5px;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:100px;padding:6px 14px;color:var(--ink-soft);transition:border-color var(--t),color var(--t);}
+  .toc button:hover{border-color:var(--crimson);color:var(--crimson-d);}
+
+  footer{max-width:var(--maxw);margin:0 auto;padding:38px 26px 64px;color:var(--muted-2);font-size:12.5px;letter-spacing:.04em;}
+  footer .row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:22px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand"><span class="mark">余白フォース</span><span class="en">yohakuforce&nbsp;suite</span></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="overview" aria-selected="true"><span class="jp">全体像</span><span class="en">overview</span></button>
+      <button role="tab" data-tab="core"><span class="jp">コア</span><span class="en">core</span></button>
+      <button role="tab" data-tab="hub"><span class="jp">コンテクストハブ</span><span class="en">context-hub</span></button>
+      <button role="tab" data-tab="manager"><span class="jp">AIマネージャー</span><span class="en">ai-manager</span></button>
+      <button role="tab" data-tab="flow"><span class="jp">連携</span><span class="en">integration</span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== OVERVIEW ===================== -->
+<div class="panel active" id="overview" role="tabpanel">
+  <section class="hero">
+    <div class="kicker">A three-layer foundation for AI-run delivery work</div>
+    <h1>AIに任せられる仕事は、<br>余白フォースに任せる。</h1>
+    <p class="lead">余白フォースは、受託・社内プロジェクトの「文脈の収集」「決定的な足場の生成」「進行の管理」を担う三層構造です。ブレない足場の上でAIが取りこぼしなく実務を回し、人は本質的な思考と意思決定、そして余白からの発想に集中する。</p>
+    <div class="chips">
+      <span class="chip"><b>コア</b> — 決定的な知識足場（OSS）</span>
+      <span class="chip"><b>コンテクストハブ</b> — 文脈の収集・提供（OSS）</span>
+      <span class="chip"><b>AIマネージャー</b> — 進行管理の5能力（社内）</span>
+    </div>
+    <div class="toc">
+      <button data-go="core">コアの詳細 →</button>
+      <button data-go="hub">コンテクストハブの詳細 →</button>
+      <button data-go="manager">AIマネージャーの詳細 →</button>
+      <button data-go="flow">三層の連携 →</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>三層の役割</h2></div>
+    <div class="grid g3">
+      <div class="card role"><div class="layer">layer · core</div><h3>コア</h3><p class="muted">Salesforce メタデータを SQLite 知識グラフ化し、決定的に Markdown を生成する CLI。LLMを呼ばず出所を管理する「足場」。</p><div class="meta"><span class="pill">@yohakuforce/core</span><span class="pill"><span class="d">v</span>0.5.0</span></div></div>
+      <div class="card role"><div class="layer">layer · context-hub</div><h3>コンテクストハブ</h3><p class="muted">Slack / Backlog / Redmine / Gmail / 会議メモ を取り込み、検索・文脈・タスクを提供する MCP ネイティブ基盤。顧客データは社内に閉じる。</p><div class="meta"><span class="pill">yohakuforce-context-hub</span><span class="pill"><span class="d">v</span>0.3.0</span></div></div>
+      <div class="card role"><div class="layer">layer · ai-manager</div><h3>AIマネージャー</h3><p class="muted">ハブの文脈をもとに、計画・割当・進捗追跡・アラート・経営サマリの5能力でプロジェクト進行を回す社内アプリ。</p><div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>全体構成</h2>
+      <p class="muted">直線スタックではない。<b>コアは技術依存ゼロの兄弟</b>。実際の結合は「ハブ ⇄ AIマネージャー（REST）」と「ハブ ⇄ コア（MCP, opt-in）」の2本だけ。</p></div>
+    <div class="figure">
+      <div class="arch">
+        <div class="col">
+          <div class="anode">データ源<span class="s">Slack / Backlog</span></div>
+          <div class="anode">課題・チケット<span class="s">Redmine / Gmail</span></div>
+          <div class="anode">会議メモ / ファイル<span class="s">meeting / file</span></div>
+        </div>
+        <div class="conn"><span class="lab">取込</span><span class="ln">→</span></div>
+        <div class="hub">
+          <div class="t">コンテクストハブ</div>
+          <div class="s">Context-Hub · :8000</div>
+          <ul>
+            <li>· 正規化 → SQLite / Postgres</li>
+            <li>· ハイブリッド検索</li>
+            <li>· 会議 → タスク抽出</li>
+            <li>· REST + MCP で提供</li>
+          </ul>
+        </div>
+        <div class="conn"><span class="lab">REST</span><span class="ln">→</span></div>
+        <div class="col">
+          <div class="anode">AIマネージャー<span class="s">:8001 · 5能力</span></div>
+          <div class="anode">配信<span class="s">Slack / Sheets / ローカル</span></div>
+        </div>
+      </div>
+      <div class="branch">
+        <div class="anode" style="min-width:190px">コンテクストハブ</div>
+        <div class="conn"><span class="lab">MCP · opt-in</span><span class="ln">→</span></div>
+        <div class="anode" style="min-width:190px">コア<span class="s">@yohakuforce/core</span></div>
+      </div>
+      <div class="figcap">図 1 — コンテクストハブが結節点。AIマネージャーは REST、コアは MCP（opt-in）で接続する。</div>
+    </div>
+    <div class="note boundary"><b>データ境界。</b>顧客機密はコンテクストハブが動く社内PCに閉じる（MCP は stdio でローカル完結）。外部AIや公開成果物には抽象化した文脈のみ反映し、生データは転記しない。</div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>エンドツーエンドの流れ</h2></div>
+    <div class="flowtags">
+      <span class="ft">会議メモ取込</span><span class="ar">→</span>
+      <span class="ft">ハブが文脈化・タスク抽出</span><span class="ar">→</span>
+      <span class="ft">AIマネージャーが計画</span><span class="ar">→</span>
+      <span class="ft">担当割当</span><span class="ar">→</span>
+      <span class="ft">日報・進捗追跡</span><span class="ar">→</span>
+      <span class="ft">遅延アラート</span><span class="ar">→</span>
+      <span class="ft">経営サマリ</span>
+    </div>
+    <p class="muted">各タブで、それぞれの仕組みが「何ができるか」を機能・コマンド・API のレベルまで確認できます。「連携」タブでは三層を繋いだ全体フローを示します。</p>
+  </section>
+</div>
+
+<!-- ===================== CORE ===================== -->
+<div class="panel" id="core" role="tabpanel">
+  <section>
+    <div class="section-head"><span class="num">core</span><h2>コア / @yohakuforce/core</h2></div>
+    <p class="lead">Salesforce のメタデータを SQLite の知識グラフに変換し、そこから決定的に Markdown ドキュメントを生成する CLI。<b>LLM を呼ばない</b>のが核心 — 同じ入力からは常に同じ出力になり、出所（provenance）を <code class="inl">Tracked&lt;T&gt;</code> で管理する。</p>
+    <div class="meta"><span class="pill">npm: @yohakuforce/core</span><span class="pill"><span class="d">v</span>0.5.0</span><span class="pill">Apache-2.0</span><span class="pill">CLI: yohaku</span></div>
+
+    <h3><span class="x">01</span>何ができるか</h3>
+    <div class="grid g2">
+      <div class="card"><span class="tag">graph</span><h3>知識グラフ化</h3><p>force-app/ の SObject・項目・入力規則・Flow・Apex・依存関係を SQLite グラフに格納。SQL で横断クエリ可能（差分ビルド対応）。</p></div>
+      <div class="card"><span class="tag">render</span><h3>決定的ドキュメント生成</h3><p>システム全体像・SObject 個別・Flow・Apex を Markdown 化。同一入力→同一出力をゴールデンテストで保証。</p></div>
+      <div class="card"><span class="tag">diff</span><h3>変更差分の抽出</h3><p>Git ref 間でメタデータ変更を抽出し、change-summary の材料にする。</p></div>
+      <div class="card"><span class="tag">onboard</span><h3>オンボーディング支援</h3><p>ロール別の進行記録・FAQ 抽出で、プロジェクト立ち上げの文脈を蓄積。</p></div>
+      <div class="card"><span class="tag">validate</span><h3>グラフ検証</h3><p>JSON グラフのスキーマ整合を検証。CI に組み込み可能。</p></div>
+      <div class="card"><span class="tag">context</span><h3>文脈注入（opt-in）</h3><p>コンテクストハブから抽象化済み文脈を取得し、explain / change-summary の生成材料にする。</p></div>
+    </div>
+
+    <h3><span class="x">02</span>コマンドリファレンス</h3>
+    <table>
+      <tr><th>コマンド</th><th>役割</th></tr>
+      <tr><td><code class="inl">yohaku init --bootstrap</code></td><td>プロジェクトに足場を作成（<code class="inl">--profile minimal|standard|full</code>）</td></tr>
+      <tr><td><code class="inl">yohaku sync</code></td><td>取込→グラフ→生成を一括（<code class="inl">--full-rebuild</code>）</td></tr>
+      <tr><td><code class="inl">yohaku graph build</code></td><td>メタデータ→SQLiteグラフ（<code class="inl">--incremental</code> / <code class="inl">--source local|dx-mcp</code>）</td></tr>
+      <tr><td><code class="inl">yohaku graph query "&lt;SQL&gt;"</code></td><td>グラフに SQL 問い合わせ（PRAGMA は安全のためブロック）</td></tr>
+      <tr><td><code class="inl">yohaku graph schema --tables</code></td><td>テーブル/列の一覧（<code class="inl">--format json|markdown</code>）</td></tr>
+      <tr><td><code class="inl">yohaku render all</code></td><td>全種一括生成（system-index / objects / flows / apex）</td></tr>
+      <tr><td><code class="inl">yohaku diff --from &lt;ref&gt; --to &lt;ref&gt;</code></td><td>ref 間の変更差分（<code class="inl">--path-prefix</code>）</td></tr>
+      <tr><td><code class="inl">yohaku validate --target &lt;path&gt;</code></td><td>JSON グラフのスキーマ検証</td></tr>
+      <tr><td><code class="inl">yohaku context --kind &lt;k&gt; --fqn &lt;fqn&gt;</code></td><td>ContextBrief を出力（ハブ連携・opt-in）</td></tr>
+    </table>
+
+    <h3><span class="x">03</span>パイプライン</h3>
+    <div class="figure">
+      <div class="pipe">
+        <div class="pnode"><div class="t">Salesforce</div><div class="s">metadata (SFDX / DX-MCP)</div></div>
+        <div class="pgo"></div>
+        <div class="pnode em"><div class="t">SQLite 知識グラフ</div><div class="s">yohaku graph build</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">決定的レンダリング</div><div class="s">yohaku render</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">Markdown ドキュメント</div><div class="s">docs/generated/</div></div>
+      </div>
+      <div class="figcap">図 2 — メタデータ → 知識グラフ → 決定的 Markdown。LLM は介在しない。</div>
+    </div>
+
+    <h3><span class="x">04</span>利用手順</h3>
+    <ol class="steps">
+      <li><h4>インストール</h4><p>npm から導入。CLI は <code class="inl">yohaku</code>。</p><pre>npm install -g <span class="s">@yohakuforce/core</span></pre></li>
+      <li><h4>初期化 & グラフ構築</h4><pre>yohaku init --bootstrap --profile <span class="s">standard</span>
+yohaku graph build --incremental</pre></li>
+      <li><h4>ドキュメント生成</h4><pre>yohaku render all</pre></li>
+      <li><h4>（任意）ハブ文脈を有効化</h4><p><code class="inl">.yohaku/config.json</code> の <code class="inl">contextProvider</code> を設定（既定 none＝OSS安全）。</p><pre>yohaku context --kind explain --fqn <span class="s">Account</span></pre></li>
+    </ol>
+
+    <h3><span class="x">05</span>設計原則</h3>
+    <div class="frow"><div class="k">3層分離</div><div class="v">決定的処理はコアで担い、AI 推測は混ぜない。</div></div>
+    <div class="frow"><div class="k">決定的 I/O</div><div class="v">同一入力 → 同一出力をハッシュ（ゴールデンテスト）で検証。</div></div>
+    <div class="frow"><div class="k">force-app は読むだけ</div><div class="v">正本を書き換えない。グラフは CLI 経由でしか更新しない。</div></div>
+    <div class="note boundary"><b>文脈注入の設計。</b>コアは LLM を呼ばない決定的足場。注入は「ContextProvider が決定的に取得 → 外部AI(explain-writer 等)が材料化」の2層構造で、顧客固有名・PII・シークレットは抽象化され生データが成果物に漏れない。</div>
+  </section>
+</div>
+
+<!-- ===================== CONTEXT-HUB ===================== -->
+<div class="panel" id="hub" role="tabpanel">
+  <section>
+    <div class="section-head"><span class="num">context-hub</span><h2>コンテクストハブ / Context-Hub</h2></div>
+    <p class="lead">各ツールに散らばったプロジェクト文脈を一箇所に集め、検索・文脈・タスクとして提供する MCP ネイティブ基盤。REST と MCP の両方で読み出せ、応答は camelCase に統一。顧客データはローカル（社内PC）に閉じる。</p>
+    <div class="meta"><span class="pill">PyPI: yohakuforce-context-hub</span><span class="pill"><span class="d">v</span>0.3.0</span><span class="pill">REST :8000</span><span class="pill">MCP stdio</span><span class="pill">Apache-2.0</span></div>
+
+    <h3><span class="x">01</span>取り込み（5経路）</h3>
+    <table>
+      <tr><th>経路</th><th>内容</th></tr>
+      <tr><td><b>会議メモ / メモ / メール</b></td><td><code class="inl">POST /documents</code> — JSON で直接登録。<b>会議は取込時に自動でタスク抽出</b>。</td></tr>
+      <tr><td><b>ファイルアップロード</b></td><td><code class="inl">POST /documents/upload</code> — <code class="inl">.md / .txt / .pdf / .docx</code> を本文抽出して登録。</td></tr>
+      <tr><td><b>Backlog / Redmine</b></td><td>API アダプタ経由で課題・コメントを同期（<code class="inl">/sources/*/sync</code>）。</td></tr>
+      <tr><td><b>Gmail</b></td><td>メールをドキュメントとして取り込み。</td></tr>
+      <tr><td><b>Slack（スクレイピング）</b></td><td><code class="inl">POST /projects/{id}/ingest/slack</code> — スクレイピング済みメッセージを <code class="inl">ts</code> キーで冪等 upsert。Slack API トークン不要。</td></tr>
+      <tr><td><b>Inbox フォルダ監視</b></td><td><code class="inl">$CH_INBOX_DIR/{meeting,file,email}/</code> にファイルを置くとポーリングで取込。</td></tr>
+    </table>
+
+    <h3><span class="x">02</span>提供インターフェース</h3>
+    <div class="grid g2">
+      <div class="card"><span class="tag">REST · :8000</span><h3>REST API（camelCase）</h3><p><code class="inl">/projects/{id}/issues</code> · <code class="inl">/meetings/{id}</code> · <code class="inl">/members</code> · <code class="inl">/context</code> · <code class="inl">/query</code> · <code class="inl">/documents</code> · <code class="inl">/ingest/slack</code>。認証は <code class="inl">X-Api-Key</code>（READ/WRITE/ADMIN スコープ）。</p></div>
+      <div class="card"><span class="tag">MCP · stdio</span><h3>MCP ツール（7種）</h3><p><code class="inl">get_project_context</code> · <code class="inl">search_context</code> · <code class="inl">get_issues</code> · <code class="inl">get_issue_detail</code> · <code class="inl">get_meeting</code> · <code class="inl">get_members</code> · <code class="inl">trigger_sync</code>。Claude Desktop / Claude Code に直結。</p></div>
+    </div>
+
+    <h3><span class="x">03</span>主な機能</h3>
+    <div class="frow"><div class="k">ハイブリッド検索<span class="s">hybrid search</span></div><div class="v">ベクトル検索（sqlite-vec / pgvector）と FTS5 キーワード検索を RRF（Reciprocal Rank Fusion）で融合。決定的な順位付け。</div></div>
+    <div class="frow"><div class="k">会議 → タスク抽出<span class="s">meeting → tasks</span></div><div class="v">会議取込時に on-prem LLM がアクションタスクを抽出し永続化。再読込でも結果が不変（取りこぼし防止）。</div></div>
+    <div class="frow"><div class="k">3プロファイル<span class="s">profiles</span></div><div class="v"><code class="inl">quickstart</code>（SQLite・最短）/ <code class="inl">personal</code>（永続スケジューラ）/ <code class="inl">production</code>（PostgreSQL）。</div></div>
+    <div class="frow"><div class="k">権限・監査<span class="s">auth / audit</span></div><div class="v">API キー＋スコープで読み書きを制御。アクセスは監査ログに記録。</div></div>
+    <div class="frow"><div class="k">プライバシー<span class="s">privacy</span></div><div class="v">顧客データはローカルに保存。MCP は stdio でローカル完結し、生データを外部に送らない。</div></div>
+
+    <h3><span class="x">04</span>会議メモ → タスク自動生成</h3>
+    <div class="figure">
+      <div class="pipe">
+        <div class="pnode"><div class="t">会議メモ取込</div><div class="s">POST /documents</div></div>
+        <div class="pgo"></div>
+        <div class="pnode em"><div class="t">on-prem LLM 抽出</div><div class="s">社内に閉じる</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">タスク永続化</div><div class="s">再読込で不変</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">get_meeting で提供</div><div class="s">extractedTasks</div></div>
+      </div>
+      <div class="figcap">図 3 — 取込時に1回だけ抽出して永続化。抽出は社内（on-prem LLM）で完結する。</div>
+    </div>
+
+    <h3><span class="x">05</span>セットアップ（SQLite・Docker不要）</h3>
+    <ol class="steps">
+      <li><h4>インストールと初期化</h4><pre>pip install yohakuforce-context-hub
+context-hub init --profile <span class="s">quickstart</span>
+context-hub migrate</pre></li>
+      <li><h4>起動</h4><p>REST（:8000）と MCP（stdio）を提供。</p><pre><span class="c"># REST</span>
+uvicorn context_hub.main:create_app --factory --host 127.0.0.1 --port 8000
+<span class="c"># MCP（stdio）</span>
+python -m context_hub.mcp.server</pre></li>
+      <li><h4>取り込み</h4><pre><span class="c"># 会議メモ（取込時にタスク自動抽出）</span>
+POST /api/v1/documents  { "projectId", "sourceType":"meeting", "text" }
+<span class="c"># スクレイピング済み Slack（ts キーで冪等）</span>
+POST /api/v1/projects/{id}/ingest/slack  { "messages":[ … ] }</pre></li>
+      <li><h4>読み出し</h4><pre>GET /api/v1/projects/{id}/meetings/{meetingId}
+<span class="c"># → extractedTasks: [{ title, suggestedAssignee, suggestedDueDate }]</span></pre></li>
+    </ol>
+    <div class="note"><b>運用の選択肢。</b>社内パイロットは <code class="inl">quickstart</code>（SQLite）で Docker なしに開始可能。本番グレードは <code class="inl">production</code>（PostgreSQL）。</div>
+  </section>
+</div>
+
+<!-- ===================== AI-MANAGER ===================== -->
+<div class="panel" id="manager" role="tabpanel">
+  <section>
+    <div class="section-head"><span class="num">ai-manager</span><h2>AIマネージャー / AI-Project-Manager</h2></div>
+    <p class="lead">コンテクストハブの文脈をもとに、プロジェクト進行を5つの能力で回す。会議や課題からタスクを起こし、担当に割り当て、日報で追跡し、遅延を検知し、経営サマリにまとめる。文脈はハブから REST で取得し、進行データは自前の PostgreSQL に保持する。</p>
+    <div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span><span class="pill">REST :8001</span><span class="pill">PostgreSQL</span></div>
+
+    <h3><span class="x">01</span>5つの能力（詳細）</h3>
+    <div class="frow"><div class="k">Plan · 計画<span class="s">extract / import</span></div><div class="v"><b>会議メモ</b>（ハブの <code class="inl">get_meeting</code> の抽出タスク）と <b>Backlog/Redmine 課題</b>（ステータス絞り込み可）からタスクを自動生成し、プロジェクトに取り込む。初期開発案件でも「最初からAIがタスクを切る」状態をつくる。</div></div>
+    <div class="frow"><div class="k">Assign · 割当<span class="s">draft / confirm</span></div><div class="v">メンバーのスキル・稼働状況・負荷をふまえて担当案（draft）を生成。PM が承認 / 却下して確定する。</div></div>
+    <div class="frow"><div class="k">Track · 進捗追跡<span class="s">report / analyze</span></div><div class="v">日報テンプレを生成・配信し、回答を集約。回答を分析してブロッカーを抽出する。</div></div>
+    <div class="frow"><div class="k">Alert · アラート<span class="s">scan</span></div><div class="v">プロジェクトをスキャンし <b>タスク遅延 / メンバー過負荷 / 顧客（日報）未回答</b> を検知して通知。確認・解決の状態管理つき。</div></div>
+    <div class="frow"><div class="k">Overview · 経営サマリ<span class="s">summary / phase</span></div><div class="v">タスク状態・日報提出状況・アクティブアラートを集約した日次サマリと、フェーズ進捗（計画対実績）を生成。</div></div>
+
+    <h3><span class="x">02</span>能力フロー</h3>
+    <div class="figure">
+      <div class="pipe">
+        <div class="pnode em"><div class="t">Plan</div><div class="s">計画</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">Assign</div><div class="s">割当</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">Track</div><div class="s">追跡</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">Alert</div><div class="s">アラート</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">Overview</div><div class="s">サマリ</div></div>
+      </div>
+      <div class="figcap">図 4 — Plan は会議・課題（コンテクストハブ）を入力に起動する。5 能力はそれぞれ REST エンドポイントとして実行される。</div>
+    </div>
+
+    <h3><span class="x">03</span>いつ・何が動くか — 一日の運用</h3>
+    <p class="muted">内蔵スケジューラ（APScheduler）が設定時刻に各能力を自動実行する。時刻は設定 GUI（<code class="inl">/settings</code>）で自由に調整でき、既定は <b>経営サマリ 7:00 / 日報配信 8:00 / アラートスキャン 30 分間隔</b>。<b>処理の順序は時刻設定に関わらず常に固定</b>（経営サマリ→日報生成→日報配信→アラート）で、ユーザーがどんな時刻を設定しても入れ替わらない。</p>
+    <div class="figure">
+      <div class="timeline">
+        <div class="tl-row">
+          <div class="tl-when">07:00<span class="sub">毎朝</span></div>
+          <div class="tl-body auto"><h4>経営サマリ生成<span class="who">Overview · 自動</span></h4>
+            <p>前日のタスク状態・日報提出状況・アクティブアラートを集約し、AI が日次サマリとフェーズ進捗（計画対実績）を生成。PM はこれを見て一日を始める。</p>
+            <span class="api">POST /overview/daily-summary · /overview/phase-progress</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">08:00<span class="sub">毎朝</span></div>
+          <div class="tl-body auto"><h4>日報テンプレ生成 → 配信<span class="who">Track · 自動</span></h4>
+            <p>その日の担当タスクから質問を動的に組み立て、メンバーごとの日報を生成。各メンバーのチャネル（Slack DM / Sheets / ローカル）へ配信する。</p>
+            <span class="api">POST /track/generate-templates → /track/deliver</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">日中<span class="sub">随時</span></div>
+          <div class="tl-body"><h4>回答の収集<span class="who">メンバー</span></h4>
+            <p>メンバーが配信された日報に回答。AI マネージャーが受信して記録し、提出済みに更新する。</p>
+            <span class="api">POST /track/submit-responses</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">回答後<span class="sub">自動</span></div>
+          <div class="tl-body auto"><h4>AI 分析 → ブロッカー抽出<span class="who">Track · 自動</span></h4>
+            <p>回答を AI が解析し、進捗サマリとブロッカーを抽出。検出したブロッカーは以降のアラート・経営サマリに反映される。</p>
+            <span class="api">POST /track/analyze</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">30分毎<span class="sub">終日</span></div>
+          <div class="tl-body auto"><h4>アラートスキャン<span class="who">Alert · 自動</span></h4>
+            <p>タスク遅延・メンバー過負荷（推定残時間 40h 超）・日報未回答を検知し、アラートを生成して通知チャンネルへ。確認・解決の状態管理つき。</p>
+            <span class="api">POST /alerts/scan</span></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><span class="dot fill"></span>自動実行（設定時刻 / 間隔で起動）</span>
+        <span><span class="dot"></span>人が関与（回答・承認・確認）</span>
+      </div>
+      <div class="figcap">図 5 — 一日の運用ループ。設定した時刻に各能力の REST エンドポイントが実行される。</div>
+    </div>
+    <div class="note"><b>Plan・Assign はイベント駆動。</b>計画（Plan）と割当（Assign）は時刻ではなく<b>新しい会議メモ・課題が増えたとき</b>（プロジェクト発足時・スプリント開始時など）に実行する。Assign だけは AI が割当案を作り、<b>PM が承認 / 却下して確定</b>する人の関門を挟む。</div>
+
+    <h3><span class="x">04</span>日報のライフサイクル — 作成・共有・収集・分析</h3>
+    <div class="figure">
+      <div class="pipe">
+        <div class="pnode"><div class="t">① 作成</div><div class="s">タスクから動的生成</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">② 配信（共有）</div><div class="s">メンバーのチャネルへ</div></div>
+        <div class="pgo"></div>
+        <div class="pnode em"><div class="t">③ 収集</div><div class="s">回答を記録</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">④ AI 分析</div><div class="s">サマリ + ブロッカー</div></div>
+      </div>
+      <div class="loopnote">検出したブロッカー・未回答は <span class="rt">→</span> アラート / 翌朝の経営サマリへ反映</div>
+      <div class="figcap">図 6 — 日報は「タスク状態から作られ、各メンバーへ配信され、回答が集約され、AI が分析する」一連で回る。</div>
+    </div>
+    <div class="frow"><div class="k">① 作成<span class="s">dynamic template</span></div><div class="v">メンバーの担当タスクごとに「<b>進捗率（0〜100）</b>」と「<b>ブロッカー有無</b>」の質問を生成。ブロック中のタスクには「<b>顧客確認の要否</b>」を追加。担当タスクが無ければ自由記述のみ。当日分が既にあるメンバーは二重生成せずスキップ。</div></div>
+    <div class="frow"><div class="k">② 配信（共有）<span class="s">multi-channel</span></div><div class="v">メンバーの <code class="inl">external_id</code> を Slack のチャネル / DM として解決して配信。未設定なら既定チャネルへフォールバック。配信は Slack / Google Sheets / ローカルファイルから選択。</div></div>
+    <div class="frow"><div class="k">③ 収集<span class="s">submit</span></div><div class="v">メンバーの回答を受信して日報に記録、提出済みへ更新。配信済みで未回答のものは Alert の「日報未回答」スキャンが拾う。</div></div>
+    <div class="frow"><div class="k">④ AI 分析<span class="s">analyze</span></div><div class="v">回答を AI が解析して進捗サマリを生成し、ブロッカーを構造化抽出。「なし」以外のブロッカー回答は経営サマリ・アラートの材料になる。</div></div>
+
+    <h3><span class="x">05</span>実行モデル — トリガーと承認</h3>
+    <table>
+      <tr><th>能力</th><th>実行タイミング</th><th>トリガー</th><th>人の関与</th></tr>
+      <tr><td><b>Plan</b></td><td>会議・課題の発生時</td><td>取込イベント / 手動</td><td>—（自動でタスク化）</td></tr>
+      <tr><td><b>Assign</b></td><td>Plan 直後</td><td>AI が割当案を生成</td><td><b>PM が承認 / 却下</b></td></tr>
+      <tr><td><b>Track</b></td><td>毎日（配信 8:00 → 回答 → 分析）</td><td>スケジュール</td><td>メンバーが回答</td></tr>
+      <tr><td><b>Alert</b></td><td>30 分ごと（終日）</td><td>スケジュール</td><td>確認・解決を操作</td></tr>
+      <tr><td><b>Overview</b></td><td>毎朝 7:00</td><td>スケジュール</td><td>閲覧して意思決定</td></tr>
+    </table>
+    <div class="note"><b>AI が回し、人は要所だけ。</b>取込・タスク化・日報配信・分析・アラート・サマリは自動で回る。人が手を入れるのは「割当の承認」「日報への回答」「アラートの解決判断」だけ — 進行管理の定型は AI に任せ、人は判断に集中する。</div>
+    <div class="note boundary"><b>順序はユーザー操作で壊れない。</b>調整できるのは時刻だけで、実行順序は内部で固定。経営サマリと日報配信を同じ時刻にしても 1 ジョブにまとめて正しい順に逐次実行し、スキャン間隔を極端に短くしても多重起動・滞留しないよう同時実行を 1 つに集約する。不正な時刻は既定値へ丸めて停止しない。</div>
+
+    <h3><span class="x">06</span>配信とインターフェース</h3>
+    <div class="frow"><div class="k">マルチチャネル配信</div><div class="v"><b>Slack / Google Sheets / ローカルファイル</b> へ配信。未設定時は <code class="inl">local_file → in_memory</code> へ安全にフォールバック（Slack トークンが無くても動く）。</div></div>
+    <div class="frow"><div class="k">設定 GUI</div><div class="v"><code class="inl">/settings</code> で接続先・チャネル・配信時刻を設定（localhost 専用・シークレットはマスク表示）。</div></div>
+    <div class="frow"><div class="k">永続化</div><div class="v">PostgreSQL にタスク / メンバー / 日報 / アラート / 監査ログを保持。</div></div>
+
+    <h3><span class="x">07</span>セットアップ</h3>
+    <ol class="steps">
+      <li><h4>環境変数（.env）</h4><pre>CONTEXT_HUB_BASE_URL=http://localhost:8000/api/v1
+CONTEXT_HUB_USE_MOCK=false
+NOTIFICATION_CHANNEL=local_file   <span class="c"># Slack未取得時の安全策</span></pre></li>
+      <li><h4>起動（PostgreSQL + compose）</h4><pre>docker compose up --build
+<span class="c"># db(:5433) / app(:8001) / migrate が起動</span></pre></li>
+      <li><h4>会議からタスク生成</h4><pre>plan.extract_tasks_from_meeting(projectId, meetingId)
+<span class="c"># ハブの get_meeting を叩き、抽出タスクを取り込む</span></pre></li>
+    </ol>
+    <div class="note"><b>配布モデル。</b>AIマネージャーは公開パッケージではなく、private リポジトリ + 社内 PC へのデプロイ型。文脈はハブから取得し、進行管理は社内に閉じる。</div>
+  </section>
+</div>
+
+<!-- ===================== INTEGRATION ===================== -->
+<div class="panel" id="flow" role="tabpanel">
+  <section>
+    <div class="section-head"><span class="num">integration</span><h2>三層を繋ぐ</h2></div>
+    <p class="lead">プロジェクト発足から日々の進行管理まで、三層がどう協調するか。コンテクストハブを結節点に、AIマネージャーは REST で文脈を取得し、コアは MCP で opt-in 注入する。顧客データは社内PCの境界内に留まる。</p>
+
+    <h3><span class="x">01</span>全体データフロー</h3>
+    <div class="figure">
+      <div class="arch">
+        <div class="col">
+          <div class="anode">データ源<span class="s">Slack / Backlog</span></div>
+          <div class="anode">Redmine / Gmail<span class="s">会議メモ / ファイル</span></div>
+          <div class="anode">Salesforce<span class="s">メタデータ</span></div>
+        </div>
+        <div class="conn"><span class="lab">取込</span><span class="ln">→</span></div>
+        <div class="hub">
+          <div class="t">コンテクストハブ</div>
+          <div class="s">社内PCに閉じる · :8000</div>
+          <ul>
+            <li>· 正規化・検索・タスク抽出</li>
+            <li>· REST / MCP で提供</li>
+            <li>· SQLite / PostgreSQL</li>
+          </ul>
+        </div>
+        <div class="conn"><span class="lab">REST</span><span class="ln">→</span></div>
+        <div class="col">
+          <div class="anode">AIマネージャー<span class="s">5能力 · :8001</span></div>
+          <div class="anode">配信<span class="s">Slack / Sheets / ローカル</span></div>
+        </div>
+      </div>
+      <div class="branch">
+        <div class="anode" style="min-width:190px">コンテクストハブ</div>
+        <div class="conn"><span class="lab">MCP · opt-in 注入</span><span class="ln">→</span></div>
+        <div class="anode" style="min-width:190px">コア<span class="s">決定的ドキュメント生成</span></div>
+      </div>
+      <div class="figcap">図 7 — ハブが結節点。AIマネージャーは REST で文脈取得、コアは MCP で opt-in 注入。顧客データは社内PC境界内に留まる。</div>
+    </div>
+
+    <h3><span class="x">02</span>ユーザー目線の一連の流れ</h3>
+    <ol class="steps">
+      <li><h4>プロジェクト発足・文脈集約</h4><p>Slack・Backlog・会議メモ等をハブに取り込む。Slack は既存スクレイピング結果を push、Backlog/Redmine は API、会議メモは登録時に自動でタスク抽出。</p></li>
+      <li><h4>初期タスクの自動生成</h4><p>AIマネージャーが会議・課題からタスクを起こす。初期開発案件でも最初からタスクが切られた状態に。</p></li>
+      <li><h4>割当と進行管理</h4><p>担当案の生成・承認、日報の配信と分析、遅延・過負荷の検知。日々の進行が回る。</p></li>
+      <li><h4>成果物の生成（コア）</h4><p>Salesforce 案件ではコアが知識グラフから設計ドキュメントを決定的に生成。ハブの文脈を opt-in で材料化できる（生データは転記しない）。</p></li>
+      <li><h4>経営サマリ</h4><p>タスク・日報・アラートを集約した日次サマリで全体像を把握。人は意思決定と余白からの発想に集中する。</p></li>
+    </ol>
+
+    <h3><span class="x">03</span>公開境界</h3>
+    <table>
+      <tr><th>層</th><th>配布</th><th>公開先</th></tr>
+      <tr><td><b>コア</b></td><td>npm パッケージ</td><td>公開 OSS（npmjs）</td></tr>
+      <tr><td><b>コンテクストハブ</b></td><td>PyPI パッケージ</td><td>公開 OSS（PyPI）</td></tr>
+      <tr><td><b>AIマネージャー</b></td><td>デプロイ型アプリ</td><td>private リポ + 社内PC</td></tr>
+    </table>
+    <div class="note boundary"><b>なぜ三層なのか。</b>「文脈を集める層」「決定的な足場を作る層」「進行を管理する層」を分離することで、各層を独立して差し替え・公開・検証できる。コアとコンテクストハブは OSS、AIマネージャーは社内、という公開境界もこの分離に沿う。</div>
+  </section>
+</div>
+
+</main>
+
+<footer>
+  <div class="row">
+    <span>余白フォース — yohakuforce suite documentation</span>
+    <span>コア · コンテクストハブ · AIマネージャー</span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var tabs = document.querySelectorAll('nav.tabs button');
+    var panels = document.querySelectorAll('.panel');
+    function select(name) {
+      if (!document.getElementById(name)) name = 'overview';
+      tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === name); });
+      panels.forEach(function (p) { p.classList.toggle('active', p.id === name); });
+      if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+      window.scrollTo({ top: 0 });
+    }
+    tabs.forEach(function (t) { t.addEventListener('click', function () { select(t.dataset.tab); }); });
+    document.querySelectorAll('[data-go]').forEach(function (b) {
+      b.addEventListener('click', function () { select(b.dataset.go); });
+    });
+    select((location.hash || '#overview').slice(1));
+  })();
+</script>
+</body>
+</html>
