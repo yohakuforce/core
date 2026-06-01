@@ -18,6 +18,18 @@ import type {
   ApexControlFlowNode as ControlFlowNode,
   ApexMethodControlFlow as MethodControlFlow,
 } from "../types/graph.js";
+import {
+  FINALLY_LABEL,
+  TRY_LABEL,
+  catchLabel,
+  dmlLabel,
+  ifLabel,
+  loopLabel,
+  returnLabel,
+  soqlLabel,
+  stmtLabel,
+  throwLabel,
+} from "./apex-node-label.js";
 
 type IfNode = Extract<ControlFlowNode, { kind: "if" }>;
 
@@ -48,14 +60,13 @@ interface RenderResult {
   readonly exitId: string | null;
 }
 
-const END_LABEL = "End";
-const LABEL_TRUNCATE = 80;
+const END_LABEL = "終了";
 
 export function buildMethodFlowchart(flow: MethodControlFlow): MermaidFlowchart {
   const ctx: RenderContext = { lines: ["flowchart TD"], details: [], nextId: 1 };
   const startId = "n_start";
   const endId = "n_end";
-  ctx.lines.push(`  ${startId}([${escapeLabel(flow.methodName)}])`);
+  ctx.lines.push(`  ${startId}(["開始: ${escapeLabel(flow.methodName)}"])`);
 
   const result = renderSequence(flow.nodes, ctx);
   let endUsed = false;
@@ -100,32 +111,28 @@ function renderNode(node: ControlFlowNode, ctx: RenderContext): RenderResult {
   switch (node.kind) {
     case "soql": {
       const id = nextId(ctx);
-      const obj = node.primaryObject ?? "?";
-      const label = `SOQL: ${obj}`;
+      const label = soqlLabel(node.primaryObject);
       ctx.lines.push(`  ${id}[/"${escapeLabel(label)}"/]`);
       pushDetail(ctx, id, "soql", label, node.raw);
       return { entryId: id, exitId: id };
     }
     case "dml": {
       const id = nextId(ctx);
-      const path = node.viaDatabaseClass ? "Database" : "DML";
-      const label = `${path} ${node.verb}: ${node.target}`;
+      const label = dmlLabel(node.verb, node.target, node.viaDatabaseClass);
       ctx.lines.push(`  ${id}[/"${escapeLabel(label)}"/]`);
       pushDetail(ctx, id, "dml", label, label);
       return { entryId: id, exitId: id };
     }
     case "return": {
       const id = nextId(ctx);
-      const labelExpr = truncate(node.expression, 30);
-      const label = `return ${labelExpr}`;
+      const label = returnLabel(node.expression);
       ctx.lines.push(`  ${id}(("${escapeLabel(label)}"))`);
       pushDetail(ctx, id, "return", label, `return ${node.expression}`);
       return { entryId: id, exitId: null };
     }
     case "throw": {
       const id = nextId(ctx);
-      const labelExpr = truncate(node.expression, 30);
-      const label = `throw ${labelExpr}`;
+      const label = throwLabel(node.expression);
       ctx.lines.push(`  ${id}(("${escapeLabel(label)}"))`);
       pushDetail(ctx, id, "throw", label, `throw ${node.expression}`);
       return { entryId: id, exitId: null };
@@ -139,7 +146,7 @@ function renderNode(node: ControlFlowNode, ctx: RenderContext): RenderResult {
       return renderTry(node, ctx);
     case "stmt": {
       const id = nextId(ctx);
-      const label = truncate(node.text, LABEL_TRUNCATE);
+      const label = stmtLabel(node.text);
       ctx.lines.push(`  ${id}["${escapeLabel(label)}"]`);
       pushDetail(ctx, id, "stmt", label, node.text);
       return { entryId: id, exitId: id };
@@ -163,7 +170,7 @@ function collapseWhitespace(s: string): string {
 
 function renderIf(node: IfNode, ctx: RenderContext): RenderResult {
   const condId = nextId(ctx);
-  const condLabel = truncate(node.condition, LABEL_TRUNCATE);
+  const condLabel = ifLabel(node.condition);
   ctx.lines.push(`  ${condId}{"${escapeLabel(condLabel)}"}`);
   pushDetail(ctx, condId, "if", condLabel, node.condition);
   const thenR = renderSequence(node.thenNodes, ctx);
@@ -171,11 +178,11 @@ function renderIf(node: IfNode, ctx: RenderContext): RenderResult {
 
   // true 側
   if (thenR.entryId !== "") {
-    ctx.lines.push(`  ${condId} -->|true| ${thenR.entryId}`);
+    ctx.lines.push(`  ${condId} -->|はい| ${thenR.entryId}`);
   }
   // false 側
   if (elseR.entryId !== "") {
-    ctx.lines.push(`  ${condId} -->|false| ${elseR.entryId}`);
+    ctx.lines.push(`  ${condId} -->|いいえ| ${elseR.entryId}`);
   }
 
   // 合流ノード: どちらか片方でも exit があれば共通の合流点を作る
@@ -189,8 +196,8 @@ function renderIf(node: IfNode, ctx: RenderContext): RenderResult {
   ctx.lines.push(`  ${joinId}(( ))`);
   if (thenExits !== null && thenExits !== "") edge(ctx, thenExits, joinId);
   if (node.elseNodes.length === 0) {
-    // false 側の経路 cond → join (ラベル false)
-    ctx.lines.push(`  ${condId} -->|false| ${joinId}`);
+    // false 側の経路 cond → join (ラベル いいえ)
+    ctx.lines.push(`  ${condId} -->|いいえ| ${joinId}`);
   } else if (elseExits !== null && elseExits !== "") {
     edge(ctx, elseExits, joinId);
   }
@@ -202,10 +209,9 @@ function renderLoop(
   ctx: RenderContext,
 ): RenderResult {
   const headerId = nextId(ctx);
-  const label = node.kind === "for" ? `for ${node.header}` : `while ${node.header}`;
-  const shortLabel = truncate(label, LABEL_TRUNCATE);
+  const shortLabel = loopLabel(node.kind, node.header);
   ctx.lines.push(`  ${headerId}["${escapeLabel(shortLabel)}"]`);
-  pushDetail(ctx, headerId, node.kind, shortLabel, label);
+  pushDetail(ctx, headerId, node.kind, shortLabel, `${node.kind} ${node.header}`);
   const bodyR = renderSequence(node.body, ctx);
   if (bodyR.entryId === "") {
     return { entryId: headerId, exitId: headerId };
@@ -213,7 +219,7 @@ function renderLoop(
   edge(ctx, headerId, bodyR.entryId);
   if (bodyR.exitId !== null) {
     // back-edge を点線で
-    ctx.lines.push(`  ${bodyR.exitId} -.->|loop| ${headerId}`);
+    ctx.lines.push(`  ${bodyR.exitId} -.->|繰返| ${headerId}`);
   }
   return { entryId: headerId, exitId: headerId };
 }
@@ -228,8 +234,8 @@ function renderTry(
   ctx: RenderContext,
 ): RenderResult {
   const tryId = nextId(ctx);
-  ctx.lines.push(`  ${tryId}[["try"]]`);
-  pushDetail(ctx, tryId, "try", "try", "try");
+  ctx.lines.push(`  ${tryId}[["${escapeLabel(TRY_LABEL)}"]]`);
+  pushDetail(ctx, tryId, "try", TRY_LABEL, "try");
   const tryR = renderSequence(node.tryNodes, ctx);
   if (tryR.entryId !== "") edge(ctx, tryId, tryR.entryId);
 
@@ -238,10 +244,10 @@ function renderTry(
   if (tryR.exitId !== null && tryR.exitId !== "") branchExits.push(tryR.exitId);
   for (const c of node.catches) {
     const cId = nextId(ctx);
-    const cLabel = `catch ${c.exceptionType}`;
+    const cLabel = catchLabel(c.exceptionType);
     ctx.lines.push(`  ${cId}["${escapeLabel(cLabel)}"]`);
     pushDetail(ctx, cId, "catch", cLabel, cLabel);
-    ctx.lines.push(`  ${tryId} -.->|throw| ${cId}`);
+    ctx.lines.push(`  ${tryId} -.->|例外発生| ${cId}`);
     const cr = renderSequence(c.nodes, ctx);
     if (cr.entryId !== "") edge(ctx, cId, cr.entryId);
     if (cr.exitId !== null && cr.exitId !== "") branchExits.push(cr.exitId);
@@ -252,8 +258,8 @@ function renderTry(
   let lastExit: string | null = null;
   if (node.finallyNodes.length > 0) {
     const fId = nextId(ctx);
-    ctx.lines.push(`  ${fId}[["finally"]]`);
-    pushDetail(ctx, fId, "finally", "finally", "finally");
+    ctx.lines.push(`  ${fId}[["${escapeLabel(FINALLY_LABEL)}"]]`);
+    pushDetail(ctx, fId, "finally", FINALLY_LABEL, "finally");
     for (const ex of branchExits) edge(ctx, ex, fId);
     const fr = renderSequence(node.finallyNodes, ctx);
     if (fr.entryId !== "") edge(ctx, fId, fr.entryId);

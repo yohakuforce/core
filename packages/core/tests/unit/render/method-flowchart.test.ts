@@ -14,8 +14,9 @@ describe("buildMethodFlowchart - 基本", () => {
     const f = flowFor("public class C { public void run() { } }", "run");
     const m = buildMethodFlowchart(f).mermaid;
     expect(m.startsWith("flowchart TD")).toBe(true);
-    expect(m).toContain("n_start([run])");
-    expect(m).toContain("n_end([End])");
+    // 自然語化: 開始/終了ラベル
+    expect(m).toContain('n_start(["開始: run"])');
+    expect(m).toContain("n_end([終了])");
     expect(m).toContain("n_start --> n_end");
   });
 
@@ -23,65 +24,65 @@ describe("buildMethodFlowchart - 基本", () => {
     const f = flowFor("public class C { public void run() { Integer a = 1; insert acc; } }", "run");
     const m = buildMethodFlowchart(f).mermaid;
     expect(m).toContain('"Integer a = 1"');
-    expect(m).toContain("DML insert: acc");
+    expect(m).toContain("acc を登録"); // DML insert → 自然語
   });
 
-  it("SOQL を /SOQL: <obj>/ 形で出す", () => {
+  it("SOQL を自然語 (<obj> を取得) で出す", () => {
     const f = flowFor(
       "public class C { public void run() { List<Account> r = [SELECT Id FROM Account]; } }",
       "run",
     );
     const m = buildMethodFlowchart(f).mermaid;
-    expect(m).toContain("SOQL: Account");
+    expect(m).toContain("Account を取得");
   });
 });
 
 describe("buildMethodFlowchart - if/else", () => {
-  it("if-else に true/false ラベルを付ける", () => {
+  it("if-else に はい/いいえ ラベルを付ける", () => {
     const f = flowFor(
       "public class C { public void run() { if (x > 0) { return; } else { insert acc; } } }",
       "run",
     );
     const m = buildMethodFlowchart(f).mermaid;
-    expect(m).toContain("|true|");
-    expect(m).toContain("|false|");
+    expect(m).toContain("|はい|");
+    expect(m).toContain("|いいえ|");
   });
 
-  it("else 無しの if は false 側が join に直接行く", () => {
+  it("else 無しの if は いいえ 側が join に直接行く", () => {
     const f = flowFor(
       "public class C { public void run() { if (x) { insert acc; } update b; } }",
       "run",
     );
     const m = buildMethodFlowchart(f).mermaid;
-    expect(m).toContain("|true|");
-    expect(m).toContain("|false|");
+    expect(m).toContain("|はい|");
+    expect(m).toContain("|いいえ|");
     // join ノード (空ラベル) が存在する
     expect(m).toMatch(/n\d+\(\( \)\)/);
   });
 });
 
 describe("buildMethodFlowchart - for/while", () => {
-  it("for に back-edge を点線で書く", () => {
+  it("for を自然語化し back-edge を点線で書く", () => {
     const f = flowFor(
       "public class C { public void run() { for (Account a : rows) { insert a; } } }",
       "run",
     );
     const m = buildMethodFlowchart(f).mermaid;
-    expect(m).toContain("for Account a : rows");
-    expect(m).toContain("-.->|loop|");
+    expect(m).toContain("rows を 1 件ずつ繰り返す");
+    expect(m).toContain("-.->|繰返|");
   });
 });
 
 describe("buildMethodFlowchart - try/catch", () => {
-  it("try / catch / finally の各ブロックを描く", () => {
+  it("try / catch / finally の各ブロックを自然語で描く", () => {
     const f = flowFor(
       "public class C { public void run() { try { insert a; } catch (DmlException e) { return; } finally { update b; } } }",
       "run",
     );
     const m = buildMethodFlowchart(f).mermaid;
-    expect(m).toContain("try");
-    expect(m).toContain("catch DmlException");
-    expect(m).toContain("finally");
+    expect(m).toContain("例外処理");
+    expect(m).toContain("DmlException を捕捉");
+    expect(m).toContain("後処理（finally）");
   });
 });
 

@@ -7,6 +7,18 @@
 // の両方を提供する。
 // ----------------------------------------------------------------------------
 
+import {
+  FINALLY_LABEL,
+  TRY_LABEL,
+  catchLabel,
+  dmlLabel,
+  ifLabel,
+  loopLabel,
+  returnLabel,
+  soqlLabel,
+  stmtLabel,
+  throwLabel,
+} from "../render/apex-node-label.js";
 import { buildMethodFlowchart } from "../render/method-flowchart.js";
 import type { ApexControlFlowNode, ApexMethodControlFlow } from "../types/graph.js";
 import { escapeAttr, escapeHtml } from "./escape.js";
@@ -45,33 +57,39 @@ function renderTree(nodes: readonly ApexControlFlowNode[]): string {
   return `<ul>${nodes.map(renderNode).join("")}</ul>`;
 }
 
+function rawSpan(text: string, max: number): string {
+  return `<span style="color:var(--muted);">${escapeHtml(truncate(text, max))}</span>`;
+}
+
 function renderNode(n: ApexControlFlowNode): string {
   switch (n.kind) {
     case "soql":
-      return `<li class="node-soql">SOQL → ${escapeHtml(n.primaryObject ?? "?")} <span style="color:var(--muted);">${escapeHtml(truncate(n.raw, 80))}</span></li>`;
+      return `<li class="node-soql">${escapeHtml(soqlLabel(n.primaryObject))} ${rawSpan(n.raw, 80)}</li>`;
     case "dml":
-      return `<li class="node-dml">DML ${escapeHtml(n.verb)} → ${escapeHtml(n.target)}${n.viaDatabaseClass ? " (Database.*)" : ""}</li>`;
+      return `<li class="node-dml">${escapeHtml(dmlLabel(n.verb, n.target, n.viaDatabaseClass))}</li>`;
     case "if":
-      return `<li class="node-if">if (${escapeHtml(truncate(n.condition, 60))})
-        <ul>then ${renderTree(n.thenNodes).slice(4, -5)}</ul>
-        ${n.elseNodes.length > 0 ? `<ul>else ${renderTree(n.elseNodes).slice(4, -5)}</ul>` : ""}
+      return `<li class="node-if">${escapeHtml(ifLabel(n.condition))} ${rawSpan(n.condition, 60)}
+        <ul>はい ${renderTree(n.thenNodes).slice(4, -5)}</ul>
+        ${n.elseNodes.length > 0 ? `<ul>いいえ ${renderTree(n.elseNodes).slice(4, -5)}</ul>` : ""}
       </li>`;
     case "for":
-      return `<li class="node-for">for (${escapeHtml(truncate(n.header, 60))})${renderTree(n.body)}</li>`;
+      return `<li class="node-for">${escapeHtml(loopLabel("for", n.header))} ${rawSpan(n.header, 60)}${renderTree(n.body)}</li>`;
     case "while":
-      return `<li class="node-while">while (${escapeHtml(truncate(n.header, 60))})${renderTree(n.body)}</li>`;
+      return `<li class="node-while">${escapeHtml(loopLabel("while", n.header))} ${rawSpan(n.header, 60)}${renderTree(n.body)}</li>`;
     case "try":
-      return `<li class="node-try">try${renderTree(n.tryNodes)}${n.catches
-        .map((c) => `<ul>catch (${escapeHtml(c.exceptionType)})${renderTree(c.nodes)}</ul>`)
+      return `<li class="node-try">${escapeHtml(TRY_LABEL)}${renderTree(n.tryNodes)}${n.catches
+        .map((c) => `<ul>${escapeHtml(catchLabel(c.exceptionType))}${renderTree(c.nodes)}</ul>`)
         .join("")}${
-        n.finallyNodes.length > 0 ? `<ul>finally${renderTree(n.finallyNodes)}</ul>` : ""
+        n.finallyNodes.length > 0
+          ? `<ul>${escapeHtml(FINALLY_LABEL)}${renderTree(n.finallyNodes)}</ul>`
+          : ""
       }</li>`;
     case "return":
-      return `<li class="node-return">return ${escapeHtml(truncate(n.expression, 80))}</li>`;
+      return `<li class="node-return">${escapeHtml(returnLabel(n.expression))} ${rawSpan(n.expression, 60)}</li>`;
     case "throw":
-      return `<li class="node-throw">throw ${escapeHtml(truncate(n.expression, 80))}</li>`;
+      return `<li class="node-throw">${escapeHtml(throwLabel(n.expression))} ${rawSpan(n.expression, 60)}</li>`;
     case "stmt":
-      return `<li>${escapeHtml(truncate(n.text, 100))}</li>`;
+      return `<li>${escapeHtml(stmtLabel(n.text))} ${rawSpan(n.text, 80)}</li>`;
   }
 }
 
