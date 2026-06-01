@@ -6,6 +6,7 @@
 // ----------------------------------------------------------------------------
 
 import { escapeAttr, escapeHtml } from "./escape.js";
+import { icon } from "./icons.js";
 import type { ComponentViewModel, SectionViewModel } from "./types.js";
 
 function escapeJsonForScript(s: string): string {
@@ -17,6 +18,8 @@ export interface PageRenderOptions {
   readonly indexHref: string;
   /** assets ディレクトリへの相対パス (例: "../../assets") */
   readonly assetsHref: string;
+  /** 凡例ページ legend.html への相対パス (例: "../../legend.html") */
+  readonly legendHref?: string;
   /** Phase 11: cmdk が href を解決する基準パス (例: "../../") */
   readonly hrefPrefix?: string;
   /** Phase 11: 埋め込み検索インデックス JSON (string 化済) */
@@ -49,6 +52,11 @@ export function renderComponentPage(vm: ComponentViewModel, options: PageRenderO
         <span class="brand-sub">Knowledge Hub</span>
       </a>
     </div>
+    ${
+      options.legendHref !== undefined
+        ? `<nav class="global-nav"><a href="${escapeAttr(options.legendHref)}" class="legend-link icon-button">${icon("book", { size: "15" })}凡例（読み方）</a></nav>`
+        : ""
+    }
   </header>
   <header class="component-header">
     <nav class="breadcrumb">

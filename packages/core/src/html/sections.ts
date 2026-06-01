@@ -16,6 +16,10 @@ export const SECTION_IDS = [
   "public-interface", // 4. 公開インターフェース
   "data-model-touchpoints", // 5. データモデル接点 (参照Object/Field)
   "internal-flow", // 6. 内部処理フロー (method-flowchart 等)
+  "processing-detail", // 6.5 処理詳細 (詳細設計: メソッド/要素単位の処理・分岐・計算・戻り値)
+  "field-writes", // 6.6 項目値の割り当て (apex/trigger: 触れるオブジェクト別タブ、LLM抽出)
+  "field-assignment", // 4.5 項目値の割り当て (詳細設計: 項目ごとの値の決まり方・書き込み元)
+  "calculation-rules", // 4.6 計算項目・入力規則 (詳細設計: 数式/入力規則の算出ロジック)
   "io-contract", // 7. 入出力契約 (params/returns / handlers)
   "test-coverage", // 8. テスト被覆 (既存テストへのリンク)
   "change-history", // 9. 変更履歴 (直近 N コミット)
@@ -110,6 +114,56 @@ export const SECTION_SCHEMA: readonly SectionDescriptor[] = [
       lwc: "not-applicable",
       object: "not-applicable",
       flow: "required",
+    },
+  },
+  {
+    id: "processing-detail",
+    label: "処理詳細",
+    // 決定的スケルトン (メソッド統合表 + 制御フロー) の上に LLM 解説ブロックを重ねる
+    source: "deterministic",
+    perType: {
+      apex: "optional",
+      trigger: "optional",
+      lwc: "not-applicable",
+      object: "not-applicable",
+      flow: "optional",
+    },
+  },
+  {
+    id: "field-writes",
+    label: "項目値の割り当て",
+    // タブ構造は決定的、各タブ内訳は LLM (ai_managed)
+    source: "deterministic",
+    perType: {
+      apex: "optional",
+      trigger: "optional",
+      lwc: "not-applicable",
+      object: "not-applicable",
+      flow: "not-applicable",
+    },
+  },
+  {
+    id: "field-assignment",
+    label: "項目値の割り当て",
+    source: "deterministic",
+    perType: {
+      apex: "not-applicable",
+      trigger: "not-applicable",
+      lwc: "not-applicable",
+      object: "optional",
+      flow: "not-applicable",
+    },
+  },
+  {
+    id: "calculation-rules",
+    label: "計算項目・入力規則",
+    source: "deterministic",
+    perType: {
+      apex: "not-applicable",
+      trigger: "not-applicable",
+      lwc: "not-applicable",
+      object: "optional",
+      flow: "not-applicable",
     },
   },
   {

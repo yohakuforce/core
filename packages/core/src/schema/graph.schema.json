@@ -109,6 +109,8 @@
           "description": "Lookup/MasterDetail の参照先オブジェクト"
         },
         "picklistValues": { "type": "array", "items": { "type": "string" } },
+        "formula": { "type": "string", "description": "数式項目の計算式。詳細設計の計算方法に使用" },
+        "defaultValue": { "type": "string", "description": "既定値の式/リテラル。詳細設計の項目値割り当てに使用" },
         "sourcePath": { "type": "string" },
         "contentHash": { "type": "string" }
       }

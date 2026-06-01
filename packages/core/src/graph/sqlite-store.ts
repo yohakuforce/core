@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS fields (
   is_custom INTEGER NOT NULL,
   reference_to_json TEXT,
   picklist_values_json TEXT,
+  formula TEXT,
+  default_value TEXT,
   source_path TEXT NOT NULL,
   content_hash TEXT NOT NULL,
   FOREIGN KEY (object) REFERENCES objects(fqn) ON DELETE CASCADE
@@ -324,6 +326,7 @@ const ALLOWED_TABLES_FOR_MIGRATE: ReadonlySet<string> = new Set([
   "apex_triggers",
   "permission_sets",
   "profiles",
+  "fields",
 ]);
 const SAFE_IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -409,6 +412,9 @@ export class SqliteGraphStore {
     addColumnIfMissing(this.#db, "apex_triggers", "body_json", "TEXT");
     addColumnIfMissing(this.#db, "permission_sets", "body_json", "TEXT");
     addColumnIfMissing(this.#db, "profiles", "body_json", "TEXT");
+    // Phase: 詳細設計書化 — 数式項目 / 既定値の round-trip 用カラム
+    addColumnIfMissing(this.#db, "fields", "formula", "TEXT");
+    addColumnIfMissing(this.#db, "fields", "default_value", "TEXT");
   }
 
   close(): void {
@@ -561,7 +567,7 @@ export class SqliteGraphStore {
 
   private writeFields(graph: KnowledgeGraph): void {
     const stmt = this.#db.prepare(
-      "INSERT OR REPLACE INTO fields(fqn, object, label, description, type, required, is_unique, is_custom, reference_to_json, picklist_values_json, source_path, content_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT OR REPLACE INTO fields(fqn, object, label, description, type, required, is_unique, is_custom, reference_to_json, picklist_values_json, formula, default_value, source_path, content_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     );
     for (const f of graph.fields) {
       stmt.run(
@@ -575,6 +581,8 @@ export class SqliteGraphStore {
         f.isCustom ? 1 : 0,
         f.referenceTo === undefined ? null : JSON.stringify(f.referenceTo),
         f.picklistValues === undefined ? null : JSON.stringify(f.picklistValues),
+        f.formula ?? null,
+        f.defaultValue ?? null,
         f.sourcePath,
         f.contentHash,
       );

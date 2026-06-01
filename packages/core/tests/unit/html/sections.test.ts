@@ -9,9 +9,9 @@ import {
 } from "../../../src/html/sections.js";
 
 describe("SECTION_SCHEMA", () => {
-  it("12 項目すべて定義されている", () => {
-    expect(SECTION_SCHEMA).toHaveLength(12);
-    expect(SECTION_IDS).toHaveLength(12);
+  it("16 項目すべて定義されている (12 基本 + 詳細設計 4: processing-detail / field-writes / field-assignment / calculation-rules)", () => {
+    expect(SECTION_SCHEMA).toHaveLength(16);
+    expect(SECTION_IDS).toHaveLength(16);
   });
 
   it("各セクションは全コンポーネントタイプの perType エントリを持つ", () => {

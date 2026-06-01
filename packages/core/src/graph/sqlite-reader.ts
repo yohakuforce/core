@@ -75,6 +75,8 @@ interface FieldRow {
   readonly is_custom: number;
   readonly reference_to_json: string | null;
   readonly picklist_values_json: string | null;
+  readonly formula: string | null;
+  readonly default_value: string | null;
   readonly source_path: string;
   readonly content_hash: string;
 }
@@ -711,7 +713,7 @@ export class KnowledgeGraphReader {
   private readFields(): readonly Field[] {
     return this.#store
       .query<FieldRow>(
-        "SELECT fqn, object, label, description, type, required, is_unique, is_custom, reference_to_json, picklist_values_json, source_path, content_hash FROM fields",
+        "SELECT fqn, object, label, description, type, required, is_unique, is_custom, reference_to_json, picklist_values_json, formula, default_value, source_path, content_hash FROM fields",
       )
       .map((r) => ({
         fullyQualifiedName: r.fqn,
@@ -730,6 +732,8 @@ export class KnowledgeGraphReader {
           r.picklist_values_json !== null
             ? (JSON.parse(r.picklist_values_json) as readonly string[])
             : undefined,
+        formula: r.formula ?? undefined,
+        defaultValue: r.default_value ?? undefined,
         sourcePath: r.source_path,
         contentHash: r.content_hash,
       }));

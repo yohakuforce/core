@@ -88,6 +88,10 @@ export interface Field {
   readonly isCustom: boolean;
   readonly referenceTo?: readonly string[];
   readonly picklistValues?: readonly string[];
+  /** 数式項目の計算式 (type=Formula 等)。詳細設計の「計算方法」算出に使用 */
+  readonly formula?: string;
+  /** 既定値の式/リテラル (defaultValue)。詳細設計の「項目値の割り当て」に使用 */
+  readonly defaultValue?: string;
   readonly sourcePath: string;
   readonly contentHash: string;
 }

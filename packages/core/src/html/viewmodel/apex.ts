@@ -10,10 +10,13 @@
 import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForApex } from "../../render/concerns.js";
 import { summaryForApex } from "../../render/summary.js";
+import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
 import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
+import { buildProcessingDetailSection } from "./apex-detail.js";
+import { buildFieldWritesSection } from "./apex-field-writes.js";
 import { changeHistorySection } from "./shared.js";
 
 export function buildApexViewModel(
@@ -55,6 +58,17 @@ export function buildApexViewModel(
       title: "内部処理フロー",
       htmlContent: renderInternalFlowPlaceholder(cls),
     },
+    buildProcessingDetailSection({
+      methodSummaryTable: buildMethodSummaryTable(cls),
+      body: cls.body,
+      preservedNarrative: preservedBlocks?.get("processing-detail-narrative"),
+    }),
+    buildFieldWritesSection({
+      componentName: cls.fullyQualifiedName,
+      body: cls.body,
+      knownObjects: new Set(graph.objects.map((o) => o.fullyQualifiedName)),
+      getPreserved: (id) => preservedBlocks?.get(id),
+    }),
     {
       id: "io-contract",
       title: "入出力契約",

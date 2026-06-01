@@ -17,6 +17,7 @@ import { extractBusinessMeanings } from "./business-meaning-extractor.js";
 import { CMDK_CSS, CMDK_JS } from "./cmdk.js";
 import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./data-builder.js";
 import { renderHomeHtml } from "./home.js";
+import { buildLegendPage } from "./legend.js";
 import { renderComponentPage } from "./page-template.js";
 import { preserveAiManagedBlocks } from "./preserve-blocks.js";
 import { METHOD_FLOWCHART_JS } from "./render-method-flow.js";
@@ -211,6 +212,14 @@ export function renderHtmlAll(
   );
   written.push(indexPath);
 
+  const legendPath = join(htmlOutDir, "legend.html");
+  writeFileSync(
+    legendPath,
+    buildLegendPage({ indexHref: "index.html", assetsHref: "assets" }),
+    "utf8",
+  );
+  written.push(legendPath);
+
   warnings.push({ code: "phase_notice", message: HOME_PHASE_NOTICE });
 
   if (auditFailures.length > 0 && options?.strict === true) {
@@ -251,6 +260,7 @@ function renderComponentsForType(
     const html = renderComponentPage(vm, {
       indexHref: "../../index.html",
       assetsHref: "../../assets",
+      legendHref: "../../legend.html",
       hrefPrefix: "../../",
       ...(searchIndexJson !== undefined ? { searchIndexJson } : {}),
     });
@@ -600,6 +610,135 @@ strong { color: var(--fg-strong); }
 .method-flow .switch-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
 .method-flow .switch-buttons button { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border); background: #fff; border-radius: 3px; cursor: pointer; color: var(--fg); }
 .method-flow .switch-buttons button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== 詳細設計セクション (processing-detail / field-assignment / calculation-rules) ===== */
+/* 数式の自然語化 */
+.formula-nl {
+  background: var(--bg-alt); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: var(--radius); padding: 10px 14px; margin: 6px 0;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.8;
+  white-space: pre-wrap; word-break: break-word; color: var(--fg-strong);
+}
+/* base の pre code (白文字・block) を上書きしてフィールド名を可読化 */
+.formula-nl code {
+  display: inline; background: rgba(1,118,211,0.10); color: var(--accent);
+  padding: 0 4px; border-radius: 3px; border: 0; font-size: 12px; line-height: inherit;
+}
+.formula-raw { margin: 4px 0 0; }
+.formula-raw summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+.formula-raw pre { background: var(--bg-alt); border-radius: var(--radius); padding: 10px; overflow-x: auto; font-size: 12px; }
+
+/* 計算項目 / 入力規則カード */
+.calc-card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-surface); padding: 12px 16px; margin: 12px 0; box-shadow: var(--shadow-sm);
+}
+.calc-card h4 { margin: 0 0 8px; font-size: 14px; color: var(--fg-strong); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.calc-card .calc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 6px 0 2px; }
+.calc-card.calc-vr { border-left: 3px solid var(--type-flow); }
+.calc-card .vr-message { font-size: 13px; margin: 4px 0; }
+.badge { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.badge-vr { background: var(--severity-medium-bg); color: var(--severity-medium-fg); }
+.badge-on { background: var(--severity-info-bg); color: var(--severity-info-fg); }
+.badge-off { background: var(--bg-alt); color: var(--muted); }
+
+/* 項目値の割り当て表 */
+.field-assignment .value-origin {
+  display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px;
+  border-radius: 4px; background: var(--accent-bg); color: var(--accent);
+}
+
+/* 処理詳細: 件数表 + 処理ステップ + LLM 解説 */
+.processing-summary .num { text-align: center; font-family: var(--font-mono); }
+.processing-summary .num.hot { font-weight: 700; color: var(--type-trigger); }
+.method-detail { border: 1px solid var(--border); border-radius: var(--radius); margin: 8px 0; background: var(--bg-surface); overflow: hidden; }
+.method-detail summary { cursor: pointer; padding: 9px 14px; background: var(--bg-alt); font-size: 13px; }
+.step-list { list-style: none; padding-left: 18px; border-left: 1px dashed var(--border-strong); margin: 8px 0 8px 6px; }
+.step-list li { margin: 4px 0; font-size: 13px; line-height: 1.7; }
+.step-list .step-else { font-size: 12px; color: var(--muted); margin: 2px 0; }
+.step-kind {
+  display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+  margin-right: 6px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.step-in { background: var(--bg-alt); color: var(--muted); }
+.step-soql, .step-dml { background: var(--severity-high-bg); color: var(--severity-high-fg); }
+.step-if, .step-loop, .step-try { background: var(--severity-medium-bg); color: var(--severity-medium-fg); }
+.step-return { background: var(--severity-info-bg); color: var(--severity-info-fg); }
+.step-throw { background: var(--type-trigger); color: #fff; }
+.step-stmt { background: var(--bg-alt); color: var(--fg); }
+.step-raw { font-size: 11px; color: var(--muted); }
+/* LLM 解説 (processing-detail-narrative) — 決定的部と視覚的に区別 */
+.yohaku-section--processing-detail .narrative {
+  border: 1px solid var(--accent); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); background: var(--accent-bg); padding: 12px 16px; margin: 8px 0 16px;
+}
+.narrative .method-narrative dt { font-weight: 600; margin-top: 8px; color: var(--fg-strong); }
+.narrative .method-narrative dd { margin: 2px 0 6px 0; font-size: 13px; line-height: 1.75; }
+
+/* AI 確認/詳細ブロック (項目割当の詳細 / 計算・入力規則レビュー) — 決定的部と区別 */
+.ai-detail {
+  border: 1px solid var(--accent); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); background: var(--accent-bg); padding: 12px 16px; margin: 12px 0;
+}
+.ai-detail > .ai-detail-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ai-detail .ai-tag { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: #fff; }
+.ai-detail .data-table { background: #fff; }
+.ai-review.clean { border-color: var(--type-object); border-left-color: var(--type-object); background: #f0faf3; }
+.ai-review.clean .ai-detail-head { color: var(--type-object); }
+.ai-review.clean .ai-tag { background: var(--type-object); }
+
+/* オブジェクト別タブ (項目値の割り当て: 1クラス→複数オブジェクト) — JS 不要の radio タブ */
+.obj-tabs { margin: 8px 0; }
+.obj-tabs > input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.obj-tabs > .obj-tablist { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 0; }
+.obj-tabs > .obj-tablist > label {
+  cursor: pointer; padding: 7px 14px; font-size: 13px; font-weight: 600; color: var(--muted);
+  border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; margin-bottom: -2px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.obj-tabs > .obj-tablist > label:hover { color: var(--accent); background: var(--accent-bg); }
+.obj-tabs > .obj-tablist > label .tab-count { font-size: 11px; color: var(--muted-soft); font-weight: 500; }
+.obj-tabs > .obj-tabpanel { display: none; padding: 14px 2px; }
+/* radio:checked → 対応 label を強調 + panel を表示 (隣接の nth で対応付け) */
+.obj-tabs > input:nth-of-type(1):checked ~ .obj-tablist > label:nth-of-type(1),
+.obj-tabs > input:nth-of-type(2):checked ~ .obj-tablist > label:nth-of-type(2),
+.obj-tabs > input:nth-of-type(3):checked ~ .obj-tablist > label:nth-of-type(3),
+.obj-tabs > input:nth-of-type(4):checked ~ .obj-tablist > label:nth-of-type(4),
+.obj-tabs > input:nth-of-type(5):checked ~ .obj-tablist > label:nth-of-type(5),
+.obj-tabs > input:nth-of-type(6):checked ~ .obj-tablist > label:nth-of-type(6),
+.obj-tabs > input:nth-of-type(7):checked ~ .obj-tablist > label:nth-of-type(7),
+.obj-tabs > input:nth-of-type(8):checked ~ .obj-tablist > label:nth-of-type(8) {
+  color: var(--accent); border-color: var(--border); border-bottom-color: #fff; background: #fff;
+}
+.obj-tabs > input:nth-of-type(1):checked ~ .obj-tabpanel:nth-of-type(1),
+.obj-tabs > input:nth-of-type(2):checked ~ .obj-tabpanel:nth-of-type(2),
+.obj-tabs > input:nth-of-type(3):checked ~ .obj-tabpanel:nth-of-type(3),
+.obj-tabs > input:nth-of-type(4):checked ~ .obj-tabpanel:nth-of-type(4),
+.obj-tabs > input:nth-of-type(5):checked ~ .obj-tabpanel:nth-of-type(5),
+.obj-tabs > input:nth-of-type(6):checked ~ .obj-tabpanel:nth-of-type(6),
+.obj-tabs > input:nth-of-type(7):checked ~ .obj-tabpanel:nth-of-type(7),
+.obj-tabs > input:nth-of-type(8):checked ~ .obj-tabpanel:nth-of-type(8) { display: block; }
+
+/* 凡例リンク (component ヘッダ) + 凡例ページの図形スウォッチ */
+.global-nav { margin-left: auto; }
+.global-nav .legend-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--accent); text-decoration: none; padding: 6px 12px;
+  border: 1px solid var(--border); border-radius: 6px; background: #fff; white-space: nowrap;
+}
+.global-nav .legend-link .icon { width: 15px; height: 15px; }
+.global-nav .legend-link:hover { background: var(--accent-bg); border-color: var(--accent); }
+.legend-table td:first-child { white-space: nowrap; text-align: center; width: 70px; }
+.lg-swatch { display: inline-block; width: 38px; height: 22px; vertical-align: middle; background: var(--muted-soft); }
+.lg-stadium { border-radius: 999px; background: var(--muted-soft); }
+.lg-data { background: var(--type-trigger); }
+.lg-cond { background: var(--type-lwc); }
+.lg-exit { background: var(--type-flow); }
+.lg-paral { clip-path: polygon(16% 0, 100% 0, 84% 100%, 0 100%); }
+.lg-diamond { width: 24px; height: 24px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.lg-rect { border-radius: 4px; }
+.lg-circle { width: 24px; height: 24px; border-radius: 999px; }
+.lg-double { box-shadow: inset 4px 0 0 #fff, inset -4px 0 0 #fff; }
 
 /* ===== Home / type-index shared =====
  * width:100% + max-width で「viewport が広ければ 1280px に固定、

@@ -2,7 +2,7 @@
 // controlFlows を再帰的に集計し、各メソッドの SOQL/DML/分岐/ループ/try/呼び出し先件数を出す。
 
 import type {
-  ApexClass,
+  ApexBodyInfo,
   ApexControlFlowNode,
   ApexMethodControlFlow,
   ApexMethodInfo,
@@ -23,8 +23,11 @@ export interface MethodSummaryRow {
   readonly externalCalls: readonly string[];
 }
 
-export function buildMethodSummaryTable(cls: ApexClass): readonly MethodSummaryRow[] {
-  const body = cls.body;
+// ApexClass / ApexTrigger いずれも body を持つため構造的型で受ける
+export function buildMethodSummaryTable(source: {
+  readonly body?: ApexBodyInfo;
+}): readonly MethodSummaryRow[] {
+  const body = source.body;
   if (body === undefined) return [];
 
   const flowsByName = new Map<string, ApexMethodControlFlow>();

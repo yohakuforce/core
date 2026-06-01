@@ -5,10 +5,13 @@
 import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForTrigger } from "../../render/concerns.js";
 import { summaryForApexTrigger } from "../../render/summary.js";
+import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
 import type { ApexTrigger, KnowledgeGraph } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
+import { buildProcessingDetailSection } from "./apex-detail.js";
+import { buildFieldWritesSection } from "./apex-field-writes.js";
 import {
   changeHistorySection,
   emptyLlmPlaceholderSection,
@@ -41,6 +44,18 @@ export function buildTriggerViewModel(
     dependenciesSection(trg),
     dataModelTouchpointsSection(trg),
     internalFlowSection(trg),
+    buildProcessingDetailSection({
+      methodSummaryTable: buildMethodSummaryTable(trg),
+      body: trg.body,
+      preservedNarrative: preservedBlocks?.get("processing-detail-narrative"),
+    }),
+    buildFieldWritesSection({
+      componentName: trg.fullyQualifiedName,
+      body: trg.body,
+      triggerObject: trg.object,
+      knownObjects: new Set(graph.objects.map((o) => o.fullyQualifiedName)),
+      getPreserved: (id) => preservedBlocks?.get(id),
+    }),
     testCoverageSection(trg, graph, coverage),
     changeHistorySection(trg.sourcePath, gitCwd),
     impactHintSection(`ApexTrigger:${trg.fullyQualifiedName}`),

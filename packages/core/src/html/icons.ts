@@ -19,7 +19,8 @@ type IconName =
   | "chevron-right"
   | "chevron-down"
   | "external"
-  | "tag";
+  | "tag"
+  | "book";
 
 const SVG_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">`;
 const SVG_CLOSE = "</svg>";
@@ -44,6 +45,8 @@ const ICON_BODIES: Record<IconName, string> = {
   "chevron-down": `<path d="m6 9 6 6 6-6"/>`,
   external: `<path d="M14 4h6v6"/><path d="m20 4-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>`,
   tag: `<path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8z"/><circle cx="8.5" cy="8.5" r="1.2"/>`,
+  // 凡例 / 読み方: open book
+  book: `<path d="M12 6.5C10.4 5.2 7.9 4.6 4 5.2v12.6c3.9-.6 6.4 0 8 1.4"/><path d="M12 6.5c1.6-1.3 4.1-1.9 8-1.3v12.6c-3.9-.6-6.4 0-8 1.4z"/><path d="M12 6.5v12.6"/>`,
 };
 
 export function icon(name: IconName, options?: { size?: string; className?: string }): string {

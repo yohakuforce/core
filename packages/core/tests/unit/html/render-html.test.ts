@@ -64,7 +64,7 @@ describe("renderHtmlAll (Phase 0 stub)", () => {
     const schema = JSON.parse(readFileSync(join(htmlOut, "data", "sections-schema.json"), "utf8"));
     expect(schema.version).toBe(1);
     expect(schema.componentTypes).toHaveLength(5);
-    expect(schema.sections).toHaveLength(12);
+    expect(schema.sections).toHaveLength(16);
   });
 
   it("index.html はタブ UI と JSON データ参照を含む", () => {

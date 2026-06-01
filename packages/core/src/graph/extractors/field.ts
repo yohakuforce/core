@@ -23,6 +23,8 @@ export function extractField({ descriptor, content }: ExtractContext): Field | u
     isCustom: descriptor.fullyQualifiedName.endsWith("__c"),
     referenceTo: referenceTo.length > 0 ? referenceTo : undefined,
     picklistValues: picklistValues.length > 0 ? picklistValues : undefined,
+    formula: asString(node.formula),
+    defaultValue: asString(node.defaultValue),
     sourcePath: descriptor.sourcePath,
     contentHash: descriptor.contentHash,
   };

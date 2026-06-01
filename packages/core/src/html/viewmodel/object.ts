@@ -6,6 +6,10 @@ import type { Field, KnowledgeGraph, SObject } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import {
+  buildCalculationRulesSection,
+  buildFieldAssignmentSection,
+} from "./object-detail.js";
+import {
   changeHistorySection,
   emptyLlmPlaceholderSection,
   impactHintSection,
@@ -36,6 +40,8 @@ export function buildObjectViewModel(
     ),
     dependenciesSection(obj, graph),
     publicInterfaceSection(obj, fields),
+    buildFieldAssignmentSection(obj, fields, graph, (id) => preservedBlocks?.get(id)),
+    buildCalculationRulesSection(obj, fields, graph, (id) => preservedBlocks?.get(id)),
     changeHistorySection(obj.sourcePath, gitCwd),
     impactHintSection(`SObject:${obj.fullyQualifiedName}`),
     relatedDomainsSection("object", obj.fullyQualifiedName, graph),
