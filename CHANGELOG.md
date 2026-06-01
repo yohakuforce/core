@@ -2,6 +2,30 @@
 
 すべての注目すべき変更は本ファイルに記録される (SemVer 準拠)。
 
+## [0.6.0] - 2026-06-02 (詳細設計書化)
+
+> HTML 設計書を「詳細設計で必要な観点」(処理詳細・項目値の割り当て・計算方法) まで踏み込ませ、
+> 「決定的な事実」と「LLM による解釈・確認」の二層で仕様を漏れなく把握できるようにした。
+> 3 層分離 (Core は LLM を呼ばない) は維持し、LLM 連携は既存の prompt→html-write 往復に乗せている。
+
+### Added
+
+- **詳細設計セクション群** (HTML): Object「項目値の割り当て」「計算項目・入力規則」、Apex/Trigger「処理詳細」、Apex/Trigger「項目値の割り当て」(触れるオブジェクト別タブ, JS 不要の CSS タブ)
+- **数式の自然語化**: 数式項目 / 入力規則 (ValidationRule) を日本語の算出ロジックへ展開 (原文は折りたたみ併記)
+- **フローチャートの日本語化**: Mermaid / ツリーのノードを自然な日本語に (`Account を取得` / `o を登録` / `lines を 1 件ずつ繰り返す` / `o.Id を返す`、矢印も はい/いいえ・繰返)
+- **凡例ページ** (`legend.html`): 図形・ステップバッジ・項目値区分・色分け(事実/AI)を 1 枚に。全 component ページ右上からリンク
+- **LLM 役割拡張**: 項目設定詳細の抽出 (`field-writes` / `field-assignment-detail`)、計算項目・入力規則のレビュー (`calculation-review`) を ai_managed ブロックとして追加
+
+### Changed
+
+- **Field 抽出に `formula` / `defaultValue` を追加** (graph schema / sqlite store・reader を round-trip 対応、既存 DB は `addColumnIfMissing` で安全 migrate)
+- 項目値の割り当てから曖昧な「—」を撤廃。決定的に確定する項目のみ決定的テーブル化し、残りは完全性保証スケルトン付きの LLM ブロックへ再設計
+- アイコンを絵文字から inline SVG (`book`) に統一 (凡例リンク)
+
+### Fixed
+
+- 数式内のフィールド名が白飛びして読めない CSS バグ (`pre code` の白文字継承を上書き)
+
 ## [0.5.0] - 2026-05-31 (HTML 設計書パイプライン)
 
 > 同じ知識グラフから「AI が読む Markdown」と「人間がレビューする HTML」を二系統で生成し、
