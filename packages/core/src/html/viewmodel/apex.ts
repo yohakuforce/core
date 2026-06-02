@@ -9,8 +9,8 @@
 
 import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForApex } from "../../render/concerns.js";
-import { summaryForApex } from "../../render/summary.js";
 import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
+import { summaryForApex } from "../../render/summary.js";
 import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";

@@ -12,12 +12,7 @@ import { describe, expect, it } from "vitest";
 
 const scaffoldRoot = resolve(__dirname, "../../../../..", "scaffold");
 
-const AGENTS = [
-  "cascade-tracer",
-  "apex-query-tracer",
-  "flow-query-tracer",
-  "batch-calculator",
-];
+const AGENTS = ["cascade-tracer", "apex-query-tracer", "flow-query-tracer", "batch-calculator"];
 
 describe("/analyze-batch-limits pack — files exist", () => {
   it.each(AGENTS)("agent %s.md.eta is present in scaffold", (name) => {
@@ -33,10 +28,7 @@ describe("/analyze-batch-limits pack — files exist", () => {
 
 describe("/analyze-batch-limits pack — front-matter shape", () => {
   it.each(AGENTS)("%s has valid agent front-matter (name, description, tools, model)", (name) => {
-    const text = readFileSync(
-      resolve(scaffoldRoot, ".claude/agents", `${name}.md.eta`),
-      "utf8",
-    );
+    const text = readFileSync(resolve(scaffoldRoot, ".claude/agents", `${name}.md.eta`), "utf8");
     expect(text).toMatch(/^---\s*$/m);
     expect(text).toMatch(new RegExp(`^name:\\s*${name}\\s*$`, "m"));
     expect(text).toMatch(/^description:.*<%=\s*it\.projectName\s*%>/m);
@@ -65,10 +57,7 @@ describe("/analyze-batch-limits pack — SQL uses snake_case schema", () => {
     }
     m.set(
       "commands/analyze-batch-limits",
-      readFileSync(
-        resolve(scaffoldRoot, ".claude/commands/analyze-batch-limits.md.eta"),
-        "utf8",
-      ),
+      readFileSync(resolve(scaffoldRoot, ".claude/commands/analyze-batch-limits.md.eta"), "utf8"),
     );
     return m;
   }
@@ -76,7 +65,7 @@ describe("/analyze-batch-limits pack — SQL uses snake_case schema", () => {
   it("does not reference legacy / wrong column names", () => {
     const all = loadAll();
     // ref 由来の古い・推測カラム名は scaffold には残してはいけない
-    const FORBIDDEN = [
+    const forbidden = [
       /\bapi_name\b/, // objects.fqn / fields.fqn が正
       /\bobject_api_name\b/, // apex_triggers.object が正
       /\bobject_id\b/, // fields.object が正 (JOIN は object→fqn)
@@ -86,7 +75,7 @@ describe("/analyze-batch-limits pack — SQL uses snake_case schema", () => {
       /\btrigger_type\b/, // flows.* に該当カラム無し
     ];
     for (const [file, text] of all) {
-      for (const pat of FORBIDDEN) {
+      for (const pat of forbidden) {
         // 実コードや日本語コメントとの誤検出を避けるため、
         // `yohaku graph query "..."` のクオート内のみ走査する
         const queries = text.match(/yohaku graph query\s+"[\s\S]*?"/g) ?? [];
@@ -100,7 +89,8 @@ describe("/analyze-batch-limits pack — SQL uses snake_case schema", () => {
   it("uses required snake_case columns in graph queries", () => {
     const all = loadAll();
     // /analyze-batch-limits は実スキーマの代表 3 クエリを必ず含む
-    const cmd = all.get("commands/analyze-batch-limits")!;
+    const cmd = all.get("commands/analyze-batch-limits");
+    if (cmd === undefined) throw new Error("analyze-batch-limits command not found");
     expect(cmd).toMatch(/FROM objects WHERE fqn\s*=/);
     expect(cmd).toMatch(/FROM apex_triggers WHERE object\s*=/);
     expect(cmd).toMatch(/FROM flows WHERE triggering_object\s*=/);

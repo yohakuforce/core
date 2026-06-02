@@ -26,7 +26,8 @@ describe("scaffold settings.json.eta — hook hygiene", () => {
     // Stop フックの中で sync (--async ではない) build が動く
     const stopBlockMatch = text.match(/"Stop"\s*:\s*\[[\s\S]*?\]/);
     expect(stopBlockMatch).not.toBeNull();
-    const stopBlock = stopBlockMatch![0];
+    if (stopBlockMatch === null) throw new Error("Stop block not found");
+    const stopBlock = stopBlockMatch[0];
     expect(stopBlock).toMatch(/yohaku graph build --incremental --quiet/);
     expect(stopBlock).not.toMatch(/--async/);
   });

@@ -2,11 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import {
-  MarkerCorruptionError,
-  mergeRender,
-  mergeRenameAware,
-} from "../../../src/merge/index.js";
+import { MarkerCorruptionError, mergeRenameAware, mergeRender } from "../../../src/merge/index.js";
 import { archiveDeleted } from "../../../src/render/archive.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -114,9 +110,7 @@ describe("HUMAN_MANAGED merge — golden tests", () => {
         templatePath: spec.templatePath,
       });
       expect(result.content).toBe(expected);
-      const warning = result.warnings.find(
-        (w) => w.code === "human_migrated_from_renamed_entity",
-      );
+      const warning = result.warnings.find((w) => w.code === "human_migrated_from_renamed_entity");
       expect(warning).toBeDefined();
       expect(warning?.blockId).toBe("business-context");
       expect(warning?.originPath).toBe(spec.oldFilePath);
@@ -126,8 +120,7 @@ describe("HUMAN_MANAGED merge — golden tests", () => {
   describe("Case 5: エンティティ削除 (archive)", () => {
     const dir = join(here, "case-5-entity-deleted");
     const spec = loadJSON<ArchiveCase>(join(dir, "input/case.json"));
-    const expectedArchivePath = readFileSync(join(dir, "expected/archivedPath.txt"), "utf8")
-      .trim();
+    const expectedArchivePath = readFileSync(join(dir, "expected/archivedPath.txt"), "utf8").trim();
 
     it("既存ファイルを _archive/<date>/<original> へ移動する論理パスを返す", () => {
       const archived = archiveDeleted(spec.existingPath, spec.archiveBaseDir, spec.renderDate);

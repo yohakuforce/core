@@ -5,10 +5,7 @@
 import type { Field, KnowledgeGraph, SObject } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
-import {
-  buildCalculationRulesSection,
-  buildFieldAssignmentSection,
-} from "./object-detail.js";
+import { buildCalculationRulesSection, buildFieldAssignmentSection } from "./object-detail.js";
 import {
   changeHistorySection,
   emptyLlmPlaceholderSection,

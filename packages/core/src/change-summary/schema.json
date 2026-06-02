@@ -4,7 +4,15 @@
   "title": "yohakuforce Change Summary",
   "description": "Phase 3 差分意味づけの正本スキーマ。各値フィールドは source 列付き Tracked<T> を必須とする。",
   "type": "object",
-  "required": ["id", "createdAt", "fromRef", "toRef", "staticAnalysisFindings", "categories", "humanAnnotations"],
+  "required": [
+    "id",
+    "createdAt",
+    "fromRef",
+    "toRef",
+    "staticAnalysisFindings",
+    "categories",
+    "humanAnnotations"
+  ],
   "properties": {
     "id": { "$ref": "#/$defs/TrackedString" },
     "createdAt": { "$ref": "#/$defs/TrackedString" },

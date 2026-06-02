@@ -4,8 +4,8 @@
 
 import type { CoverageEntry } from "../../coverage/types.js";
 import { concernsForTrigger } from "../../render/concerns.js";
-import { summaryForApexTrigger } from "../../render/summary.js";
 import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
+import { summaryForApexTrigger } from "../../render/summary.js";
 import type { ApexTrigger, KnowledgeGraph } from "../../types/graph.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";

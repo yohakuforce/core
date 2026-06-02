@@ -37,8 +37,8 @@ describe("getGitLogForPath", () => {
   });
 
   it("コミット行を SHA / 日時 / Author / Subject にパース", () => {
-    const SEP = "\x1f";
-    const line = ["abcdef1234567890", "2026-05-30T10:00:00+09:00", "Koya", "feat: add X"].join(SEP);
+    const sep = "\x1f";
+    const line = ["abcdef1234567890", "2026-05-30T10:00:00+09:00", "Koya", "feat: add X"].join(sep);
     const result = getGitLogForPath("X.cls", {
       spawnSyncFn: fakeSpawn({ stdout: line, status: 0 }),
     });
@@ -48,10 +48,10 @@ describe("getGitLogForPath", () => {
   });
 
   it("複数コミットも正しくパース", () => {
-    const SEP = "\x1f";
+    const sep = "\x1f";
     const lines = [
-      ["aaaaaaa1234567", "2026-05-30T10:00:00Z", "Koya", "fix"].join(SEP),
-      ["bbbbbbb1234567", "2026-05-29T10:00:00Z", "Koya", "feat"].join(SEP),
+      ["aaaaaaa1234567", "2026-05-30T10:00:00Z", "Koya", "fix"].join(sep),
+      ["bbbbbbb1234567", "2026-05-29T10:00:00Z", "Koya", "feat"].join(sep),
     ].join("\n");
     const result = getGitLogForPath("X.cls", {
       spawnSyncFn: fakeSpawn({ stdout: lines, status: 0 }),
