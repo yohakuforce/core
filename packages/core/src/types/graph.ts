@@ -281,6 +281,31 @@ export interface PermissionSetBodyInfo {
   readonly fieldPermissions: readonly FieldPermissionInfo[];
   readonly classAccesses: readonly ClassAccessInfo[];
   readonly userPermissions: readonly string[];
+  /** タブ表示設定 (任意: 既存互換のため optional) */
+  readonly tabSettings?: readonly TabVisibilityInfo[];
+  /** レコードタイプ表示 (任意) */
+  readonly recordTypeVisibilities?: readonly RecordTypeVisibilityInfo[];
+  /** アプリケーション表示 (任意) */
+  readonly applicationVisibilities?: readonly AppVisibilityInfo[];
+  /** カスタム権限 (任意) */
+  readonly customPermissions?: readonly string[];
+}
+
+export interface TabVisibilityInfo {
+  readonly tab: string;
+  readonly visibility: string; // DefaultOn / DefaultOff(Available) / Hidden
+}
+
+export interface RecordTypeVisibilityInfo {
+  readonly recordType: string;
+  readonly visible: boolean;
+  readonly default: boolean;
+}
+
+export interface AppVisibilityInfo {
+  readonly application: string;
+  readonly visible: boolean;
+  readonly default: boolean;
 }
 
 export interface ObjectPermissionInfo {

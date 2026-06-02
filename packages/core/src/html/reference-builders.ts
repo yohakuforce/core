@@ -21,6 +21,8 @@ export interface RefSection {
   readonly id: string;
   readonly title: string;
   readonly html: string;
+  /** true なら初期状態で折りたたむ (情報量の多いセクション向け) */
+  readonly collapsed?: boolean;
 }
 
 const check = (b: boolean): string => (b ? "✓" : "");
@@ -59,11 +61,11 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
   if (body === undefined) {
     return [{ id: "perms", title: "権限", html: muted("権限ボディは解析されていません。") }];
   }
-  const sections: RefSection[] = [];
 
-  sections.push({
+  // オブジェクト権限
+  const objectPerms: RefSection = {
     id: "object-perms",
-    title: "オブジェクト権限",
+    title: `オブジェクト権限 (${body.objectPermissions.length})`,
     html:
       body.objectPermissions.length === 0
         ? muted("オブジェクト権限はありません。")
@@ -78,9 +80,9 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
             .join("\n          ")}
         </tbody>
       </table>`,
-  });
+  };
 
-  // 項目権限はオブジェクト単位でまとめる
+  // 項目権限 (オブジェクト単位、情報量が多いので初期折りたたみ)
   const byObject = new Map<string, { field: string; readable: boolean; editable: boolean }[]>();
   for (const fp of body.fieldPermissions) {
     const obj = fp.field.split(".")[0] ?? fp.field;
@@ -88,18 +90,17 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
     list.push(fp);
     byObject.set(obj, list);
   }
-  sections.push({
+  const fieldPerms: RefSection = {
     id: "field-perms",
-    title: "項目権限",
+    title: `項目権限 (${body.fieldPermissions.length})`,
+    collapsed: true,
     html:
       body.fieldPermissions.length === 0
         ? muted("項目レベル権限はありません。")
         : [...byObject.entries()]
             .map(
-              ([
-                obj,
-                fps,
-              ]) => `<details class="layout-block"><summary><code>${escapeHtml(obj)}</code> <span class="muted">(${fps.length} 項目)</span></summary>
+              ([obj, fps]) =>
+                `<details class="layout-block"><summary><code>${escapeHtml(obj)}</code> <span class="muted">(${fps.length} 項目)</span></summary>
         <table class="data-table"><thead><tr><th>項目</th><th>参照</th><th>編集</th></tr></thead><tbody>
           ${fps
             .map(
@@ -110,28 +111,83 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
         </tbody></table></details>`,
             )
             .join("\n      "),
-  });
+  };
 
-  sections.push({
+  // Apex クラスアクセス (有効/無効を明示)
+  const apexAccess: RefSection = {
     id: "apex-access",
-    title: "Apex クラスアクセス",
+    title: `Apex クラスアクセス (${body.classAccesses.length})`,
     html:
       body.classAccesses.length === 0
         ? muted("付与された Apex クラスアクセスはありません。")
         : `<ul>${body.classAccesses
-            .filter((c) => c.enabled)
-            .map((c) => `<li><code>${escapeHtml(c.apexClass)}</code></li>`)
+            .map(
+              (c) =>
+                `<li><code>${escapeHtml(c.apexClass)}</code>${c.enabled ? "" : ' <span class="muted">(無効)</span>'}</li>`,
+            )
             .join("")}</ul>`,
-  });
+  };
 
-  if (body.userPermissions.length > 0) {
-    sections.push({
-      id: "user-perms",
-      title: "システム権限",
-      html: `<ul class="cols">${body.userPermissions.map((p) => `<li><code>${escapeHtml(p)}</code></li>`).join("")}</ul>`,
+  // システム権限 (常に表示。情報量が多いので折りたたみ)
+  const userPerms: RefSection = {
+    id: "user-perms",
+    title: `システム権限 (${body.userPermissions.length})`,
+    collapsed: body.userPermissions.length > 12,
+    html:
+      body.userPermissions.length === 0
+        ? muted("付与されたシステム権限はありません。")
+        : `<ul class="perm-cols">${[...body.userPermissions]
+            .toSorted((a, b) => a.localeCompare(b))
+            .map((p) => `<li><code>${escapeHtml(p)}</code></li>`)
+            .join("")}</ul>`,
+  };
+
+  const extra: RefSection[] = [];
+
+  const tabs = body.tabSettings ?? [];
+  if (tabs.length > 0) {
+    extra.push({
+      id: "tab-settings",
+      title: `タブ表示 (${tabs.length})`,
+      collapsed: tabs.length > 12,
+      html: `<table class="data-table"><thead><tr><th>タブ</th><th>表示</th></tr></thead><tbody>
+        ${tabs.map((t) => `<tr><td><code>${escapeHtml(t.tab)}</code></td><td>${escapeHtml(t.visibility)}</td></tr>`).join("\n        ")}
+      </tbody></table>`,
     });
   }
-  return sections;
+
+  const rtv = body.recordTypeVisibilities ?? [];
+  if (rtv.length > 0) {
+    extra.push({
+      id: "rt-visibility",
+      title: `レコードタイプ表示 (${rtv.length})`,
+      html: `<table class="data-table"><thead><tr><th>レコードタイプ</th><th>表示</th><th>既定</th></tr></thead><tbody>
+        ${rtv.map((r) => `<tr><td><code>${escapeHtml(r.recordType)}</code></td><td>${check(r.visible)}</td><td>${check(r.default)}</td></tr>`).join("\n        ")}
+      </tbody></table>`,
+    });
+  }
+
+  const apps = body.applicationVisibilities ?? [];
+  if (apps.length > 0) {
+    extra.push({
+      id: "app-visibility",
+      title: `アプリケーション表示 (${apps.length})`,
+      html: `<table class="data-table"><thead><tr><th>アプリ</th><th>表示</th><th>既定</th></tr></thead><tbody>
+        ${apps.map((a) => `<tr><td><code>${escapeHtml(a.application)}</code></td><td>${check(a.visible)}</td><td>${check(a.default)}</td></tr>`).join("\n        ")}
+      </tbody></table>`,
+    });
+  }
+
+  const custom = body.customPermissions ?? [];
+  if (custom.length > 0) {
+    extra.push({
+      id: "custom-perms",
+      title: `カスタム権限 (${custom.length})`,
+      html: `<ul class="perm-cols">${custom.map((c) => `<li><code>${escapeHtml(c)}</code></li>`).join("")}</ul>`,
+    });
+  }
+
+  return [objectPerms, fieldPerms, apexAccess, userPerms, ...extra];
 }
 
 export function buildPermissionSetSections(ps: PermissionSet): RefSection[] {
@@ -154,37 +210,63 @@ export function buildProfileSections(pf: Profile): RefSection[] {
 
 // ---------- FlexiPage ----------
 
+interface ItemKind {
+  readonly cls: string;
+  readonly label: string;
+}
+
+function classifyFlexiItem(item: { componentName?: string; fieldName?: string }): ItemKind {
+  if (item.fieldName !== undefined) return { cls: "fp-field", label: "項目" };
+  const c = (item.componentName ?? "").toLowerCase();
+  if (c.includes("relatedlist")) return { cls: "fp-related", label: "関連リスト" };
+  if (c.includes("recordhighlight") || c.includes("highlights"))
+    return { cls: "fp-highlight", label: "ハイライト" };
+  if (c.includes("action") || c.includes("activit"))
+    return { cls: "fp-action", label: "アクション/活動" };
+  if (c.startsWith("c:") || c.includes("__")) return { cls: "fp-custom", label: "カスタム" };
+  return { cls: "fp-component", label: "コンポーネント" };
+}
+
+function flexiItemChip(item: { componentName?: string; fieldName?: string }): string {
+  const kind = classifyFlexiItem(item);
+  const name = item.fieldName ?? item.componentName ?? "?";
+  return `<div class="fp-item ${kind.cls}"><span class="fp-item-kind">${kind.label}</span><code>${escapeHtml(name)}</code></div>`;
+}
+
 export function buildFlexiPageSections(fp: FlexiPage): RefSection[] {
+  const hasDynamicForm = fp.regions.some((r) => r.items.some((it) => it.fieldName !== undefined));
   const summary: RefSection = {
     id: "summary",
     title: "概要",
-    html: `<ul>
-      <li>種別: <code>${escapeHtml(fp.type ?? "—")}</code></li>
-      ${fp.sobjectType ? `<li>対象オブジェクト: <code>${escapeHtml(fp.sobjectType)}</code></li>` : ""}
-      ${fp.pageTemplate ? `<li>テンプレート: <code>${escapeHtml(fp.pageTemplate)}</code></li>` : ""}
-      ${fp.masterLabel ? `<li>ラベル: ${escapeHtml(fp.masterLabel)}</li>` : ""}
-    </ul>${fp.description ? muted(fp.description) : ""}`,
+    html: `<table class="data-table"><tbody>
+      <tr><th>種別</th><td><code>${escapeHtml(fp.type ?? "—")}</code></td></tr>
+      ${fp.sobjectType ? `<tr><th>対象オブジェクト</th><td><code>${escapeHtml(fp.sobjectType)}</code></td></tr>` : ""}
+      ${fp.pageTemplate ? `<tr><th>テンプレート</th><td><code>${escapeHtml(fp.pageTemplate)}</code></td></tr>` : ""}
+      ${fp.masterLabel ? `<tr><th>ラベル</th><td>${escapeHtml(fp.masterLabel)}</td></tr>` : ""}
+      <tr><th>動的フォーム</th><td>${hasDynamicForm ? "✓ 採用 (項目をリージョンへ直接配置)" : "未使用 (項目はページレイアウト参照)"}</td></tr>
+    </tbody></table>${fp.description ? muted(fp.description) : ""}`,
   };
-  const regions: RefSection = {
-    id: "regions",
-    title: "リージョン構成",
+  const layout: RefSection = {
+    id: "page-layout",
+    title: "ページ構成 (視覚)",
     html:
       fp.regions.length === 0
         ? muted("リージョンは検出されませんでした。")
-        : fp.regions
-            .map(
-              (
-                r,
-              ) => `<h4>${escapeHtml(r.name)}${r.type ? ` <span class="muted">(${escapeHtml(r.type)})</span>` : ""}</h4>
-      ${
-        r.items.length === 0
-          ? muted("項目なし")
-          : `<ul>${r.items.map((it) => `<li>${it.componentName ? `<code>${escapeHtml(it.componentName)}</code>` : ""}${it.fieldName ? `項目 <code>${escapeHtml(it.fieldName)}</code>` : ""}</li>`).join("")}</ul>`
-      }`,
-            )
-            .join("\n      "),
+        : `<p class="muted">リージョンごとの配置です。色で 項目(動的フォーム) / 関連リスト / アクション・活動 / ハイライト / コンポーネント を区別します。</p>
+      <div class="flexi-mock">
+        ${fp.regions
+          .map(
+            (r) => `<div class="fp-region">
+          <div class="fp-region-label">${escapeHtml(r.name)}${r.type ? ` <span class="muted">${escapeHtml(r.type)}</span>` : ""}${r.items.some((it) => it.fieldName !== undefined) ? ' <span class="badge">動的フォーム</span>' : ""}</div>
+          <div class="fp-items">
+            ${r.items.length === 0 ? '<span class="muted">（空）</span>' : r.items.map(flexiItemChip).join("\n            ")}
+          </div>
+        </div>`,
+          )
+          .join("\n        ")}
+      </div>`,
   };
-  return [summary, regions];
+  return [summary, layout];
 }
 
 // ---------- Visualforce ----------

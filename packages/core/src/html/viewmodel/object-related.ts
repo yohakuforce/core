@@ -37,13 +37,29 @@ export function buildRecordTypesSection(obj: SObject, graph: KnowledgeGraph): Se
     title: "レコードタイプ",
     htmlContent: `
     <p class="muted">業務区分ごとのレコードタイプ (${rts.length})。区分によって画面・選択リスト・処理が変わる起点です。</p>
+    <div class="rt-cards">
+      ${rts.map(recordTypeCard).join("\n      ")}
+    </div>
+    <details class="layout-block"><summary>一覧 (テーブル表示)</summary>
     <table class="data-table">
       <thead><tr><th>API 名</th><th>ラベル</th><th>有効</th><th>説明</th></tr></thead>
       <tbody>
         ${rts.map(recordTypeRow).join("\n        ")}
       </tbody>
-    </table>`,
+    </table></details>`,
   };
+}
+
+function recordTypeCard(r: RecordType): string {
+  const dev = r.fullyQualifiedName.split(".").at(-1) ?? r.fullyQualifiedName;
+  const badge = r.active
+    ? `<span class="badge badge-on">有効</span>`
+    : `<span class="badge badge-off">無効</span>`;
+  return `<div class="rt-card${r.active ? "" : " rt-inactive"}">
+      <div class="rt-card-head"><strong>${escapeHtml(r.label ?? dev)}</strong> ${badge}</div>
+      <div class="muted"><code>${escapeHtml(dev)}</code></div>
+      ${r.description ? `<div class="rt-card-desc">${escapeHtml(r.description)}</div>` : ""}
+    </div>`;
 }
 
 function recordTypeRow(r: RecordType): string {
@@ -70,55 +86,70 @@ export function buildLayoutsSection(obj: SObject, graph: KnowledgeGraph): Sectio
     id: "page-layouts",
     title: "ページレイアウト",
     htmlContent: `
-    <p class="muted">画面の項目配置 (${layouts.length})。項目の編集可否 (Edit / 参照のみ / 必須) を含みます。</p>
+    <p class="muted">画面の項目配置 (${layouts.length})。配置を視覚的に再現し、色で 必須 / 参照のみ / 編集可 を区別します。</p>
+    <div class="layout-legend">
+      <span class="lo-field lo-required">必須</span>
+      <span class="lo-field lo-edit">編集可</span>
+      <span class="lo-field lo-readonly">参照のみ</span>
+    </div>
     ${layouts.map(layoutBlock).join("\n    ")}`,
   };
 }
 
+function behaviorClass(behavior: string): string {
+  switch (behavior) {
+    case "Required":
+      return "lo-required";
+    case "Readonly":
+      return "lo-readonly";
+    default:
+      return "lo-edit";
+  }
+}
+
+function layoutFieldChip(it: { field: string; behavior: string }): string {
+  const req = it.behavior === "Required" ? '<span class="lo-req-mark">*</span>' : "";
+  return `<div class="lo-field ${behaviorClass(it.behavior)}">${req}<code>${escapeHtml(it.field)}</code></div>`;
+}
+
+function layoutSectionMock(s: Layout["sections"][number]): string {
+  // 列番号 (1-based) ごとにグルーピングして横並び再現
+  const maxCol = s.items.reduce((m, it) => Math.max(m, it.column), 1);
+  const cols: string[] = [];
+  for (let c = 1; c <= maxCol; c++) {
+    const items = s.items.filter((it) => it.column === c);
+    cols.push(
+      `<div class="lo-col">${items.length === 0 ? '<span class="muted">（空）</span>' : items.map(layoutFieldChip).join("")}</div>`,
+    );
+  }
+  return `<div class="lo-section">
+        <div class="lo-section-label">${escapeHtml(s.label || "(無題セクション)")}</div>
+        <div class="lo-cols" style="grid-template-columns:repeat(${maxCol},1fr);">${cols.join("")}</div>
+      </div>`;
+}
+
 function layoutBlock(l: Layout): string {
-  const sections = l.sections
-    .map(
-      (s) => `<h4>${escapeHtml(s.label || "(無題セクション)")}</h4>
-      ${
-        s.items.length === 0
-          ? `<p class="muted">項目なし</p>`
-          : `<table class="data-table"><thead><tr><th>項目</th><th>挙動</th></tr></thead><tbody>
-        ${s.items
-          .map(
-            (it) =>
-              `<tr><td><code>${escapeHtml(it.field)}</code></td><td>${behaviorLabel(it.behavior)}</td></tr>`,
-          )
-          .join("\n        ")}
-      </tbody></table>`
-      }`,
-    )
-    .join("\n      ");
+  const sections =
+    l.sections.length === 0
+      ? `<p class="muted">セクションは検出されませんでした。</p>`
+      : l.sections.map(layoutSectionMock).join("\n      ");
   const related =
     l.relatedLists.length > 0
-      ? `<p class="muted">関連リスト: ${l.relatedLists.map((r) => `<code>${escapeHtml(r.relatedList)}</code>`).join(", ")}</p>`
+      ? `<div class="lo-box"><div class="lo-box-label">関連リスト (${l.relatedLists.length})</div>
+        <div class="lo-chips">${l.relatedLists.map((r) => `<span class="lo-chip lo-related"><code>${escapeHtml(r.relatedList)}</code></span>`).join("")}</div></div>`
       : "";
   const quick =
     l.quickActions.length > 0
-      ? `<p class="muted">クイックアクション: ${l.quickActions.map((q) => `<code>${escapeHtml(q)}</code>`).join(", ")}</p>`
+      ? `<div class="lo-box"><div class="lo-box-label">アクションボタン (${l.quickActions.length})</div>
+        <div class="lo-chips">${l.quickActions.map((q) => `<span class="lo-chip lo-action"><code>${escapeHtml(q)}</code></span>`).join("")}</div></div>`
       : "";
-  return `<details class="layout-block"><summary><code>${escapeHtml(l.layoutName)}</code></summary>
-      ${sections}
+  return `<details class="layout-block" open><summary><code>${escapeHtml(l.layoutName)}</code></summary>
+      <div class="layout-mock">
+        ${sections}
+      </div>
       ${related}
       ${quick}
     </details>`;
-}
-
-function behaviorLabel(behavior: string): string {
-  switch (behavior) {
-    case "Edit":
-      return "編集可";
-    case "Readonly":
-      return "参照のみ";
-    case "Required":
-      return "<strong>必須</strong>";
-    default:
-      return escapeHtml(behavior);
-  }
 }
 
 // ---------- 承認プロセス ----------

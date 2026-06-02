@@ -2,10 +2,13 @@
 // XML から objectPermissions / fieldPermissions / classAccesses / userPermissions を取り出す。
 
 import type {
+  AppVisibilityInfo,
   ClassAccessInfo,
   FieldPermissionInfo,
   ObjectPermissionInfo,
   PermissionSetBodyInfo,
+  RecordTypeVisibilityInfo,
+  TabVisibilityInfo,
 } from "../../types/graph.js";
 import { asArray, asBoolean, asString } from "../parse-xml.js";
 
@@ -15,7 +18,73 @@ export function extractPermissionSetBody(node: Record<string, unknown>): Permiss
     fieldPermissions: extractFieldPermissions(node),
     classAccesses: extractClassAccesses(node),
     userPermissions: extractUserPermissions(node),
+    tabSettings: extractTabSettings(node),
+    recordTypeVisibilities: extractRecordTypeVisibilities(node),
+    applicationVisibilities: extractAppVisibilities(node),
+    customPermissions: extractCustomPermissions(node),
   };
+}
+
+function extractTabSettings(node: Record<string, unknown>): readonly TabVisibilityInfo[] {
+  // PermissionSet は tabSettings, Profile は tabVisibilities
+  const list = asArray((node.tabSettings ?? node.tabVisibilities) as unknown);
+  const result: TabVisibilityInfo[] = [];
+  for (const item of list) {
+    if (typeof item !== "object" || item === null) continue;
+    const r = item as Record<string, unknown>;
+    const tab = asString(r.tab);
+    const visibility = asString(r.visibility);
+    if (tab !== undefined) result.push({ tab, visibility: visibility ?? "—" });
+  }
+  return result.toSorted((a, b) => a.tab.localeCompare(b.tab));
+}
+
+function extractRecordTypeVisibilities(
+  node: Record<string, unknown>,
+): readonly RecordTypeVisibilityInfo[] {
+  const list = asArray(node.recordTypeVisibilities as unknown);
+  const result: RecordTypeVisibilityInfo[] = [];
+  for (const item of list) {
+    if (typeof item !== "object" || item === null) continue;
+    const r = item as Record<string, unknown>;
+    const recordType = asString(r.recordType);
+    if (recordType === undefined) continue;
+    result.push({
+      recordType,
+      visible: asBoolean(r.visible) ?? false,
+      default: asBoolean(r.default) ?? false,
+    });
+  }
+  return result.toSorted((a, b) => a.recordType.localeCompare(b.recordType));
+}
+
+function extractAppVisibilities(node: Record<string, unknown>): readonly AppVisibilityInfo[] {
+  const list = asArray(node.applicationVisibilities as unknown);
+  const result: AppVisibilityInfo[] = [];
+  for (const item of list) {
+    if (typeof item !== "object" || item === null) continue;
+    const r = item as Record<string, unknown>;
+    const application = asString(r.application);
+    if (application === undefined) continue;
+    result.push({
+      application,
+      visible: asBoolean(r.visible) ?? false,
+      default: asBoolean(r.default) ?? false,
+    });
+  }
+  return result.toSorted((a, b) => a.application.localeCompare(b.application));
+}
+
+function extractCustomPermissions(node: Record<string, unknown>): readonly string[] {
+  const list = asArray(node.customPermissions as unknown);
+  const result: string[] = [];
+  for (const item of list) {
+    if (typeof item !== "object" || item === null) continue;
+    const r = item as Record<string, unknown>;
+    const name = asString(r.name);
+    if (name !== undefined && (asBoolean(r.enabled) ?? false)) result.push(name);
+  }
+  return result.toSorted((a, b) => a.localeCompare(b));
 }
 
 function extractObjectPermissions(node: Record<string, unknown>): readonly ObjectPermissionInfo[] {

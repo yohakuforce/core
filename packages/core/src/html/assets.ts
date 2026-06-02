@@ -67,10 +67,12 @@ export const HOME_CSS_EXTRA = `
 }
 .sidebar .sidebar-group-header:hover { background: var(--bg-alt); }
 .sidebar .sidebar-group-header .chevron {
-  color: var(--muted); transition: transform 0.15s ease;
-  width: 14px; height: 14px;
+  color: var(--muted-soft); transition: transform 0.15s ease, color 0.15s ease;
+  width: 16px; height: 16px; stroke-width: 2.4;
 }
-.sidebar .sidebar-group[data-collapsed="false"] .chevron { transform: rotate(90deg); }
+/* 開いている時: 下向き(▼) + アクセント色 / 閉じている時: 右向き(▸) + グレー で明示 */
+.sidebar .sidebar-group[data-collapsed="false"] .chevron { transform: rotate(90deg); color: var(--accent); }
+.sidebar .sidebar-group[data-collapsed="false"] .sidebar-group-header { color: var(--accent); }
 .sidebar .sidebar-group-header .group-label {
   flex: 1; display: inline-flex; align-items: center; gap: 8px;
 }

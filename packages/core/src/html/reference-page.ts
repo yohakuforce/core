@@ -210,10 +210,11 @@ ${globalHeader()}
 }
 
 function renderSection(s: RefSection): string {
-  return `<section id="${escapeAttr(s.id)}" class="yohaku-section">
-        <h2>${escapeHtml(s.title)}</h2>
-        ${s.html}
-      </section>`;
+  // セクションごとに開閉可能 (情報量が多い権限セット等のため)
+  return `<details id="${escapeAttr(s.id)}" class="yohaku-section ref-section"${s.collapsed ? "" : " open"}>
+        <summary><h2>${escapeHtml(s.title)}</h2></summary>
+        <div class="ref-section-body">${s.html}</div>
+      </details>`;
 }
 
 function renderReferenceIndex(t: RefTypeDef, entities: readonly RefEntity[]): string {

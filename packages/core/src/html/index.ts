@@ -728,6 +728,58 @@ strong { color: var(--fg-strong); }
 .obj-tabs > input:nth-of-type(7):checked ~ .obj-tabpanel:nth-of-type(7),
 .obj-tabs > input:nth-of-type(8):checked ~ .obj-tabpanel:nth-of-type(8) { display: block; }
 
+/* リファレンスページ: セクション開閉 (権限セット等) */
+details.ref-section { border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 12px; background: var(--bg-surface); padding: 0 16px; }
+details.ref-section > summary { cursor: pointer; list-style: none; padding: 12px 0; display: flex; align-items: center; gap: 8px; }
+details.ref-section > summary::-webkit-details-marker { display: none; }
+details.ref-section > summary::before { content: "▸"; color: var(--accent); font-size: 13px; transition: transform 0.15s; }
+details.ref-section[open] > summary::before { transform: rotate(90deg); }
+details.ref-section > summary h2 { display: inline; margin: 0; font-size: 15px; border: 0; padding: 0; }
+details.ref-section .ref-section-body { padding: 0 0 14px; }
+.perm-cols { columns: 2; column-gap: 24px; list-style: none; padding: 0; }
+.perm-cols li { break-inside: avoid; margin: 2px 0; font-size: 12.5px; }
+
+/* レコードタイプ カード */
+.rt-cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
+.rt-card { border: 1px solid var(--border); border-left: 3px solid var(--type-object); border-radius: var(--radius); background: var(--bg-surface); padding: 10px 14px; min-width: 200px; box-shadow: var(--shadow-sm); }
+.rt-card.rt-inactive { border-left-color: var(--muted-soft); opacity: 0.7; }
+.rt-card-head { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 4px; }
+.rt-card-desc { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+/* ページレイアウト 視覚モック */
+.layout-legend { display: flex; gap: 8px; margin: 6px 0 12px; }
+.layout-mock { border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--bg-alt); padding: 10px; }
+.lo-section { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin: 0 0 10px; overflow: hidden; }
+.lo-section-label { background: var(--bg-alt); padding: 6px 12px; font-weight: 600; font-size: 12.5px; color: var(--fg-strong); border-bottom: 1px solid var(--border); }
+.lo-cols { display: grid; gap: 10px; padding: 10px; }
+.lo-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lo-field { font-size: 12px; padding: 5px 9px; border-radius: 4px; border: 1px solid var(--border); background: #fff; display: inline-flex; align-items: center; gap: 4px; }
+.lo-field code { background: transparent; border: 0; padding: 0; font-size: 11.5px; }
+.lo-required { background: var(--severity-high-bg); border-color: var(--severity-high-fg); color: var(--severity-high-fg); font-weight: 600; }
+.lo-edit { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.lo-readonly { background: var(--bg-alt); border-color: var(--border-strong); color: var(--muted); }
+.lo-req-mark { color: var(--severity-high-fg); font-weight: 700; }
+.lo-box { margin: 8px 0 0; }
+.lo-box-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 4px; }
+.lo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lo-chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: #fff; }
+.lo-chip.lo-related { border-color: var(--type-object); color: var(--type-object); }
+.lo-chip.lo-action { border-color: var(--type-flow); color: var(--type-flow); }
+
+/* FlexiPage 視覚モック */
+.flexi-mock { display: flex; flex-wrap: wrap; gap: 12px; }
+.fp-region { flex: 1 1 240px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--bg-alt); padding: 8px; min-width: 0; }
+.fp-region-label { font-weight: 600; font-size: 12.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.fp-items { display: flex; flex-direction: column; gap: 6px; }
+.fp-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 4px; background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--muted-soft); font-size: 12px; }
+.fp-item code { background: transparent; border: 0; padding: 0; }
+.fp-item-kind { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--bg-alt); color: var(--muted); white-space: nowrap; }
+.fp-field { border-left-color: var(--accent); }
+.fp-related { border-left-color: var(--type-object); }
+.fp-highlight { border-left-color: var(--type-flow); }
+.fp-action { border-left-color: var(--type-trigger); }
+.fp-custom { border-left-color: var(--type-lwc); }
+
 /* 組織設定パネル (ホーム) */
 .org-block { margin: 0 0 28px; }
 .org-block h3 { font-size: 14px; margin: 0 0 10px; color: var(--fg-strong); }
