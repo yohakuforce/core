@@ -7,6 +7,7 @@
 
 import type {
   AuraBundle,
+  EmailTemplate,
   FlexiPage,
   PermissionSet,
   PermissionSetBodyInfo,
@@ -24,6 +25,33 @@ export interface RefSection {
 
 const check = (b: boolean): string => (b ? "✓" : "");
 const muted = (s: string): string => `<p class="muted">${escapeHtml(s)}</p>`;
+
+// ---------- EmailTemplate ----------
+
+const EMAIL_TYPE_LABEL: Record<string, string> = {
+  text: "テキスト",
+  html: "HTML",
+  custom: "カスタム HTML",
+  visualforce: "Visualforce",
+};
+
+export function buildEmailTemplateSections(t: EmailTemplate): RefSection[] {
+  const typeJa = t.type !== undefined ? (EMAIL_TYPE_LABEL[t.type.toLowerCase()] ?? t.type) : "—";
+  return [
+    {
+      id: "summary",
+      title: "概要",
+      html: `<table class="data-table"><tbody>
+        <tr><th>ラベル</th><td>${escapeHtml(t.name ?? "—")}</td></tr>
+        <tr><th>件名</th><td>${t.subject !== undefined ? escapeHtml(t.subject) : "—"}</td></tr>
+        <tr><th>形式</th><td>${escapeHtml(typeJa)}</td></tr>
+        <tr><th>文字コード</th><td>${escapeHtml(t.encodingKey ?? "—")}</td></tr>
+        <tr><th>利用可能</th><td>${t.available === undefined ? "—" : t.available ? "✓" : "無効"}</td></tr>
+      </tbody></table>${t.description ? muted(t.description) : ""}
+      <p class="muted">本文 (差し込み項目を含む) は <code>.email</code> ファイルに格納されます。差し込みロジックの詳細は本文を参照してください。</p>`,
+    },
+  ];
+}
 
 // ---------- PermissionSet / Profile (共通の body) ----------
 

@@ -149,3 +149,37 @@ describe("extractRemoteSiteSetting", () => {
     expect(out?.disableProtocolSecurity).toBe(false);
   });
 });
+
+import { extractEmailTemplate } from "../../../src/graph/extractors/email-template.js";
+
+const EMAIL_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>UTF-8</encodingKey>
+    <name>受注確認メール</name>
+    <description>受注登録時に送信</description>
+    <subject>【受注確認】注文番号: {!Order__c.Name}</subject>
+    <type>custom</type>
+    <uiType>SF</uiType>
+</EmailTemplate>`;
+
+describe("extractEmailTemplate", () => {
+  it("ラベル/件名/形式/文字コード/利用可否を取れる", () => {
+    const out = extractEmailTemplate({
+      descriptor: {
+        type: "EmailTemplate",
+        fullyQualifiedName: "Sales/OrderConfirmation",
+        sourcePath: "p",
+        contentHash: "h",
+      },
+      content: EMAIL_XML,
+      projectRoot: ".",
+    });
+    expect(out?.fullyQualifiedName).toBe("Sales/OrderConfirmation");
+    expect(out?.name).toBe("受注確認メール");
+    expect(out?.subject).toContain("{!Order__c.Name}");
+    expect(out?.type).toBe("custom");
+    expect(out?.encodingKey).toBe("UTF-8");
+    expect(out?.available).toBe(true);
+  });
+});

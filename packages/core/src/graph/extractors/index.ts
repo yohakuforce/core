@@ -2,6 +2,7 @@ export type { ExtractContext } from "./types.js";
 export { DEFAULT_API_VERSION } from "./types.js";
 export { extractObject } from "./object.js";
 export { extractField } from "./field.js";
+export { extractEmailTemplate } from "./email-template.js";
 export { extractValidationRule } from "./validation-rule.js";
 export { extractFlow } from "./flow.js";
 export { extractApexClass, readApiVersion } from "./apex-class.js";

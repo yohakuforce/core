@@ -16,6 +16,7 @@ import { icon } from "./icons.js";
 import {
   type RefSection,
   buildAuraSections,
+  buildEmailTemplateSections,
   buildFlexiPageSections,
   buildPermissionSetSections,
   buildProfileSections,
@@ -100,6 +101,16 @@ const REF_TYPES: readonly RefTypeDef[] = [
         name: ab.fullyQualifiedName,
         summary: ab.bundleKind,
         sections: buildAuraSections(ab),
+      })),
+  },
+  {
+    key: "emailtemplate",
+    label: "メールテンプレート",
+    entities: (g) =>
+      (g.emailTemplates ?? []).map((t) => ({
+        name: t.fullyQualifiedName,
+        summary: t.subject ?? t.name ?? "メールテンプレート",
+        sections: buildEmailTemplateSections(t),
       })),
   },
 ];

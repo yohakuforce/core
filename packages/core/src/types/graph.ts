@@ -29,7 +29,8 @@ export type EntityKind =
   | "flexiPage"
   | "visualforcePage"
   | "visualforceComponent"
-  | "customApplication";
+  | "customApplication"
+  | "emailTemplate";
 
 export type DependencyKind =
   | "references"
@@ -611,6 +612,21 @@ export interface SharedToInfo {
   readonly target?: string;
 }
 
+// ===== EmailTemplate (Phase: 詳細設計書化) =====
+
+export interface EmailTemplate {
+  readonly fullyQualifiedName: string; // folder/DeveloperName
+  readonly name?: string; // 表示ラベル
+  readonly subject?: string; // 件名
+  readonly type?: string; // text / html / custom / visualforce
+  readonly uiType?: string;
+  readonly encodingKey?: string;
+  readonly available?: boolean;
+  readonly description?: string;
+  readonly sourcePath: string;
+  readonly contentHash: string;
+}
+
 export interface Dependency {
   readonly from: EntityRef;
   readonly to: EntityRef;
@@ -647,6 +663,8 @@ export interface KnowledgeGraph {
   readonly visualforcePages: readonly VisualforcePage[];
   readonly visualforceComponents: readonly VisualforceComponent[];
   readonly customApplications: readonly CustomApplication[];
+  /** メールテンプレート (任意フィールド: 既存グラフ構築箇所との互換のため optional) */
+  readonly emailTemplates?: readonly EmailTemplate[];
   readonly dependencies: readonly Dependency[];
   readonly tags: readonly Tag[];
 }

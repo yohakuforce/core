@@ -8,6 +8,7 @@ import type {
   AuraBundle,
   CustomApplication,
   CustomMetadataRecord,
+  EmailTemplate,
   Field,
   FlexiPage,
   Flow,
@@ -38,6 +39,7 @@ import {
   extractAuraBundle,
   extractCustomApplication,
   extractCustomMetadataRecord,
+  extractEmailTemplate,
   extractField,
   extractFlexiPage,
   extractFlow,
@@ -89,6 +91,7 @@ export async function buildGraph(
   const visualforcePages: VisualforcePage[] = [];
   const visualforceComponents: VisualforceComponent[] = [];
   const customApplications: CustomApplication[] = [];
+  const emailTemplates: EmailTemplate[] = [];
 
   for (const descriptor of descriptors) {
     const content = await adapter.loadContent(descriptor);
@@ -117,6 +120,7 @@ export async function buildGraph(
         visualforcePages,
         visualforceComponents,
         customApplications,
+        emailTemplates,
       },
       options.projectRoot,
     );
@@ -170,6 +174,7 @@ export async function buildGraph(
     visualforcePages,
     visualforceComponents,
     customApplications,
+    emailTemplates,
     dependencies,
     tags: [],
   };
@@ -250,6 +255,7 @@ interface Buckets {
   readonly visualforcePages: VisualforcePage[];
   readonly visualforceComponents: VisualforceComponent[];
   readonly customApplications: CustomApplication[];
+  readonly emailTemplates: EmailTemplate[];
 }
 
 function routeDescriptor(
@@ -363,6 +369,11 @@ function routeDescriptor(
     case "CustomApplication": {
       const a = extractCustomApplication(ctx);
       if (a !== undefined) buckets.customApplications.push(a);
+      return;
+    }
+    case "EmailTemplate": {
+      const e = extractEmailTemplate(ctx);
+      if (e !== undefined) buckets.emailTemplates.push(e);
       return;
     }
     default:

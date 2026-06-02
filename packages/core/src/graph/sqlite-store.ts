@@ -250,6 +250,18 @@ CREATE TABLE IF NOT EXISTS custom_applications (
   source_path TEXT NOT NULL,
   content_hash TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS email_templates (
+  fqn TEXT PRIMARY KEY,
+  name TEXT,
+  subject TEXT,
+  type TEXT,
+  ui_type TEXT,
+  encoding_key TEXT,
+  available INTEGER,
+  description TEXT,
+  source_path TEXT NOT NULL,
+  content_hash TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS dependencies (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -275,6 +287,7 @@ CREATE TABLE IF NOT EXISTS tags (
 const TRUNCATE_DDL = `
 DELETE FROM dependencies;
 DELETE FROM tags;
+DELETE FROM email_templates;
 DELETE FROM custom_applications;
 DELETE FROM visualforce_components;
 DELETE FROM visualforce_pages;
@@ -532,6 +545,7 @@ export class SqliteGraphStore {
       this.writeVisualforcePages(graph);
       this.writeVisualforceComponents(graph);
       this.writeCustomApplications(graph);
+      this.writeEmailTemplates(graph);
       this.writeDependencies(graph);
       this.writeTags(graph);
     });
@@ -941,6 +955,26 @@ export class SqliteGraphStore {
         JSON.stringify(body),
         a.sourcePath,
         a.contentHash,
+      );
+    }
+  }
+
+  private writeEmailTemplates(graph: KnowledgeGraph): void {
+    const stmt = this.#db.prepare(
+      "INSERT OR REPLACE INTO email_templates(fqn, name, subject, type, ui_type, encoding_key, available, description, source_path, content_hash) VALUES (?,?,?,?,?,?,?,?,?,?)",
+    );
+    for (const e of graph.emailTemplates ?? []) {
+      stmt.run(
+        e.fullyQualifiedName,
+        e.name ?? null,
+        e.subject ?? null,
+        e.type ?? null,
+        e.uiType ?? null,
+        e.encodingKey ?? null,
+        e.available === undefined ? null : e.available ? 1 : 0,
+        e.description ?? null,
+        e.sourcePath,
+        e.contentHash,
       );
     }
   }

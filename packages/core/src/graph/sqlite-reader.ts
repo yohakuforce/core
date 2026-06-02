@@ -12,6 +12,7 @@ import type {
   CustomApplication,
   CustomMetadataRecord,
   CustomMetadataValueInfo,
+  EmailTemplate,
   Field,
   FlexiPage,
   FlexiPageRegionInfo,
@@ -218,6 +219,7 @@ export class KnowledgeGraphReader {
       visualforcePages: this.readVisualforcePages(),
       visualforceComponents: this.readVisualforceComponents(),
       customApplications: this.readCustomApplications(),
+      emailTemplates: this.readEmailTemplates(),
       dependencies: [],
       tags: [],
     };
@@ -341,6 +343,42 @@ export class KnowledgeGraphReader {
           contentHash: r.content_hash,
         };
       });
+  }
+
+  private readEmailTemplates(): readonly EmailTemplate[] {
+    interface Row {
+      readonly fqn: string;
+      readonly name: string | null;
+      readonly subject: string | null;
+      readonly type: string | null;
+      readonly ui_type: string | null;
+      readonly encoding_key: string | null;
+      readonly available: number | null;
+      readonly description: string | null;
+      readonly source_path: string;
+      readonly content_hash: string;
+    }
+    // 旧 DB (テーブル未作成) でも壊れないよう防御
+    let rows: readonly Row[];
+    try {
+      rows = this.#store.query<Row>(
+        "SELECT fqn, name, subject, type, ui_type, encoding_key, available, description, source_path, content_hash FROM email_templates",
+      );
+    } catch {
+      return [];
+    }
+    return rows.map((r) => ({
+      fullyQualifiedName: r.fqn,
+      name: r.name ?? undefined,
+      subject: r.subject ?? undefined,
+      type: r.type ?? undefined,
+      uiType: r.ui_type ?? undefined,
+      encodingKey: r.encoding_key ?? undefined,
+      available: r.available === null ? undefined : r.available === 1,
+      description: r.description ?? undefined,
+      sourcePath: r.source_path,
+      contentHash: r.content_hash,
+    }));
   }
 
   private readLwcs(): readonly LightningWebComponent[] {

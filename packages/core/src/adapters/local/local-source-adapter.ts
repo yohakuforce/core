@@ -128,6 +128,8 @@ const EXTENSION_CLASSIFIERS: ReadonlyArray<{
   { suffix: ".component-meta.xml", type: "VisualforceComponent", directoryHint: "components" },
   // Lightning App / CustomApplication (in applications/, AuraBundle と区別)
   // suffix .app-meta.xml は AuraBundle と衝突するので、classifyFile でディレクトリ判別
+  // EmailTemplate
+  { suffix: ".email-meta.xml", type: "EmailTemplate", directoryHint: "email" },
 ];
 
 function classifyFile(
@@ -244,6 +246,13 @@ function inferFullyQualifiedName(type: string, segments: readonly string[]): str
       return fileName.replace(/\.component-meta\.xml$/, "");
     case "CustomApplication":
       return fileName.replace(/\.app-meta\.xml$/, "");
+    case "EmailTemplate": {
+      // 命名: email/<folder>/<Name>.email-meta.xml → fqn = <folder>/<Name>
+      const idx = segments.indexOf("email");
+      const base = fileName.replace(/\.email-meta\.xml$/, "");
+      const folder = idx >= 0 ? segments[idx + 1] : undefined;
+      return folder !== undefined && folder !== fileName ? `${folder}/${base}` : base;
+    }
     default:
       return undefined;
   }

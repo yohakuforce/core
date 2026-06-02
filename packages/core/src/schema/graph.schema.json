@@ -28,6 +28,7 @@
     "visualforcePages": { "type": "array", "items": { "$ref": "#/$defs/VisualforcePage" } },
     "visualforceComponents": { "type": "array", "items": { "$ref": "#/$defs/VisualforceComponent" } },
     "customApplications": { "type": "array", "items": { "$ref": "#/$defs/CustomApplication" } },
+    "emailTemplates": { "type": "array", "items": { "$ref": "#/$defs/EmailTemplate" } },
     "dependencies": { "type": "array", "items": { "$ref": "#/$defs/Dependency" } },
     "tags": { "type": "array", "items": { "$ref": "#/$defs/Tag" } }
   },
@@ -382,6 +383,22 @@
         "utilityBar": { "type": "string" },
         "brandColor": { "type": "string" },
         "logo": { "type": "string" },
+        "sourcePath": { "type": "string" },
+        "contentHash": { "type": "string" }
+      }
+    },
+    "EmailTemplate": {
+      "type": "object",
+      "required": ["fullyQualifiedName", "sourcePath", "contentHash"],
+      "properties": {
+        "fullyQualifiedName": { "type": "string" },
+        "name": { "type": "string" },
+        "subject": { "type": "string" },
+        "type": { "type": "string" },
+        "uiType": { "type": "string" },
+        "encodingKey": { "type": "string" },
+        "available": { "type": "boolean" },
+        "description": { "type": "string" },
         "sourcePath": { "type": "string" },
         "contentHash": { "type": "string" }
       }
