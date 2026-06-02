@@ -81,6 +81,114 @@
       }
     },
     {
+      "id": "processing-detail",
+      "label": "処理詳細",
+      "source": "deterministic",
+      "perType": {
+        "apex": "optional",
+        "trigger": "optional",
+        "lwc": "not-applicable",
+        "object": "not-applicable",
+        "flow": "optional"
+      }
+    },
+    {
+      "id": "field-writes",
+      "label": "項目値の割り当て",
+      "source": "deterministic",
+      "perType": {
+        "apex": "optional",
+        "trigger": "optional",
+        "lwc": "not-applicable",
+        "object": "not-applicable",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "field-assignment",
+      "label": "項目値の割り当て",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "calculation-rules",
+      "label": "計算項目・入力規則",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "record-types",
+      "label": "レコードタイプ",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "page-layouts",
+      "label": "ページレイアウト",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "approval-process",
+      "label": "承認プロセス",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "sharing-rules",
+      "label": "共有ルール",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
+      "id": "access-permissions",
+      "label": "アクセス権限",
+      "source": "deterministic",
+      "perType": {
+        "apex": "not-applicable",
+        "trigger": "not-applicable",
+        "lwc": "not-applicable",
+        "object": "optional",
+        "flow": "not-applicable"
+      }
+    },
+    {
       "id": "io-contract",
       "label": "入出力契約",
       "source": "deterministic",
@@ -161,6 +269,8 @@
       "public-interface",
       "data-model-touchpoints",
       "internal-flow",
+      "processing-detail",
+      "field-writes",
       "io-contract",
       "test-coverage",
       "change-history",
@@ -174,6 +284,8 @@
       "dependencies",
       "data-model-touchpoints",
       "internal-flow",
+      "processing-detail",
+      "field-writes",
       "test-coverage",
       "change-history",
       "impact-hint",
@@ -197,6 +309,13 @@
       "business-meaning",
       "dependencies",
       "public-interface",
+      "field-assignment",
+      "calculation-rules",
+      "record-types",
+      "page-layouts",
+      "approval-process",
+      "sharing-rules",
+      "access-permissions",
       "change-history",
       "impact-hint",
       "related-domains"
@@ -207,6 +326,7 @@
       "dependencies",
       "data-model-touchpoints",
       "internal-flow",
+      "processing-detail",
       "io-contract",
       "change-history",
       "impact-hint",

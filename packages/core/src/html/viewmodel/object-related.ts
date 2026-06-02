@@ -16,6 +16,12 @@ import type {
   SObject,
   SharingRule,
 } from "../../types/graph.js";
+import {
+  type FieldLabelResolver,
+  labelIfDistinct,
+  makeFieldLabelResolver,
+  renderRefInline,
+} from "../display.js";
 import { escapeHtml } from "../escape.js";
 import type { SectionViewModel } from "../types.js";
 
@@ -82,17 +88,19 @@ export function buildLayoutsSection(obj: SObject, graph: KnowledgeGraph): Sectio
       "ページレイアウトは検出されませんでした。",
     );
   }
+  // レイアウト項目は短縮 API 名 (例: Account__c) のため、所属オブジェクトを文脈に補完する。
+  const resolveField = makeFieldLabelResolver(graph);
   return {
     id: "page-layouts",
     title: "ページレイアウト",
     htmlContent: `
-    <p class="muted">画面の項目配置 (${layouts.length})。配置を視覚的に再現し、色で 必須 / 参照のみ / 編集可 を区別します。</p>
+    <p class="muted">画面の項目配置 (${layouts.length})。項目は日本語ラベルで表示し、配置を視覚的に再現、色で 必須 / 参照のみ / 編集可 を区別します。</p>
     <div class="layout-legend">
       <span class="lo-field lo-required">必須</span>
       <span class="lo-field lo-edit">編集可</span>
       <span class="lo-field lo-readonly">参照のみ</span>
     </div>
-    ${layouts.map(layoutBlock).join("\n    ")}`,
+    ${layouts.map((l) => layoutBlock(l, obj.fullyQualifiedName, resolveField)).join("\n    ")}`,
   };
 }
 
@@ -107,19 +115,33 @@ function behaviorClass(behavior: string): string {
   }
 }
 
-function layoutFieldChip(it: { field: string; behavior: string }): string {
+function layoutFieldChip(
+  it: { field: string; behavior: string },
+  objectContext: string,
+  resolveField: FieldLabelResolver,
+): string {
   const req = it.behavior === "Required" ? '<span class="lo-req-mark">*</span>' : "";
-  return `<div class="lo-field ${behaviorClass(it.behavior)}">${req}<code>${escapeHtml(it.field)}</code></div>`;
+  // 日本語ラベルを主表示にし、API 名を小さく併記。ラベルが無ければ API 名のみ。
+  const label = resolveField(it.field, objectContext);
+  const body =
+    label !== undefined
+      ? `${escapeHtml(label)}<span class="api-name-inline">${escapeHtml(it.field)}</span>`
+      : `<code>${escapeHtml(it.field)}</code>`;
+  return `<div class="lo-field ${behaviorClass(it.behavior)}">${req}${body}</div>`;
 }
 
-function layoutSectionMock(s: Layout["sections"][number]): string {
+function layoutSectionMock(
+  s: Layout["sections"][number],
+  objectContext: string,
+  resolveField: FieldLabelResolver,
+): string {
   // 列番号 (1-based) ごとにグルーピングして横並び再現
   const maxCol = s.items.reduce((m, it) => Math.max(m, it.column), 1);
   const cols: string[] = [];
   for (let c = 1; c <= maxCol; c++) {
     const items = s.items.filter((it) => it.column === c);
     cols.push(
-      `<div class="lo-col">${items.length === 0 ? '<span class="muted">（空）</span>' : items.map(layoutFieldChip).join("")}</div>`,
+      `<div class="lo-col">${items.length === 0 ? '<span class="muted">（空）</span>' : items.map((it) => layoutFieldChip(it, objectContext, resolveField)).join("")}</div>`,
     );
   }
   return `<div class="lo-section">
@@ -128,11 +150,11 @@ function layoutSectionMock(s: Layout["sections"][number]): string {
       </div>`;
 }
 
-function layoutBlock(l: Layout): string {
+function layoutBlock(l: Layout, objectContext: string, resolveField: FieldLabelResolver): string {
   const sections =
     l.sections.length === 0
       ? `<p class="muted">セクションは検出されませんでした。</p>`
-      : l.sections.map(layoutSectionMock).join("\n      ");
+      : l.sections.map((s) => layoutSectionMock(s, objectContext, resolveField)).join("\n      ");
   const related =
     l.relatedLists.length > 0
       ? `<div class="lo-box"><div class="lo-box-label">関連リスト (${l.relatedLists.length})</div>
@@ -166,30 +188,33 @@ export function buildApprovalSection(obj: SObject, graph: KnowledgeGraph): Secti
   if (aps.length === 0) {
     return emptyNote("approval-process", "承認プロセス", "承認プロセスは定義されていません。");
   }
+  const resolveField = makeFieldLabelResolver(graph);
   return {
     id: "approval-process",
     title: "承認プロセス",
     htmlContent: `
     <p class="muted">段階承認の設計 (${aps.length})。申請条件・承認者・各段階の挙動を示します。</p>
-    ${aps.map(approvalBlock).join("\n    ")}`,
+    ${aps.map((ap) => approvalBlock(ap, resolveField)).join("\n    ")}`,
   };
 }
 
 function criteriaTable(
   items: readonly { field: string; operation: string; value: string }[],
+  objectContext: string,
+  resolveField: FieldLabelResolver,
 ): string {
   if (items.length === 0) return `<p class="muted">（条件なし）</p>`;
   return `<table class="data-table"><thead><tr><th>項目</th><th>演算子</th><th>値</th></tr></thead><tbody>
       ${items
         .map(
           (c) =>
-            `<tr><td><code>${escapeHtml(c.field)}</code></td><td>${escapeHtml(c.operation)}</td><td>${escapeHtml(c.value)}</td></tr>`,
+            `<tr><td>${renderRefInline(resolveField(c.field, objectContext), c.field)}</td><td>${escapeHtml(c.operation)}</td><td>${escapeHtml(c.value)}</td></tr>`,
         )
         .join("\n      ")}
     </tbody></table>`;
 }
 
-function approvalBlock(ap: ApprovalProcess): string {
+function approvalBlock(ap: ApprovalProcess, resolveField: FieldLabelResolver): string {
   const status = ap.active
     ? `<span class="badge badge-on">有効</span>`
     : `<span class="badge badge-off">無効</span>`;
@@ -202,7 +227,7 @@ function approvalBlock(ap: ApprovalProcess): string {
           <li>代理承認: ${s.allowDelegate ? "許可" : "不可"}</li>
           <li>条件不一致時: ${escapeHtml(IF_NOT_MET[s.ifCriteriaNotMet] ?? s.ifCriteriaNotMet)}</li>
         </ul>
-        ${s.entryCriteria.length > 0 ? `<p class="muted">Step エントリ条件:</p>${criteriaTable(s.entryCriteria)}` : ""}
+        ${s.entryCriteria.length > 0 ? `<p class="muted">Step エントリ条件:</p>${criteriaTable(s.entryCriteria, ap.object, resolveField)}` : ""}
       </div>`,
     )
     .join("\n      ");
@@ -221,7 +246,7 @@ function approvalBlock(ap: ApprovalProcess): string {
   return `<div class="calc-card">
       <h4><code>${escapeHtml(ap.fullyQualifiedName)}</code> ${status}${ap.recordEditability ? ` <span class="muted">編集: ${escapeHtml(ap.recordEditability)}</span>` : ""}</h4>
       <div class="calc-label">申請 (エントリ) 条件</div>
-      ${criteriaTable(ap.entryCriteria)}
+      ${criteriaTable(ap.entryCriteria, ap.object, resolveField)}
       <div class="calc-label">承認ステップ (${ap.steps.length})</div>
       ${steps || `<p class="muted">（ステップなし）</p>`}
       ${actionList ? `<div class="calc-label">アクション</div><ul>${actionList}</ul>` : ""}
@@ -235,6 +260,7 @@ export function buildSharingSection(obj: SObject, graph: KnowledgeGraph): Sectio
   if (srs.length === 0) {
     return emptyNote("sharing-rules", "共有ルール", "共有ルールは定義されていません。");
   }
+  const resolveField = makeFieldLabelResolver(graph);
   return {
     id: "sharing-rules",
     title: "共有ルール",
@@ -243,13 +269,13 @@ export function buildSharingSection(obj: SObject, graph: KnowledgeGraph): Sectio
     <table class="data-table">
       <thead><tr><th>ルール</th><th>種別</th><th>アクセス</th><th>共有先</th><th>条件</th></tr></thead>
       <tbody>
-        ${srs.map(sharingRow).join("\n        ")}
+        ${srs.map((s) => sharingRow(s, resolveField)).join("\n        ")}
       </tbody>
     </table>`,
   };
 }
 
-function sharingRow(s: SharingRule): string {
+function sharingRow(s: SharingRule, resolveField: FieldLabelResolver): string {
   const kind =
     s.kind === "criteriaBased"
       ? "条件ベース"
@@ -262,7 +288,7 @@ function sharingRow(s: SharingRule): string {
       ? s.criteriaItems
           .map(
             (c) =>
-              `<code>${escapeHtml(c.field)} ${escapeHtml(c.operation)} ${escapeHtml(c.value)}</code>`,
+              `${renderRefInline(resolveField(c.field, s.object), c.field)} ${escapeHtml(c.operation)} <code>${escapeHtml(c.value)}</code>`,
           )
           .join("<br />")
       : s.ownerSource
@@ -281,6 +307,8 @@ function sharingRow(s: SharingRule): string {
 
 interface ObjectGrant {
   readonly name: string;
+  /** 権限セットの日本語ラベル (あれば)。プロファイルは無し。 */
+  readonly label?: string;
   readonly kind: "権限セット" | "プロファイル";
   readonly create: boolean;
   readonly read: boolean;
@@ -300,7 +328,7 @@ export function buildAccessSection(obj: SObject, graph: KnowledgeGraph): Section
   const collect = (
     holder: { readonly fullyQualifiedName: string; readonly body?: PermissionSetBodyInfo },
     kind: ObjectGrant["kind"],
-    label: string,
+    grantLabel?: string,
   ): void => {
     const op = holder.body?.objectPermissions.find((o) => o.object === name);
     if (op === undefined) return;
@@ -308,7 +336,8 @@ export function buildAccessSection(obj: SObject, graph: KnowledgeGraph): Section
       f.field.startsWith(fieldPrefix),
     );
     grants.push({
-      name: label,
+      name: holder.fullyQualifiedName,
+      label: labelIfDistinct(grantLabel, holder.fullyQualifiedName),
       kind,
       create: op.create,
       read: op.read,
@@ -321,8 +350,8 @@ export function buildAccessSection(obj: SObject, graph: KnowledgeGraph): Section
     });
   };
 
-  for (const ps of graph.permissionSets) collect(ps, "権限セット", ps.fullyQualifiedName);
-  for (const pf of graph.profiles) collect(pf, "プロファイル", pf.fullyQualifiedName);
+  for (const ps of graph.permissionSets) collect(ps, "権限セット", ps.label);
+  for (const pf of graph.profiles) collect(pf, "プロファイル");
 
   if (grants.length === 0) {
     return emptyNote(
@@ -348,7 +377,7 @@ export function buildAccessSection(obj: SObject, graph: KnowledgeGraph): Section
 
 function grantRow(g: ObjectGrant): string {
   return `<tr>
-    <td><code>${escapeHtml(g.name)}</code></td>
+    <td>${renderRefInline(g.label, g.name)}</td>
     <td>${g.kind}</td>
     <td>${check(g.read)}</td>
     <td>${check(g.create)}</td>

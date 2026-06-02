@@ -23,6 +23,7 @@ import type {
   LightningWebComponent,
   SObject,
 } from "../types/graph.js";
+import { type LabelResolver, makeLabelResolver } from "./display.js";
 import type { ComponentType } from "./sections.js";
 
 export type FlowRole = "entry" | "process" | "data" | "downstream";
@@ -30,6 +31,8 @@ export type FlowRole = "entry" | "process" | "data" | "downstream";
 export interface FlowStep {
   readonly type: ComponentType;
   readonly name: string;
+  /** 日本語ラベル (object/flow/lwc)。主表示に使う。無ければ undefined。 */
+  readonly label?: string;
   readonly role: FlowRole;
   /** 「なぜここに居るか」の根拠 (例: "@RestResource", "beforeInsert", "DML insert") */
   readonly evidence: string;
@@ -106,7 +109,27 @@ export function buildBusinessFlows(
   const objectFlows = graph.objects.map((o) =>
     buildObjectFlow(o, graph, meaningLookup, knownObjects),
   );
-  return { version: 1, domainFlows, objectFlows };
+  // 各ステップに日本語ラベルを付与 (object/flow/lwc)。apex/trigger は API 名のまま。
+  const resolveLabel = makeLabelResolver(graph);
+  return {
+    version: 1,
+    domainFlows: domainFlows.map((f) => enrichFlowLabels(f, resolveLabel)),
+    objectFlows: objectFlows.map((f) => enrichFlowLabels(f, resolveLabel)),
+  };
+}
+
+function enrichFlowLabels(flow: BusinessFlow, resolveLabel: LabelResolver): BusinessFlow {
+  const enrichStep = (s: FlowStep): FlowStep => {
+    const label = resolveLabel(s.type, s.name);
+    return label === undefined ? s : { ...s, label };
+  };
+  return {
+    ...flow,
+    entryPoints: flow.entryPoints.map(enrichStep),
+    processing: flow.processing.map(enrichStep),
+    affectedData: flow.affectedData.map(enrichStep),
+    downstream: flow.downstream.map(enrichStep),
+  };
 }
 
 function buildDomainFlow(

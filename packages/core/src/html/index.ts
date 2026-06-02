@@ -453,6 +453,29 @@ strong { color: var(--fg-strong); }
 .breadcrumb .sep { margin: 0 8px; color: var(--muted-soft); }
 .breadcrumb .current { color: var(--fg); font-weight: 500; }
 
+/* 日本語ラベル主 / API名副 の表示 (display.ts のヘルパが出力する class) */
+.name-stacked { display: inline-flex; flex-direction: column; gap: 1px; min-width: 0; }
+/* h1 / カード等で主表示の下に出す API 名 (block の小さいグレー mono) */
+.api-name {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 400;
+  color: var(--muted); background: none; border: 0; padding: 0;
+  line-height: 1.4; letter-spacing: 0;
+}
+/* サイドバー / 検索結果 / ドメイン等で 1 行に収める用途の API 名 (inline) */
+.api-name-inline {
+  font-family: var(--font-mono); font-size: 0.82em; color: var(--muted-soft);
+  margin-left: 7px; font-weight: 400;
+}
+/* 見出し下の短い日本語説明 (apex/trigger のサマリ) */
+.component-subtitle { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+/* type-index カードのサブタイトル */
+.card-sub { font-size: 12px; color: var(--muted); margin: 2px 0 0; line-height: 1.5; }
+/* アーキ図ノードの API 名 */
+.arch-node .node-api {
+  display: block; font-family: var(--font-mono); font-size: 10px;
+  color: var(--muted-soft); margin-top: 1px;
+}
+
 /* Type pill (used in headers, lists, type-index cards) */
 .type-pill {
   display: inline-flex; align-items: center;
@@ -564,6 +587,42 @@ strong { color: var(--fg-strong); }
 .concerns .severity-MEDIUM .severity-badge { background: var(--severity-medium-fg); color: #fff; }
 .concerns .severity-INFO   { background: var(--severity-info-bg);   color: var(--severity-info-fg);   border-left-color: var(--severity-info-fg); }
 .concerns .severity-INFO .severity-badge   { background: var(--severity-info-fg);   color: #fff; }
+
+/* Hotspots (ホーム「ホットスポット」タブ) */
+.hotspots-note { margin: 0 0 16px; font-size: 13px; }
+.hotspots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.hotspot-card {
+  border: 1px solid var(--border); border-left: 4px solid var(--muted-soft);
+  border-radius: var(--radius); background: var(--bg-surface); overflow: hidden;
+}
+.hotspot-card.sev-HIGH   { border-left-color: var(--severity-high-fg); }
+.hotspot-card.sev-MEDIUM { border-left-color: var(--severity-medium-fg); }
+.hotspot-card.sev-INFO   { border-left-color: var(--severity-info-fg); }
+.hotspot-head {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  text-decoration: none; color: inherit;
+}
+.hotspot-head:hover { background: var(--bg-alt); }
+.hotspot-rank {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-alt); color: var(--muted); font-size: 12px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+.hotspot-name { font-weight: 600; color: var(--fg-strong); flex: 1; min-width: 0; }
+.hotspot-score {
+  flex: none; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  color: var(--muted); background: var(--bg-alt); border-radius: 999px; padding: 2px 10px;
+}
+.hotspot-reasons { list-style: none; margin: 0; padding: 0 16px 12px 52px; display: flex; flex-direction: column; gap: 6px; }
+.hotspot-reasons li { font-size: 12.5px; color: var(--fg); line-height: 1.6; }
+.hotspot-reasons .sev-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 3px; margin-right: 8px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; vertical-align: middle;
+}
+.hotspot-reasons li.sev-HIGH   .sev-badge { background: var(--severity-high-fg);   color: #fff; }
+.hotspot-reasons li.sev-MEDIUM .sev-badge { background: var(--severity-medium-fg); color: #fff; }
+.hotspot-reasons li.sev-INFO   .sev-badge { background: var(--severity-info-fg);   color: #fff; }
 
 /* Coverage block (Phase 14) */
 .coverage-block {

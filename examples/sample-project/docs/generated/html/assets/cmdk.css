@@ -43,6 +43,7 @@
 .cmdk-results li .name { font-weight: 500; color: var(--fg-strong); flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cmdk-results li .meta { font-size: 11px; color: var(--muted); }
+.cmdk-results li .meta.api { font-family: var(--font-mono); opacity: 0.85; }
 .cmdk-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
 .cmdk-footer {
   padding: 8px 16px; border-top: 1px solid var(--border);

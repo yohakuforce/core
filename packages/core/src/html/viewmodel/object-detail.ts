@@ -13,6 +13,13 @@
 // ----------------------------------------------------------------------------
 
 import type { Field, KnowledgeGraph, SObject, ValidationRule } from "../../types/graph.js";
+import {
+  type LabelResolver,
+  labelIfDistinct,
+  makeLabelResolver,
+  renderNameStacked,
+  renderRefInline,
+} from "../display.js";
 import { escapeHtml } from "../escape.js";
 import { formulaToHtml, rawFormulaDetails } from "../formula-html.js";
 import type { SectionViewModel } from "../types.js";
@@ -24,6 +31,11 @@ function hasText(s: string | undefined): s is string {
   return s !== undefined && s.trim() !== "";
 }
 
+/** 項目セル: 日本語ラベルを主表示にし、API 名 (Object.Field) を副表示。 */
+function fieldCell(f: Field): string {
+  return renderNameStacked(labelIfDistinct(f.label, f.fullyQualifiedName), f.fullyQualifiedName);
+}
+
 // ---------- 値の決まり方の決定的判定 ----------
 
 interface ValueOrigin {
@@ -32,12 +44,14 @@ interface ValueOrigin {
 }
 
 /** 決定的に確定する「値の決まり方」を返す。確定できなければ null (= 入力/処理、LLM 判定対象) */
-function deterministicOrigin(f: Field): ValueOrigin | null {
+function deterministicOrigin(f: Field, resolveObject: LabelResolver): ValueOrigin | null {
   if (hasText(f.formula)) {
     return { label: "数式で自動計算", detail: "下の「計算項目・入力規則」を参照" };
   }
   if (f.referenceTo !== undefined && f.referenceTo.length > 0) {
-    const targets = f.referenceTo.map((r) => `<code>${escapeHtml(r)}</code>`).join(", ");
+    const targets = f.referenceTo
+      .map((r) => renderRefInline(resolveObject("object", r), r))
+      .join(", ");
     return { label: "参照 (lookup)", detail: `参照先: ${targets}` };
   }
   if (f.picklistValues !== undefined && f.picklistValues.length > 0) {
@@ -55,7 +69,7 @@ function deterministicOrigin(f: Field): ValueOrigin | null {
 
 function classifiedRow(f: Field, origin: ValueOrigin): string {
   return `<tr>
-    <td><code>${escapeHtml(f.fullyQualifiedName)}</code><br /><span class="muted">${escapeHtml(f.label ?? "—")}</span></td>
+    <td>${fieldCell(f)}</td>
     <td><code>${escapeHtml(f.type)}</code></td>
     <td>${f.required === true ? "✓" : ""}</td>
     <td><span class="value-origin">${escapeHtml(origin.label)}</span></td>
@@ -72,7 +86,7 @@ function residualSkeleton(residual: readonly Field[]): string {
           ${residual
             .map(
               (f) => `<tr>
-            <td><code>${escapeHtml(f.fullyQualifiedName)}</code><br /><span class="muted">${escapeHtml(f.label ?? "—")}</span></td>
+            <td>${fieldCell(f)}</td>
             <td><code>${escapeHtml(f.type)}</code></td>
             <td>${f.required === true ? "✓" : ""}</td>
             <td class="muted">要確認</td>
@@ -98,10 +112,11 @@ export function buildFieldAssignmentSection(
     };
   }
 
+  const resolveObject = makeLabelResolver(graph);
   const classified: Array<{ f: Field; origin: ValueOrigin }> = [];
   const residual: Field[] = [];
   for (const f of fields) {
-    const origin = deterministicOrigin(f);
+    const origin = deterministicOrigin(f, resolveObject);
     if (origin === null) residual.push(f);
     else classified.push({ f, origin });
   }
@@ -174,7 +189,7 @@ function touchedByList(obj: SObject, graph: KnowledgeGraph): string {
 function formulaFieldCard(f: Field): string {
   const formula = f.formula ?? "";
   return `<div class="calc-card">
-      <h4><code>${escapeHtml(f.fullyQualifiedName)}</code> ${escapeHtml(f.label ?? "")} <span class="badge">数式項目</span></h4>
+      <h4>${fieldCell(f)} <span class="badge">数式項目</span></h4>
       <div class="calc-logic">
         <div class="calc-label">算出ロジック</div>
         ${formulaToHtml(formula)}

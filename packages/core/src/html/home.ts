@@ -8,6 +8,7 @@
 import type { DomainsConfig } from "../domains/types.js";
 import type { KnowledgeGraph } from "../types/graph.js";
 import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./data-builder.js";
+import { labelIfDistinct, renderNameInline } from "./display.js";
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
 import { renderOrgSettingsPanel } from "./org-settings.js";
@@ -21,10 +22,16 @@ const TYPE_ICON_NAME: Record<string, "apex" | "trigger" | "lwc" | "object" | "fl
   flow: "flow",
 };
 
+interface SidebarItem {
+  readonly name: string;
+  /** 日本語ラベル (object/flow/lwc)。無ければ undefined。 */
+  readonly label?: string;
+}
+
 interface SidebarGroup {
   readonly type: string;
   readonly label: string;
-  readonly items: readonly { readonly name: string }[];
+  readonly items: readonly SidebarItem[];
 }
 
 export function renderHomeHtml(
@@ -53,21 +60,30 @@ export function renderHomeHtml(
       label: "LWC",
       items: [...graph.lwcs]
         .sort((a, b) => a.fullyQualifiedName.localeCompare(b.fullyQualifiedName))
-        .map((l) => ({ name: l.fullyQualifiedName })),
+        .map((l) => ({
+          name: l.fullyQualifiedName,
+          label: labelIfDistinct(l.masterLabel, l.fullyQualifiedName),
+        })),
     },
     {
       type: "object",
       label: "Objects",
       items: [...graph.objects]
         .sort((a, b) => a.fullyQualifiedName.localeCompare(b.fullyQualifiedName))
-        .map((o) => ({ name: o.fullyQualifiedName })),
+        .map((o) => ({
+          name: o.fullyQualifiedName,
+          label: labelIfDistinct(o.label, o.fullyQualifiedName),
+        })),
     },
     {
       type: "flow",
       label: "Flows",
       items: [...graph.flows]
         .sort((a, b) => a.fullyQualifiedName.localeCompare(b.fullyQualifiedName))
-        .map((f) => ({ name: f.fullyQualifiedName })),
+        .map((f) => ({
+          name: f.fullyQualifiedName,
+          label: labelIfDistinct(f.label, f.fullyQualifiedName),
+        })),
     },
     // Phase 3: 設定・UI 系メタデータのリファレンス (folder アイコンにフォールバック)
     ...referenceSidebarGroups(graph).map((g) => ({
@@ -204,7 +220,7 @@ function renderSidebarGroup(g: SidebarGroup): string {
           .slice(0, 200)
           .map(
             (it) =>
-              `<li><a href="./component/${escapeAttr(g.type)}/${escapeAttr(sanitizeFileName(it.name))}.html">${escapeHtml(it.name)}</a></li>`,
+              `<li><a href="./component/${escapeAttr(g.type)}/${escapeAttr(sanitizeFileName(it.name))}.html">${renderNameInline(it.label, it.name)}</a></li>`,
           )
           .join("\n        ")}
           ${g.items.length > 200 ? `<li class="more">…他 ${g.items.length - 200} 件 (検索で絞り込み)</li>` : ""}

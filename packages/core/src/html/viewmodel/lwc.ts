@@ -4,6 +4,7 @@
 
 import { summaryForLwc } from "../../render/summary.js";
 import type { KnowledgeGraph, LightningWebComponent } from "../../types/graph.js";
+import { labelIfDistinct } from "../display.js";
 import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import {
@@ -44,7 +45,12 @@ export function buildLwcViewModel(
     relatedDomainsSection("lwc", lwc.fullyQualifiedName, graph),
   ];
 
-  return { type: "lwc", name: lwc.fullyQualifiedName, sections };
+  return {
+    type: "lwc",
+    name: lwc.fullyQualifiedName,
+    label: labelIfDistinct(lwc.masterLabel, lwc.fullyQualifiedName),
+    sections,
+  };
 }
 
 function dependenciesSection(lwc: LightningWebComponent): SectionViewModel {

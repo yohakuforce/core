@@ -5,6 +5,7 @@
 // 詳細チューニング (タブ/折りたたみ/トップへ戻る等) は Phase 3 で導入予定。
 // ----------------------------------------------------------------------------
 
+import { renderNameStacked } from "./display.js";
 import { escapeAttr, escapeHtml } from "./escape.js";
 import { icon } from "./icons.js";
 import type { ComponentViewModel, SectionViewModel } from "./types.js";
@@ -27,7 +28,8 @@ export interface PageRenderOptions {
 }
 
 export function renderComponentPage(vm: ComponentViewModel, options: PageRenderOptions): string {
-  const title = `${typeLabel(vm.type)}: ${vm.name}`;
+  // タイトル/パンくずは日本語ラベルを主に。ラベルが無ければ API 名。
+  const title = vm.label !== undefined ? `${vm.label}（${vm.name}）` : vm.name;
   const typeIndexHref = "./index.html"; // 同タイプ index ページは同ディレクトリ内
   return `<!doctype html>
 <html lang="ja">
@@ -64,12 +66,13 @@ export function renderComponentPage(vm: ComponentViewModel, options: PageRenderO
       <span class="sep">/</span>
       <a href="${escapeAttr(typeIndexHref)}">${escapeHtml(typeLabel(vm.type))}</a>
       <span class="sep">/</span>
-      <span class="current">${escapeHtml(vm.name)}</span>
+      <span class="current">${escapeHtml(vm.label ?? vm.name)}</span>
     </nav>
     <h1>
       <span class="type-pill t-${escapeAttr(vm.type)}">${escapeHtml(vm.type)}</span>
-      ${escapeHtml(vm.name)}
+      ${renderNameStacked(vm.label, vm.name)}
     </h1>
+    ${vm.subtitle !== undefined && vm.subtitle !== "" ? `<p class="component-subtitle">${escapeHtml(vm.subtitle)}</p>` : ""}
   </header>
   <main class="component-main">
     <aside class="toc">

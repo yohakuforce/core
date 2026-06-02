@@ -659,7 +659,7 @@ export const HOME_JS = `(() => {
           </div>
           <ul class="domain-members">
             \${d.members.map((m) =>
-              \`<li><a href="\${memberHref(m)}"><span class="type-pill t-\${escapeHtml(m.type)}" style="font-size:9px;padding:1px 6px;margin-right:6px;">\${escapeHtml(m.type)}</span>\${escapeHtml(m.name)}</a></li>\`
+              \`<li><a href="\${memberHref(m)}"><span class="type-pill t-\${escapeHtml(m.type)}" style="font-size:9px;padding:1px 6px;margin-right:6px;">\${escapeHtml(m.type)}</span>\${m.label ? escapeHtml(m.label) + '<span class="api-name-inline">' + escapeHtml(m.name) + '</span>' : escapeHtml(m.name)}</a></li>\`
             ).join("")}
           </ul>
         </li>\`
@@ -677,13 +677,38 @@ export const HOME_JS = `(() => {
       el.innerHTML = '<p class="muted">ホットスポットデータを読み込めませんでした。</p>';
       return;
     }
-    if (h.items.length === 0) {
-      el.innerHTML = '<p class="muted">' + escapeHtml(h.note) + '</p>';
-    } else {
-      el.innerHTML = '<ul>' + h.items.map((it) =>
-        \`<li><code>\${escapeHtml(it.type)}:\${escapeHtml(it.name)}</code> — \${escapeHtml(it.reason)}</li>\`
-      ).join("") + '</ul>';
+    const note = '<p class="muted hotspots-note">' + escapeHtml(h.note || "") + '</p>';
+    if (!h.items || h.items.length === 0) {
+      el.innerHTML = note;
+      return;
     }
+    const TYPE_TO_PATH = { object: 'object', apex: 'apex', trigger: 'trigger', flow: 'flow', lwc: 'lwc' };
+    function hotspotHref(it) {
+      const safe = String(it.name).replace(/[^A-Za-z0-9._-]/g, '_').replace(/_+/g, '_');
+      return './component/' + (TYPE_TO_PATH[it.type] || it.type) + '/' + encodeURIComponent(safe) + '.html';
+    }
+    function hotspotName(it) {
+      return it.label
+        ? escapeHtml(it.label) + '<span class="api-name-inline">' + escapeHtml(it.name) + '</span>'
+        : escapeHtml(it.name);
+    }
+    el.innerHTML = note + '<ol class="hotspots">' + h.items.map((it, i) =>
+      '<li class="hotspot-card sev-' + escapeHtml(it.severity) + '">' +
+        '<a class="hotspot-head" href="' + hotspotHref(it) + '">' +
+          '<span class="hotspot-rank">' + (i + 1) + '</span>' +
+          '<span class="type-pill t-' + escapeHtml(it.type) + '">' + escapeHtml(it.type) + '</span>' +
+          '<span class="hotspot-name">' + hotspotName(it) + '</span>' +
+          '<span class="hotspot-score" title="注目度スコア">' + escapeHtml(String(it.score)) + '</span>' +
+        '</a>' +
+        '<ul class="hotspot-reasons">' + (it.reasons || []).map((r) =>
+          '<li class="sev-' + escapeHtml(r.severity) + '">' +
+            '<span class="sev-badge">' + escapeHtml(r.severity) + '</span>' +
+            escapeHtml(r.title) +
+            (r.detail ? ' <span class="muted">' + escapeHtml(r.detail) + '</span>' : '') +
+          '</li>'
+        ).join('') + '</ul>' +
+      '</li>'
+    ).join('') + '</ol>';
   }
 
   // ===== 業務フロー (Phase 15) =====
@@ -743,7 +768,7 @@ export const HOME_JS = `(() => {
     ].map((c) => '<span><strong>' + c[2] + '</strong> ' + escapeHtml(c[1]) + '</span>').join("");
     const search = flow.id + " " + flow.label + " " +
       flow.entryPoints.concat(flow.processing, flow.affectedData, flow.downstream)
-        .map((s) => s.name).join(" ");
+        .map((s) => s.name + " " + (s.label || "")).join(" ");
     return '<div class="bf-card" data-search="' + escapeHtml(search.toLowerCase()) + '">' +
       '<div class="bf-card-header">' +
         '<span class="bf-card-scope ' + scopeClass + '">' + escapeHtml(flow.scope === "object" ? "オブジェクト" : "ドメイン") + '</span>' +
@@ -779,8 +804,11 @@ export const HOME_JS = `(() => {
   function bfStep(s) {
     const safe = String(s.name).replace(/[^A-Za-z0-9._-]/g, "_").replace(/_+/g, "_");
     const href = "./component/" + (TYPE_PATH[s.type] || s.type) + "/" + encodeURIComponent(safe) + ".html";
+    const nameHtml = s.label
+      ? escapeHtml(s.label) + '<span class="api-name-inline">' + escapeHtml(s.name) + '</span>'
+      : escapeHtml(s.name);
     return '<a class="bf-step t-' + escapeHtml(s.type) + '" href="' + href + '">' +
-      '<span class="bf-step-name">' + escapeHtml(s.name) + '</span>' +
+      '<span class="bf-step-name">' + nameHtml + '</span>' +
       (s.evidence ? '<span class="bf-step-evidence">' + escapeHtml(s.evidence) + '</span>' : '') +
     '</a>';
   }
@@ -855,6 +883,7 @@ export const HOME_JS = `(() => {
           items.map((n) =>
             \`<a class="arch-node" data-node-id="\${escapeHtml(n.id)}" href="\${nodeHref(n)}">
               <span class="node-name">\${escapeHtml(n.label)}</span>
+              \${n.apiName && n.apiName !== n.label ? '<span class="node-api">' + escapeHtml(n.apiName) + '</span>' : ''}
             </a>\`
           ).join("")
         }

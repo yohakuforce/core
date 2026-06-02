@@ -7,6 +7,13 @@ import { concernsForTrigger } from "../../render/concerns.js";
 import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
 import { summaryForApexTrigger } from "../../render/summary.js";
 import type { ApexTrigger, KnowledgeGraph } from "../../types/graph.js";
+import {
+  type LabelResolver,
+  firstSentencePlain,
+  makeLabelResolver,
+  objectRefListHtml,
+  renderRefInline,
+} from "../display.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
@@ -28,11 +35,13 @@ export function buildTriggerViewModel(
   coverage?: CoverageEntry,
   preservedBlocks?: Map<string, string>,
 ): ComponentViewModel {
+  const resolveLabel = makeLabelResolver(graph);
+  const summary = summaryForApexTrigger(trg, graph);
   const sections: SectionViewModel[] = [
     {
       id: "one-line-summary",
       title: "一行サマリ",
-      htmlContent: `<p>${escapeMaybeMd(summaryForApexTrigger(trg, graph))}</p>`,
+      htmlContent: `<p>${escapeMaybeMd(summary)}</p>`,
     },
     emptyLlmPlaceholderSection(
       "business-meaning",
@@ -41,8 +50,8 @@ export function buildTriggerViewModel(
       "business-meaning",
       preservedBlocks?.get("business-meaning"),
     ),
-    dependenciesSection(trg),
-    dataModelTouchpointsSection(trg),
+    dependenciesSection(trg, resolveLabel),
+    dataModelTouchpointsSection(trg, resolveLabel),
     internalFlowSection(trg),
     buildProcessingDetailSection({
       methodSummaryTable: buildMethodSummaryTable(trg),
@@ -55,6 +64,7 @@ export function buildTriggerViewModel(
       triggerObject: trg.object,
       knownObjects: new Set(graph.objects.map((o) => o.fullyQualifiedName)),
       getPreserved: (id) => preservedBlocks?.get(id),
+      resolveObjectLabel: (o) => resolveLabel("object", o),
     }),
     testCoverageSection(trg, graph, coverage),
     changeHistorySection(trg.sourcePath, gitCwd),
@@ -63,10 +73,16 @@ export function buildTriggerViewModel(
     relatedDomainsSection("apexTrigger", trg.fullyQualifiedName, graph),
   ];
 
-  return { type: "trigger", name: trg.fullyQualifiedName, sections };
+  return {
+    type: "trigger",
+    name: trg.fullyQualifiedName,
+    subtitle: firstSentencePlain(summary),
+    sections,
+  };
 }
 
-function dependenciesSection(trg: ApexTrigger): SectionViewModel {
+function dependenciesSection(trg: ApexTrigger, resolveLabel: LabelResolver): SectionViewModel {
+  // ハンドラ呼び出し先は Apex (ラベル無し) なので API 名のまま。対象オブジェクトはラベル併記。
   const outgoing = unique((trg.body?.classReferences ?? []).map((r) => r.className));
   return {
     id: "dependencies",
@@ -74,12 +90,15 @@ function dependenciesSection(trg: ApexTrigger): SectionViewModel {
     htmlContent: `
     <h3>呼び出し先ハンドラ (${outgoing.length})</h3>
     ${listOrPlaceholderHtml(outgoing, "（ハンドラへの委譲は検出されませんでした）")}
-    <p class="muted">対象オブジェクト: <code>${escapeHtml(trg.object)}</code></p>
+    <p class="muted">対象オブジェクト: ${renderRefInline(resolveLabel("object", trg.object), trg.object)}</p>
     <p class="muted">イベント: <code>${escapeHtml(trg.events.join(" / "))}</code></p>`,
   };
 }
 
-function dataModelTouchpointsSection(trg: ApexTrigger): SectionViewModel {
+function dataModelTouchpointsSection(
+  trg: ApexTrigger,
+  resolveLabel: LabelResolver,
+): SectionViewModel {
   const body = trg.body;
   const soqlObjects = unique(
     (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
@@ -92,11 +111,11 @@ function dataModelTouchpointsSection(trg: ApexTrigger): SectionViewModel {
     <div class="grid two-col">
       <div>
         <h3>SOQL 対象 (${soqlObjects.length})</h3>
-        ${listOrPlaceholderHtml(soqlObjects, "（SOQL は検出されませんでした）")}
+        ${objectRefListHtml(soqlObjects, resolveLabel, "（SOQL は検出されませんでした）")}
       </div>
       <div>
         <h3>DML 対象 (${dmlTargets.length})</h3>
-        ${listOrPlaceholderHtml(dmlTargets, "（DML は検出されませんでした）")}
+        ${objectRefListHtml(dmlTargets, resolveLabel, "（DML は検出されませんでした）")}
       </div>
     </div>`,
   };

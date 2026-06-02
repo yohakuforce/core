@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SObject: Order__c — yohakuforce</title>
+  <title>Order（Order__c） — yohakuforce</title>
   <link rel="stylesheet" href="../../assets/styles.css" />
   <link rel="stylesheet" href="../../assets/home.css" />
   <link rel="stylesheet" href="../../assets/cmdk.css" />
-  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html","label":"Customer","labelLc":"customer"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html","label":"Invoice","labelLc":"invoice"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html","label":"Order","labelLc":"order"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html","label":"Order After Update","labelLc":"order after update"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
   <script src="../../assets/method-flowchart.js" defer></script>
   <script src="../../assets/cmdk.js" defer></script>
@@ -21,6 +21,7 @@
         <span class="brand-sub">Knowledge Hub</span>
       </a>
     </div>
+    <nav class="global-nav"><a href="../../legend.html" class="legend-link icon-button"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M12 6.5C10.4 5.2 7.9 4.6 4 5.2v12.6c3.9-.6 6.4 0 8 1.4"/><path d="M12 6.5c1.6-1.3 4.1-1.9 8-1.3v12.6c-3.9-.6-6.4 0-8 1.4z"/><path d="M12 6.5v12.6"/></svg>凡例（読み方）</a></nav>
   </header>
   <header class="component-header">
     <nav class="breadcrumb">
@@ -28,12 +29,13 @@
       <span class="sep">/</span>
       <a href="./index.html">SObject</a>
       <span class="sep">/</span>
-      <span class="current">Order__c</span>
+      <span class="current">Order</span>
     </nav>
     <h1>
       <span class="type-pill t-object">object</span>
-      Order__c
+      <span class="name-stacked">Order<code class="api-name">Order__c</code></span>
     </h1>
+    
   </header>
   <main class="component-main">
     <aside class="toc">
@@ -43,6 +45,13 @@
         <li><a href="#business-meaning">業務的意味づけ</a></li>
         <li><a href="#dependencies">依存関係</a></li>
         <li><a href="#public-interface">公開インターフェース</a></li>
+        <li><a href="#field-assignment">項目値の割り当て</a></li>
+        <li><a href="#calculation-rules">計算項目・入力規則</a></li>
+        <li><a href="#record-types">レコードタイプ</a></li>
+        <li><a href="#page-layouts">ページレイアウト</a></li>
+        <li><a href="#approval-process">承認プロセス</a></li>
+        <li><a href="#sharing-rules">共有ルール</a></li>
+        <li><a href="#access-permissions">アクセス権限</a></li>
         <li><a href="#change-history">変更履歴</a></li>
         <li><a href="#impact-hint">影響範囲ヒント</a></li>
         <li><a href="#related-domains">関連ドメイン</a></li>
@@ -70,7 +79,7 @@
         
         
     <h3>このオブジェクトを参照する処理 (3)</h3>
-    <ul><li><code>Apex: CustomerService</code></li><li><code>Trigger: OrderTrigger</code></li><li><code>Flow: Order_AfterUpdate</code></li></ul>
+    <ul><li>Apex: <code>CustomerService</code></li><li>Trigger: <code>OrderTrigger</code></li><li>Flow: Order After Update <code>Order_AfterUpdate</code></li></ul>
         
       </section>
       <section id="public-interface" class="yohaku-section yohaku-section--public-interface">
@@ -79,24 +88,116 @@
         
     <p class="muted">Order (Order__c) の項目 (2)</p>
     <table class="data-table">
-      <thead><tr><th>API 名</th><th>ラベル</th><th>型</th><th>必須</th><th>参照</th></tr></thead>
+      <thead><tr><th>ラベル</th><th>API 名</th><th>型</th><th>必須</th><th>参照</th></tr></thead>
       <tbody>
         <tr>
-    <td><code>Order__c.Customer__c</code></td>
     <td>Customer</td>
+    <td><code>Order__c.Customer__c</code></td>
     <td><code>Lookup</code></td>
     <td>✓</td>
-    <td><code>Customer__c</code></td>
+    <td>Customer <code>Customer__c</code></td>
   </tr>
         <tr>
-    <td><code>Order__c.Total__c</code></td>
     <td>Total Amount</td>
+    <td><code>Order__c.Total__c</code></td>
     <td><code>Currency</code></td>
     <td></td>
     <td>—</td>
   </tr>
       </tbody>
     </table>
+        
+      </section>
+      <section id="field-assignment" class="yohaku-section yohaku-section--field-assignment">
+        <h2>項目値の割り当て</h2>
+        
+        
+    <p class="muted">各項目の値がどのように決まるか（数式 / 参照 / 選択リスト / 初期値 / 集計 / 入力 / 処理設定）を記載します。</p>
+    
+    <h3>値の決まり方が確定する項目 (1)</h3>
+    <table class="data-table field-assignment">
+      <thead><tr><th>項目</th><th>型</th><th>必須</th><th>値の決まり方</th><th>詳細</th></tr></thead>
+      <tbody>
+        <tr>
+    <td><code>Order__c.Customer__c</code><br /><span class="muted">Customer</span></td>
+    <td><code>Lookup</code></td>
+    <td>✓</td>
+    <td><span class="value-origin">参照 (lookup)</span></td>
+    <td>参照先: <code>Customer__c</code></td>
+  </tr>
+      </tbody>
+    </table>
+    <h3>入力・処理で設定される項目 (1)</h3>
+    <div class="ai-detail">
+      <div class="ai-detail-head"><span class="ai-tag">AI</span> 入力/処理の判定・設定詳細</div>
+      <!-- yohaku:block kind="ai_managed" id="field-assignment-detail" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">Order__c の下記「要確認」項目について、ユーザー入力か処理による設定かを判定し、処理設定なら 設定元(クラス/トリガ/フロー) / 設定値(式) / 設定条件 / 操作 を原文から記述してください。全項目を漏れなく分類すること。</p>
+      
+      <p class="muted">下記は決定的に分類できなかった項目です。各項目が「ユーザー入力」か「処理で設定」かを AI が原文から判定・追記します。</p>
+      <p class="muted">このオブジェクトに触れる処理: <code>CustomerService</code>, <code>OrderTrigger</code>, <code>Order_AfterUpdate</code></p>
+      
+      <table class="data-table">
+        <thead><tr><th>項目</th><th>型</th><th>必須</th><th>区分 (入力/処理)</th><th>設定元・値・条件</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>Order__c.Total__c</code><br /><span class="muted">Total Amount</span></td>
+            <td><code>Currency</code></td>
+            <td></td>
+            <td class="muted">要確認</td>
+            <td class="muted">要確認</td>
+          </tr>
+        </tbody>
+      </table>
+    </div><!-- yohaku:block kind="ai_managed" id="field-assignment-detail" end -->
+    </div>
+        
+      </section>
+      <section id="calculation-rules" class="yohaku-section yohaku-section--calculation-rules">
+        <h2>計算項目・入力規則</h2>
+        
+        
+    <p class="muted">数式項目・入力規則は検出されませんでした。</p>
+    <div class="ai-detail ai-review">
+      <div class="ai-detail-head"><span class="ai-tag">AI</span> 確認メモ</div>
+      <!-- yohaku:block kind="ai_managed" id="calculation-review" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">上記の数式項目 (0) と入力規則 (0) を Order__c の原文と照合し、抜け漏れ・記載ミス・自然語化の誤りを確認してください。問題があれば該当箇所と修正案を、なければ「確認済: 問題なし」と明記してください。</p>
+      
+    </div><!-- yohaku:block kind="ai_managed" id="calculation-review" end -->
+    </div>
+        
+      </section>
+      <section id="record-types" class="yohaku-section yohaku-section--record-types">
+        <h2>レコードタイプ</h2>
+        
+        <p class="muted">レコードタイプは定義されていません。</p>
+        
+      </section>
+      <section id="page-layouts" class="yohaku-section yohaku-section--page-layouts">
+        <h2>ページレイアウト</h2>
+        
+        <p class="muted">ページレイアウトは検出されませんでした。</p>
+        
+      </section>
+      <section id="approval-process" class="yohaku-section yohaku-section--approval-process">
+        <h2>承認プロセス</h2>
+        
+        <p class="muted">承認プロセスは定義されていません。</p>
+        
+      </section>
+      <section id="sharing-rules" class="yohaku-section yohaku-section--sharing-rules">
+        <h2>共有ルール</h2>
+        
+        <p class="muted">共有ルールは定義されていません。</p>
+        
+      </section>
+      <section id="access-permissions" class="yohaku-section yohaku-section--access-permissions">
+        <h2>アクセス権限</h2>
+        
+        <p class="muted">このオブジェクトへの権限を付与する権限セット・プロファイルは検出されませんでした。</p>
         
       </section>
       <section id="change-history" class="yohaku-section yohaku-section--change-history">

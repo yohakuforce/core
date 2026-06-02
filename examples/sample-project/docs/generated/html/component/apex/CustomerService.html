@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexClass: CustomerService — yohakuforce</title>
+  <title>CustomerService — yohakuforce</title>
   <link rel="stylesheet" href="../../assets/styles.css" />
   <link rel="stylesheet" href="../../assets/home.css" />
   <link rel="stylesheet" href="../../assets/cmdk.css" />
-  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html","label":"Customer","labelLc":"customer"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html","label":"Invoice","labelLc":"invoice"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html","label":"Order","labelLc":"order"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html","label":"Order After Update","labelLc":"order after update"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
   <script src="../../assets/method-flowchart.js" defer></script>
   <script src="../../assets/cmdk.js" defer></script>
@@ -21,6 +21,7 @@
         <span class="brand-sub">Knowledge Hub</span>
       </a>
     </div>
+    <nav class="global-nav"><a href="../../legend.html" class="legend-link icon-button"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M12 6.5C10.4 5.2 7.9 4.6 4 5.2v12.6c3.9-.6 6.4 0 8 1.4"/><path d="M12 6.5c1.6-1.3 4.1-1.9 8-1.3v12.6c-3.9-.6-6.4 0-8 1.4z"/><path d="M12 6.5v12.6"/></svg>凡例（読み方）</a></nav>
   </header>
   <header class="component-header">
     <nav class="breadcrumb">
@@ -34,6 +35,7 @@
       <span class="type-pill t-apex">apex</span>
       CustomerService
     </h1>
+    <p class="component-subtitle">2 メソッド / SOQL 2 件 を含む 通常クラス</p>
   </header>
   <main class="component-main">
     <aside class="toc">
@@ -45,6 +47,8 @@
         <li><a href="#public-interface">公開インターフェース</a></li>
         <li><a href="#data-model-touchpoints">データモデル接点</a></li>
         <li><a href="#internal-flow">内部処理フロー</a></li>
+        <li><a href="#processing-detail">処理詳細</a></li>
+        <li><a href="#field-writes">項目値の割り当て</a></li>
         <li><a href="#io-contract">入出力契約</a></li>
         <li><a href="#test-coverage">テスト被覆</a></li>
         <li><a href="#change-history">変更履歴</a></li>
@@ -120,7 +124,7 @@
     <div class="grid two-col">
       <div>
         <h3>SOQL 対象 (2)</h3>
-        <ul><li><code>Customer__c</code></li><li><code>Order__c</code></li></ul>
+        <ul><li>Customer <code>Customer__c</code></li><li>Order <code>Order__c</code></li></ul>
       </div>
       <div>
         <h3>DML 対象 (0)</h3>
@@ -146,15 +150,15 @@
         </div>
         <div id="flow-findGold-mermaid" class="mermaid-host">
           <pre class="mermaid-source" data-mermaid="flowchart TD
-  n_start([findGold])
-  n1((&quot;return [SELECT Id, Name, Tier__c FRO…&quot;))
+  n_start([&quot;開始: findGold&quot;])
+  n1((&quot;[SELECT Id, Name, Tier__c FROM Cust… を返す&quot;))
   n_start --&gt; n1">flowchart TD
-  n_start([findGold])
-  n1((&quot;return [SELECT Id, Name, Tier__c FRO…&quot;))
+  n_start([&quot;開始: findGold&quot;])
+  n1((&quot;[SELECT Id, Name, Tier__c FROM Cust… を返す&quot;))
   n_start --&gt; n1</pre>
         </div>
         <div id="flow-findGold-tree" class="fallback-tree" style="display:none;">
-          <ul><li class="node-return">return [SELECT Id, Name, Tier__c FROM Customer__c WHERE Tier__c = &#39;&#39;]</li></ul>
+          <ul><li class="node-return">[SELECT Id, Name, Tier__c FROM Cust… を返す <span style="color:var(--muted);">[SELECT Id, Name, Tier__c FROM Customer__c WHERE Tier__c = …</span></li></ul>
         </div>
       </div>
     </details>
@@ -170,22 +174,118 @@
         </div>
         <div id="flow-totalRevenue-mermaid" class="mermaid-host">
           <pre class="mermaid-source" data-mermaid="flowchart TD
-  n_start([totalRevenue])
-  n1[/&quot;SOQL: Order__c&quot;/]
-  n2((&quot;return (Decimal) ar.get(&#39;&#39;)&quot;))
+  n_start([&quot;開始: totalRevenue&quot;])
+  n1[/&quot;Order__c を取得&quot;/]
+  n2((&quot;(Decimal) ar.get(&#39;&#39;) を返す&quot;))
   n1 --&gt; n2
   n_start --&gt; n1">flowchart TD
-  n_start([totalRevenue])
-  n1[/&quot;SOQL: Order__c&quot;/]
-  n2((&quot;return (Decimal) ar.get(&#39;&#39;)&quot;))
+  n_start([&quot;開始: totalRevenue&quot;])
+  n1[/&quot;Order__c を取得&quot;/]
+  n2((&quot;(Decimal) ar.get(&#39;&#39;) を返す&quot;))
   n1 --&gt; n2
   n_start --&gt; n1</pre>
         </div>
         <div id="flow-totalRevenue-tree" class="fallback-tree" style="display:none;">
-          <ul><li class="node-soql">SOQL → Order__c <span style="color:var(--muted);">SELECT SUM(Total__c) total FROM Order__c WHERE Customer__c = :customerId</span></li><li class="node-return">return (Decimal) ar.get(&#39;&#39;)</li></ul>
+          <ul><li class="node-soql">Order__c を取得 <span style="color:var(--muted);">SELECT SUM(Total__c) total FROM Order__c WHERE Customer__c = :customerId</span></li><li class="node-return">(Decimal) ar.get(&#39;&#39;) を返す <span style="color:var(--muted);">(Decimal) ar.get(&#39;&#39;)</span></li></ul>
         </div>
       </div>
     </details>
+        
+      </section>
+      <section id="processing-detail" class="yohaku-section yohaku-section--processing-detail">
+        <h2>処理詳細</h2>
+        
+        
+    <p class="muted">各メソッドの処理内容・データ操作・分岐・戻り値を詳細設計の観点で展開します。冒頭は処理の業務的な解説 (AI)、続いて件数表と処理ステップ (決定的) を示します。</p>
+    <!-- yohaku:block kind="ai_managed" id="processing-detail-narrative" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">各メソッドが業務上何を達成するか、扱うデータ・主要な分岐条件・計算・戻り値を、下の決定的スケルトンを根拠に 1 メソッド数文で解説してください。事実はスケルトンに従い、推測は避けてください。</p>
+    </div><!-- yohaku:block kind="ai_managed" id="processing-detail-narrative" end -->
+    
+    <table class="data-table processing-summary">
+      <thead><tr>
+        <th>メソッド</th><th>可視性</th><th>戻り値</th>
+        <th>SOQL</th><th>DML</th><th>分岐</th><th>ループ</th><th>try</th>
+        <th>内部呼出</th><th>外部呼出</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><code>findGold</code></td>
+          <td>public static</td>
+          <td><code>List&lt;Customer__c&gt;</code></td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><code>totalRevenue</code></td>
+          <td>public static</td>
+          <td><code>Decimal</code></td>
+          <td class="num hot">1</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td>—</td>
+          <td><code>ar.get</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>メソッド別 処理ステップ</h3>
+    <details class="method-detail">
+      <summary><code>List&lt;Customer__c&gt; findGold()</code></summary>
+      <ul class="step-list">
+        <li><span class="step-kind step-in">入力</span> なし</li>
+        <li><span class="step-kind step-return">戻り値</span> <code>[SELECT Id, Name, Tier__c FROM Customer__c WHERE Tier__c = &#39;&#39;]</code></li>
+      </ul>
+    </details>
+    <details class="method-detail">
+      <summary><code>Decimal totalRevenue(Id customerId)</code></summary>
+      <ul class="step-list">
+        <li><span class="step-kind step-in">入力</span> <code>Id customerId</code></li>
+        <li><span class="step-kind step-soql">SOQL</span> <code>Order__c</code> を取得 <code class="step-raw">SELECT SUM(Total__c) total FROM Order__c WHERE Customer__c = :customerId</code></li>
+        <li><span class="step-kind step-return">戻り値</span> <code>(Decimal) ar.get(&#39;&#39;)</code></li>
+      </ul>
+    </details>
+        
+      </section>
+      <section id="field-writes" class="yohaku-section yohaku-section--field-writes">
+        <h2>項目値の割り当て</h2>
+        
+        
+    <p class="muted">このクラスが触れるオブジェクトごとに、設定する項目・値・条件を確認できます (タブ切替)。各タブの内訳は原文から AI が抽出します。</p>
+    
+    <div class="obj-tabs">
+      <input type="radio" name="fw-tabs" id="fw-Customer__c" checked />
+      <input type="radio" name="fw-tabs" id="fw-Order__c" />
+      <div class="obj-tablist">
+        <label for="fw-Customer__c"><code>Customer__c</code></label>
+        <label for="fw-Order__c"><code>Order__c</code></label>
+      </div>
+      <section class="obj-tabpanel">
+        <h4><code>Customer__c</code> への項目設定</h4>
+        <!-- yohaku:block kind="ai_managed" id="field-writes:Customer__c" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">Customer__c について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(API名) / 設定値(式) / 設定条件 / 操作(insert|update)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。</p>
+      
+    </div><!-- yohaku:block kind="ai_managed" id="field-writes:Customer__c" end -->
+      </section>
+      <section class="obj-tabpanel">
+        <h4><code>Order__c</code> への項目設定</h4>
+        <!-- yohaku:block kind="ai_managed" id="field-writes:Order__c" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">Order__c について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(API名) / 設定値(式) / 設定条件 / 操作(insert|update)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。</p>
+      
+    </div><!-- yohaku:block kind="ai_managed" id="field-writes:Order__c" end -->
+      </section>
+    </div>
         
       </section>
       <section id="io-contract" class="yohaku-section yohaku-section--io-contract">

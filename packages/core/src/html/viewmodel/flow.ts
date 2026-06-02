@@ -5,6 +5,13 @@
 import { concernsForFlow } from "../../render/concerns.js";
 import { summaryForFlow } from "../../render/summary.js";
 import type { Flow, KnowledgeGraph } from "../../types/graph.js";
+import {
+  type LabelResolver,
+  labelIfDistinct,
+  makeLabelResolver,
+  objectRefListHtml,
+  renderRefInline,
+} from "../display.js";
 import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import {
@@ -22,6 +29,7 @@ export function buildFlowViewModel(
   gitCwd?: string,
   preservedBlocks?: Map<string, string>,
 ): ComponentViewModel {
+  const resolveLabel = makeLabelResolver(graph);
   const sections: SectionViewModel[] = [
     {
       id: "one-line-summary",
@@ -36,16 +44,21 @@ export function buildFlowViewModel(
       preservedBlocks?.get("business-meaning"),
     ),
     dependenciesSection(flow),
-    dataModelTouchpointsSection(flow),
+    dataModelTouchpointsSection(flow, resolveLabel),
     internalFlowSection(flow),
-    ioContractSection(flow),
+    ioContractSection(flow, resolveLabel),
     changeHistorySection(flow.sourcePath, gitCwd),
     impactHintSection(`Flow:${flow.fullyQualifiedName}`),
     concernsSection(flow, preservedBlocks?.get("concerns")),
     relatedDomainsSection("flow", flow.fullyQualifiedName, graph),
   ];
 
-  return { type: "flow", name: flow.fullyQualifiedName, sections };
+  return {
+    type: "flow",
+    name: flow.fullyQualifiedName,
+    label: labelIfDistinct(flow.label, flow.fullyQualifiedName),
+    sections,
+  };
 }
 
 function dependenciesSection(flow: Flow): SectionViewModel {
@@ -68,14 +81,14 @@ function dependenciesSection(flow: Flow): SectionViewModel {
   };
 }
 
-function dataModelTouchpointsSection(flow: Flow): SectionViewModel {
+function dataModelTouchpointsSection(flow: Flow, resolveLabel: LabelResolver): SectionViewModel {
   const records = unique(flow.body?.recordObjects ?? []);
   return {
     id: "data-model-touchpoints",
     title: "データモデル接点",
     htmlContent: `
     <h3>参照/更新オブジェクト (${records.length})</h3>
-    ${listOrPlaceholderHtml(records, "（レコード操作は検出されませんでした）")}`,
+    ${objectRefListHtml(records, resolveLabel, "（レコード操作は検出されませんでした）")}`,
   };
 }
 
@@ -110,15 +123,18 @@ function internalFlowSection(flow: Flow): SectionViewModel {
   };
 }
 
-function ioContractSection(flow: Flow): SectionViewModel {
-  const trigger = flow.triggeringObject ?? "n/a";
+function ioContractSection(flow: Flow, resolveLabel: LabelResolver): SectionViewModel {
+  const trigger =
+    flow.triggeringObject !== undefined
+      ? renderRefInline(resolveLabel("object", flow.triggeringObject), flow.triggeringObject)
+      : "<code>n/a</code>";
   const actions = unique(flow.body?.actionCalls ?? []);
   return {
     id: "io-contract",
     title: "入出力契約",
     htmlContent: `
     <h3>起点</h3>
-    <p>type: <code>${escapeHtml(flow.type)}</code> / triggeringObject: <code>${escapeHtml(trigger)}</code></p>
+    <p>type: <code>${escapeHtml(flow.type)}</code> / triggeringObject: ${trigger}</p>
     <h3>外部アクション</h3>
     ${listOrPlaceholderHtml(actions, "（外部アクションなし）")}`,
   };

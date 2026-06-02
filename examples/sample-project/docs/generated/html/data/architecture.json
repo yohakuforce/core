@@ -2,32 +2,38 @@
   "nodes": [
     {
       "id": "object:Order__c",
-      "label": "Order__c",
+      "label": "Order",
+      "apiName": "Order__c",
       "type": "object"
     },
     {
       "id": "object:Customer__c",
-      "label": "Customer__c",
+      "label": "Customer",
+      "apiName": "Customer__c",
       "type": "object"
     },
     {
       "id": "object:Invoice__c",
-      "label": "Invoice__c",
+      "label": "Invoice",
+      "apiName": "Invoice__c",
       "type": "object"
     },
     {
       "id": "apex:CustomerService",
       "label": "CustomerService",
+      "apiName": "CustomerService",
       "type": "apex"
     },
     {
       "id": "trigger:OrderTrigger",
       "label": "OrderTrigger",
+      "apiName": "OrderTrigger",
       "type": "trigger"
     },
     {
       "id": "flow:Order_AfterUpdate",
-      "label": "Order_AfterUpdate",
+      "label": "Order After Update",
+      "apiName": "Order_AfterUpdate",
       "type": "flow"
     }
   ],

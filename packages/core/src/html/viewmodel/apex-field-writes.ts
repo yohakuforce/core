@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 import type { ApexBodyInfo, ApexControlFlowNode } from "../../types/graph.js";
+import { renderRefInline } from "../display.js";
 import { escapeAttr, escapeHtml } from "../escape.js";
 import type { SectionViewModel } from "../types.js";
 import { aiManagedBlock } from "./ai-block.js";
@@ -28,6 +29,8 @@ export interface FieldWritesInput {
   readonly knownObjects: ReadonlySet<string>;
   /** ブロック id → preserve 済み内容 を引く関数 */
   readonly getPreserved: (id: string) => string | undefined;
+  /** オブジェクト API 名 → 日本語ラベル (タブ/見出しの主表示用、任意) */
+  readonly resolveObjectLabel?: (apiName: string) => string | undefined;
 }
 
 export function buildFieldWritesSection(input: FieldWritesInput): SectionViewModel {
@@ -53,9 +56,14 @@ export function buildFieldWritesSection(input: FieldWritesInput): SectionViewMod
     )
     .join("\n      ");
   const labels = tabs
-    .map((o) => `<label for="fw-${escapeAttr(o)}"><code>${escapeHtml(o)}</code></label>`)
+    .map(
+      (o) =>
+        `<label for="fw-${escapeAttr(o)}">${renderRefInline(input.resolveObjectLabel?.(o), o)}</label>`,
+    )
     .join("\n        ");
-  const panels = tabs.map((o) => renderPanel(o, input.getPreserved)).join("\n      ");
+  const panels = tabs
+    .map((o) => renderPanel(o, input.getPreserved, input.resolveObjectLabel?.(o)))
+    .join("\n      ");
 
   return {
     id: "field-writes",
@@ -73,7 +81,11 @@ export function buildFieldWritesSection(input: FieldWritesInput): SectionViewMod
   };
 }
 
-function renderPanel(object: string, getPreserved: (id: string) => string | undefined): string {
+function renderPanel(
+  object: string,
+  getPreserved: (id: string) => string | undefined,
+  objectLabel?: string,
+): string {
   const id = `field-writes:${object}`;
   const block = aiManagedBlock({
     id,
@@ -82,7 +94,7 @@ function renderPanel(object: string, getPreserved: (id: string) => string | unde
     prompt: `${object} について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(API名) / 設定値(式) / 設定条件 / 操作(insert|update)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。`,
   });
   return `<section class="obj-tabpanel">
-        <h4><code>${escapeHtml(object)}</code> への項目設定</h4>
+        <h4>${renderRefInline(objectLabel, object)} への項目設定</h4>
         ${block}
       </section>`;
 }

@@ -12,6 +12,12 @@ import { concernsForApex } from "../../render/concerns.js";
 import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
 import { summaryForApex } from "../../render/summary.js";
 import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../types/graph.js";
+import {
+  type LabelResolver,
+  firstSentencePlain,
+  makeLabelResolver,
+  objectRefListHtml,
+} from "../display.js";
 import { escapeHtml } from "../escape.js";
 import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
@@ -26,11 +32,13 @@ export function buildApexViewModel(
   coverage?: CoverageEntry,
   preservedBlocks?: Map<string, string>,
 ): ComponentViewModel {
+  const resolveLabel = makeLabelResolver(graph);
+  const summary = summaryForApex(cls, graph);
   const sections: SectionViewModel[] = [
     {
       id: "one-line-summary",
       title: "一行サマリ",
-      htmlContent: `<p>${escapeMaybeMarkdownInline(summaryForApex(cls, graph))}</p>`,
+      htmlContent: `<p>${escapeMaybeMarkdownInline(summary)}</p>`,
     },
     preservedOrPlaceholder(
       "business-meaning",
@@ -51,7 +59,7 @@ export function buildApexViewModel(
     {
       id: "data-model-touchpoints",
       title: "データモデル接点",
-      htmlContent: renderDataModelTouchpoints(cls),
+      htmlContent: renderDataModelTouchpoints(cls, resolveLabel),
     },
     {
       id: "internal-flow",
@@ -68,6 +76,7 @@ export function buildApexViewModel(
       body: cls.body,
       knownObjects: new Set(graph.objects.map((o) => o.fullyQualifiedName)),
       getPreserved: (id) => preservedBlocks?.get(id),
+      resolveObjectLabel: (o) => resolveLabel("object", o),
     }),
     {
       id: "io-contract",
@@ -101,6 +110,7 @@ export function buildApexViewModel(
   return {
     type: "apex",
     name: cls.fullyQualifiedName,
+    subtitle: firstSentencePlain(summary),
     sections,
   };
 }
@@ -156,7 +166,7 @@ function methodRow(m: ApexMethodInfo): string {
   </tr>`;
 }
 
-function renderDataModelTouchpoints(cls: ApexClass): string {
+function renderDataModelTouchpoints(cls: ApexClass, resolveLabel: LabelResolver): string {
   const body = cls.body;
   const soqlObjects = unique(
     (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
@@ -166,11 +176,11 @@ function renderDataModelTouchpoints(cls: ApexClass): string {
     <div class="grid two-col">
       <div>
         <h3>SOQL 対象 (${soqlObjects.length})</h3>
-        ${listOrPlaceholder(soqlObjects, "（SOQL は検出されませんでした）")}
+        ${objectRefListHtml(soqlObjects, resolveLabel, "（SOQL は検出されませんでした）")}
       </div>
       <div>
         <h3>DML 対象 (${dmlTargets.length})</h3>
-        ${listOrPlaceholder(dmlTargets, "（DML は検出されませんでした）")}
+        ${objectRefListHtml(dmlTargets, resolveLabel, "（DML は検出されませんでした）")}
       </div>
     </div>`;
 }

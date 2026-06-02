@@ -151,6 +151,12 @@
         const ni = e.nameLc.indexOf(lq);
         if (ni === 0) s += 100;
         else if (ni > 0) s += 50;
+        // 日本語ラベルでも一致 (前方一致を最優先)
+        if (e.labelLc) {
+          const li = e.labelLc.indexOf(lq);
+          if (li === 0) s += 110;
+          else if (li > 0) s += 60;
+        }
         if (e.domainLc && e.domainLc.indexOf(lq) >= 0) s += 20;
         if (e.type.indexOf(lq) >= 0) s += 10;
         if (s > 0) scored.push({ e: e, s: s });
@@ -170,9 +176,13 @@
     resultsEl.innerHTML = filtered.map((e, i) => {
       const sel = i === selectedIdx ? "true" : "false";
       const dom = e.domain ? '<span class="meta">' + escapeHtml(e.domain) + '</span>' : "";
+      // ラベルがあれば主表示、API 名は副 (mono)。無ければ API 名のみ。
+      const primary = e.label ? escapeHtml(e.label) : escapeHtml(e.name);
+      const apiMeta = e.label ? '<span class="meta api">' + escapeHtml(e.name) + '</span>' : "";
       return '<li aria-selected="' + sel + '" data-idx="' + i + '">' +
         '<span class="type-pill t-' + escapeHtml(e.type) + '" style="font-size:9.5px;padding:1px 7px;">' + escapeHtml(e.type) + '</span>' +
-        '<span class="name">' + escapeHtml(e.name) + '</span>' +
+        '<span class="name">' + primary + '</span>' +
+        apiMeta +
         dom +
       '</li>';
     }).join("");

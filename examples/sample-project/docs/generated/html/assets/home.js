@@ -153,7 +153,7 @@
           </div>
           <ul class="domain-members">
             ${d.members.map((m) =>
-              `<li><a href="${memberHref(m)}"><span class="type-pill t-${escapeHtml(m.type)}" style="font-size:9px;padding:1px 6px;margin-right:6px;">${escapeHtml(m.type)}</span>${escapeHtml(m.name)}</a></li>`
+              `<li><a href="${memberHref(m)}"><span class="type-pill t-${escapeHtml(m.type)}" style="font-size:9px;padding:1px 6px;margin-right:6px;">${escapeHtml(m.type)}</span>${m.label ? escapeHtml(m.label) + '<span class="api-name-inline">' + escapeHtml(m.name) + '</span>' : escapeHtml(m.name)}</a></li>`
             ).join("")}
           </ul>
         </li>`
@@ -349,6 +349,7 @@
           items.map((n) =>
             `<a class="arch-node" data-node-id="${escapeHtml(n.id)}" href="${nodeHref(n)}">
               <span class="node-name">${escapeHtml(n.label)}</span>
+              ${n.apiName && n.apiName !== n.label ? '<span class="node-api">' + escapeHtml(n.apiName) + '</span>' : ''}
             </a>`
           ).join("")
         }

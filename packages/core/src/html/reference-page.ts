@@ -11,9 +11,11 @@
 // ----------------------------------------------------------------------------
 
 import type { KnowledgeGraph } from "../types/graph.js";
+import { makeFieldLabelResolver, makeLabelResolver } from "./display.js";
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
 import {
+  type RefLabelResolvers,
   type RefSection,
   buildAuraSections,
   buildEmailTemplateSections,
@@ -23,6 +25,22 @@ import {
   buildVfComponentSections,
   buildVfPageSections,
 } from "./reference-builders.js";
+
+/** graph から object/field/recordType のラベル解決関数群を 1 度だけ構築する。 */
+function buildRefResolvers(graph: KnowledgeGraph): RefLabelResolvers {
+  const recordTypeLabels = new Map<string, string>();
+  for (const rt of graph.recordTypes ?? []) {
+    const short = rt.fullyQualifiedName.split(".").at(-1) ?? rt.fullyQualifiedName;
+    if (rt.label !== undefined && rt.label.trim() !== "" && rt.label !== short) {
+      recordTypeLabels.set(rt.fullyQualifiedName, rt.label);
+    }
+  }
+  return {
+    resolveObject: makeLabelResolver(graph),
+    resolveField: makeFieldLabelResolver(graph),
+    resolveRecordType: (fqn) => recordTypeLabels.get(fqn),
+  };
+}
 
 export interface ReferencePageOutput {
   /** htmlOutDir 起点の相対パス (例: "component/permissionset/FinanceOps.html") */
@@ -46,32 +64,38 @@ const REF_TYPES: readonly RefTypeDef[] = [
   {
     key: "permissionset",
     label: "権限セット",
-    entities: (g) =>
-      g.permissionSets.map((ps) => ({
+    entities: (g) => {
+      const r = buildRefResolvers(g);
+      return g.permissionSets.map((ps) => ({
         name: ps.fullyQualifiedName,
         summary: `${ps.label ?? ""}${ps.license ? ` / ${ps.license}` : ""}`.trim() || "権限セット",
-        sections: buildPermissionSetSections(ps),
-      })),
+        sections: buildPermissionSetSections(ps, r),
+      }));
+    },
   },
   {
     key: "profile",
     label: "プロファイル",
-    entities: (g) =>
-      g.profiles.map((pf) => ({
+    entities: (g) => {
+      const r = buildRefResolvers(g);
+      return g.profiles.map((pf) => ({
         name: pf.fullyQualifiedName,
         summary: pf.userLicense ?? "プロファイル",
-        sections: buildProfileSections(pf),
-      })),
+        sections: buildProfileSections(pf, r),
+      }));
+    },
   },
   {
     key: "flexipage",
     label: "Lightning ページ",
-    entities: (g) =>
-      g.flexiPages.map((fp) => ({
+    entities: (g) => {
+      const r = buildRefResolvers(g);
+      return g.flexiPages.map((fp) => ({
         name: fp.fullyQualifiedName,
         summary: `${fp.type ?? "FlexiPage"}${fp.sobjectType ? ` / ${fp.sobjectType}` : ""}`,
-        sections: buildFlexiPageSections(fp),
-      })),
+        sections: buildFlexiPageSections(fp, r),
+      }));
+    },
   },
   {
     key: "vfpage",

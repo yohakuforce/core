@@ -50,6 +50,17 @@ export interface SectionViewModel {
 
 export interface ComponentViewModel {
   readonly type: ComponentType;
+  /** API 名 (fullyQualifiedName)。href / ファイル名生成に使う不変の識別子。 */
   readonly name: string;
+  /**
+   * 日本語ラベル (SObject.label / Flow.label / LWC.masterLabel)。
+   * 主表示に使う。API 名と同一・空・apex/trigger の場合は undefined。
+   */
+  readonly label?: string;
+  /**
+   * 見出し下に出す短い日本語説明。ラベルを持たない apex/trigger で、
+   * 決定的サマリの先頭 1 文を入れて「日本語の手がかり」を与える用途。
+   */
+  readonly subtitle?: string;
   readonly sections: readonly SectionViewModel[];
 }

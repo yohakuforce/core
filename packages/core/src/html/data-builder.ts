@@ -7,7 +7,16 @@
 // ----------------------------------------------------------------------------
 
 import type { DomainsConfig } from "../domains/types.js";
+import {
+  type Concern,
+  type ConcernSeverity,
+  concernsForApex,
+  concernsForFlow,
+  concernsForTrigger,
+} from "../render/concerns.js";
 import type { KnowledgeGraph } from "../types/graph.js";
+import { makeLabelResolver } from "./display.js";
+import type { ComponentType } from "./sections.js";
 
 export interface ComponentStat {
   readonly type: string;
@@ -62,7 +71,10 @@ function statsOf(sizes: readonly number[]): { avgSize: number; maxSize: number }
 
 export interface ArchNode {
   readonly id: string;
+  /** 主表示: 日本語ラベル (無ければ API 名)。 */
   readonly label: string;
+  /** API 名 (fullyQualifiedName)。label と異なる場合のみ副表示する。 */
+  readonly apiName: string;
   readonly type: "object" | "apex" | "trigger" | "flow" | "lwc";
 }
 
@@ -86,28 +98,19 @@ export function buildArchitecture(graph: KnowledgeGraph): ArchitecturePayload {
   const apex = topNApexByReferences(graph, 30);
   const triggers = graph.apexTriggers.slice(0, 20);
   const flows = graph.flows.slice(0, 20);
+  const resolveLabel = makeLabelResolver(graph);
+  const node = (type: ComponentType, fqn: string): ArchNode => ({
+    id: nodeId(type, fqn),
+    label: resolveLabel(type, fqn) ?? fqn,
+    apiName: fqn,
+    type: type as ArchNode["type"],
+  });
 
   const nodes: ArchNode[] = [
-    ...objects.map<ArchNode>((o) => ({
-      id: nodeId("object", o.fullyQualifiedName),
-      label: o.fullyQualifiedName,
-      type: "object",
-    })),
-    ...apex.map<ArchNode>((c) => ({
-      id: nodeId("apex", c.fullyQualifiedName),
-      label: c.fullyQualifiedName,
-      type: "apex",
-    })),
-    ...triggers.map<ArchNode>((t) => ({
-      id: nodeId("trigger", t.fullyQualifiedName),
-      label: t.fullyQualifiedName,
-      type: "trigger",
-    })),
-    ...flows.map<ArchNode>((f) => ({
-      id: nodeId("flow", f.fullyQualifiedName),
-      label: f.fullyQualifiedName,
-      type: "flow",
-    })),
+    ...objects.map((o) => node("object", o.fullyQualifiedName)),
+    ...apex.map((c) => node("apex", c.fullyQualifiedName)),
+    ...triggers.map((t) => node("trigger", t.fullyQualifiedName)),
+    ...flows.map((f) => node("flow", f.fullyQualifiedName)),
   ].slice(0, ARCH_NODE_LIMIT);
 
   const nodeSet = new Set(nodes.map((n) => n.id));
@@ -219,6 +222,8 @@ function topNApexByReferences(graph: KnowledgeGraph, n: number): KnowledgeGraph[
 export interface DomainMember {
   readonly type: string;
   readonly name: string;
+  /** 日本語ラベル (object/flow/lwc)。無ければ undefined。 */
+  readonly label?: string;
 }
 
 export interface DomainPayload {
@@ -237,12 +242,18 @@ export function buildDomains(
   graph: KnowledgeGraph,
   domainsConfig?: DomainsConfig | null,
 ): DomainsPayload {
+  const resolveLabel = makeLabelResolver(graph);
+  const withLabel = (type: string, name: string): DomainMember => {
+    const label = resolveLabel(type as ComponentType, name);
+    return label === undefined ? { type, name } : { type, name, label };
+  };
+
   // 優先順位: domains.yaml (Phase 5 で正本) > graph.tags (Phase 4 までの簡易方式)
   if (domainsConfig !== undefined && domainsConfig !== null) {
     const claimed = new Set<string>();
     const domains: DomainPayload[] = [];
     for (const d of domainsConfig.domains) {
-      const members: DomainMember[] = d.members.map((m) => ({ type: m.type, name: m.name }));
+      const members: DomainMember[] = d.members.map((m) => withLabel(m.type, m.name));
       for (const m of members) claimed.add(`${m.type}:${m.name}`);
       domains.push({ id: d.id, label: d.label, members });
     }
@@ -262,10 +273,10 @@ export function buildDomains(
   for (const tag of graph.tags) {
     if (tag.namespace !== "domain") continue;
     const k = tag.value;
-    const member: DomainMember = {
-      type: entityKindToType(tag.entity.kind),
-      name: tag.entity.fullyQualifiedName,
-    };
+    const member: DomainMember = withLabel(
+      entityKindToType(tag.entity.kind),
+      tag.entity.fullyQualifiedName,
+    );
     const list = byDomain.get(k) ?? [];
     list.push(member);
     byDomain.set(k, list);
@@ -302,18 +313,168 @@ function entityKindToType(kind: string): string {
 // Hotspots (Phase 4 で git 連携を入れる; Phase 3 ではプレースホルダ)
 // ----------------------------------------------------------------------------
 
+export interface HotspotReason {
+  readonly severity: ConcernSeverity;
+  readonly title: string;
+  readonly detail?: string;
+}
+
+export interface HotspotItem {
+  readonly type: ComponentType;
+  /** API 名 (href 生成に使う) */
+  readonly name: string;
+  /** 日本語ラベル (object/flow/lwc)。無ければ undefined。 */
+  readonly label?: string;
+  /** 注目度スコア (大きいほど要注意) */
+  readonly score: number;
+  /** reasons 中の最大深刻度 */
+  readonly severity: ConcernSeverity;
+  readonly reasons: readonly HotspotReason[];
+}
+
 export interface HotspotsPayload {
-  readonly items: readonly {
-    readonly type: string;
-    readonly name: string;
-    readonly reason: string;
-  }[];
+  readonly items: readonly HotspotItem[];
   readonly note: string;
 }
 
-export function buildHotspots(_graph: KnowledgeGraph): HotspotsPayload {
-  return {
-    items: [],
-    note: "git 連携は Phase 4 で追加予定です。",
+const SEVERITY_WEIGHT = new Map<ConcernSeverity, number>([
+  ["HIGH", 5],
+  ["MEDIUM", 2],
+  ["INFO", 1],
+]);
+const SEVERITY_RANK = new Map<ConcernSeverity, number>([
+  ["HIGH", 3],
+  ["MEDIUM", 2],
+  ["INFO", 1],
+]);
+const weightOf = (s: ConcernSeverity): number => SEVERITY_WEIGHT.get(s) ?? 0;
+const rankOf = (s: ConcernSeverity): number => SEVERITY_RANK.get(s) ?? 0;
+const HOTSPOT_LIMIT = 15;
+
+// 依存集中度 (fan-in) のしきい値。これ以上 被参照されると「変更の影響範囲が広い」と判断。
+const APEX_FANIN_MEDIUM = 3;
+const APEX_FANIN_HIGH = 6;
+const OBJECT_FANIN_MEDIUM = 5;
+const OBJECT_FANIN_HIGH = 8;
+
+/**
+ * ホットスポット = 「いま注目すべきコンポーネント」を決定的に算出する。
+ *
+ * シグナル:
+ *   1. 既存の懸念検出 (concernsForApex/Trigger/Flow) の深刻度
+ *   2. 依存の集中度 (fan-in)。多く参照される Apex / オブジェクトは変更時の影響が広い
+ *
+ * 深刻度を重み付けして合算し、スコア降順で上位を返す (LLM 不使用・完全決定的)。
+ * git の変更頻度 (churn) 連携は今後追加予定。
+ */
+export function buildHotspots(graph: KnowledgeGraph): HotspotsPayload {
+  const resolveLabel = makeLabelResolver(graph);
+  const items: HotspotItem[] = [];
+
+  const add = (type: ComponentType, name: string, reasons: readonly HotspotReason[]): void => {
+    if (reasons.length === 0) return;
+    const score = reasons.reduce((s, r) => s + weightOf(r.severity), 0);
+    const severity = reasons.reduce<ConcernSeverity>(
+      (max, r) => (rankOf(r.severity) > rankOf(max) ? r.severity : max),
+      "INFO",
+    );
+    const label = resolveLabel(type, name);
+    items.push(
+      label === undefined
+        ? { type, name, score, severity, reasons }
+        : { type, name, label, score, severity, reasons },
+    );
   };
+
+  for (const cls of graph.apexClasses) {
+    if (cls.isTest) continue;
+    const reasons = [...toReasons(concernsForApex(cls, graph))];
+    appendFanIn(
+      reasons,
+      apexFanIn(graph, cls.fullyQualifiedName),
+      APEX_FANIN_MEDIUM,
+      APEX_FANIN_HIGH,
+      (n) => `他コンポーネントから ${n} 箇所で参照 — 変更の影響範囲が広い`,
+    );
+    add("apex", cls.fullyQualifiedName, reasons);
+  }
+
+  for (const trg of graph.apexTriggers) {
+    add("trigger", trg.fullyQualifiedName, toReasons(concernsForTrigger(trg, graph)));
+  }
+
+  for (const flow of graph.flows) {
+    add("flow", flow.fullyQualifiedName, toReasons(concernsForFlow(flow)));
+  }
+
+  for (const obj of graph.objects) {
+    const reasons: HotspotReason[] = [];
+    appendFanIn(
+      reasons,
+      objectFanIn(graph, obj.fullyQualifiedName),
+      OBJECT_FANIN_MEDIUM,
+      OBJECT_FANIN_HIGH,
+      (n) => `中心的オブジェクト — ${n} 箇所の処理が参照 / 更新`,
+    );
+    add("object", obj.fullyQualifiedName, reasons);
+  }
+
+  items.sort(
+    (a, b) =>
+      b.score - a.score || rankOf(b.severity) - rankOf(a.severity) || a.name.localeCompare(b.name),
+  );
+
+  return {
+    items: items.slice(0, HOTSPOT_LIMIT),
+    note:
+      items.length === 0
+        ? "注目すべき懸念・依存集中は検出されませんでした。"
+        : "決定的シグナル（懸念検出＋依存の集中度）から要注意コンポーネントをスコア順に表示します。git の変更頻度（churn）連携は今後追加予定。",
+  };
+}
+
+function toReasons(concerns: readonly Concern[]): HotspotReason[] {
+  return concerns.map((c) => ({ severity: c.severity, title: c.title, detail: c.detail }));
+}
+
+function appendFanIn(
+  reasons: HotspotReason[],
+  fanIn: number,
+  mediumAt: number,
+  highAt: number,
+  title: (n: number) => string,
+): void {
+  if (fanIn >= highAt) reasons.push({ severity: "HIGH", title: title(fanIn) });
+  else if (fanIn >= mediumAt) reasons.push({ severity: "MEDIUM", title: title(fanIn) });
+}
+
+function apexFanIn(graph: KnowledgeGraph, fqn: string): number {
+  let n = 0;
+  for (const c of graph.apexClasses) {
+    if (c.fullyQualifiedName === fqn) continue;
+    if ((c.body?.classReferences ?? []).some((r) => r.className === fqn)) n++;
+  }
+  for (const t of graph.apexTriggers) {
+    if ((t.body?.classReferences ?? []).some((r) => r.className === fqn)) n++;
+  }
+  return n;
+}
+
+function objectFanIn(graph: KnowledgeGraph, name: string): number {
+  const refs = new Set<string>();
+  for (const c of graph.apexClasses) {
+    const touches =
+      (c.body?.soqlQueries ?? []).some((q) => q.primaryObject === name) ||
+      (c.body?.dmlOperations ?? []).some((d) => d.target === name);
+    if (touches) refs.add(`apex:${c.fullyQualifiedName}`);
+  }
+  for (const t of graph.apexTriggers) {
+    if (t.object === name) refs.add(`trigger:${t.fullyQualifiedName}`);
+  }
+  for (const f of graph.flows) {
+    if (f.triggeringObject === name || (f.body?.recordObjects ?? []).includes(name)) {
+      refs.add(`flow:${f.fullyQualifiedName}`);
+    }
+  }
+  return refs.size;
 }

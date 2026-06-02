@@ -15,6 +15,8 @@ import type {
   VisualforceComponent,
   VisualforcePage,
 } from "../types/graph.js";
+import type { FieldLabelResolver, LabelResolver } from "./display.js";
+import { renderRefInline } from "./display.js";
 import { escapeHtml } from "./escape.js";
 
 export interface RefSection {
@@ -23,6 +25,20 @@ export interface RefSection {
   readonly html: string;
   /** true なら初期状態で折りたたむ (情報量の多いセクション向け) */
   readonly collapsed?: boolean;
+}
+
+/**
+ * リファレンスページの各 builder に渡すラベル解決関数群 (任意)。
+ * 未指定なら従来どおり API 名のみ表示する (後方互換)。
+ */
+export interface RefLabelResolvers {
+  readonly resolveObject?: LabelResolver;
+  readonly resolveField?: FieldLabelResolver;
+  readonly resolveRecordType?: (fqn: string) => string | undefined;
+}
+
+function objectRef(r: RefLabelResolvers | undefined, apiName: string): string {
+  return renderRefInline(r?.resolveObject?.("object", apiName), apiName);
 }
 
 const check = (b: boolean): string => (b ? "✓" : "");
@@ -57,7 +73,10 @@ export function buildEmailTemplateSections(t: EmailTemplate): RefSection[] {
 
 // ---------- PermissionSet / Profile (共通の body) ----------
 
-function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSection[] {
+function permissionBodySections(
+  body: PermissionSetBodyInfo | undefined,
+  resolvers?: RefLabelResolvers,
+): RefSection[] {
   if (body === undefined) {
     return [{ id: "perms", title: "権限", html: muted("権限ボディは解析されていません。") }];
   }
@@ -75,7 +94,7 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
           ${body.objectPermissions
             .map(
               (o) =>
-                `<tr><td><code>${escapeHtml(o.object)}</code></td><td>${check(o.read)}</td><td>${check(o.create)}</td><td>${check(o.edit)}</td><td>${check(o.delete)}</td><td>${check(o.viewAll)}</td><td>${check(o.modifyAll)}</td></tr>`,
+                `<tr><td>${objectRef(resolvers, o.object)}</td><td>${check(o.read)}</td><td>${check(o.create)}</td><td>${check(o.edit)}</td><td>${check(o.delete)}</td><td>${check(o.viewAll)}</td><td>${check(o.modifyAll)}</td></tr>`,
             )
             .join("\n          ")}
         </tbody>
@@ -100,12 +119,12 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
         : [...byObject.entries()]
             .map(
               ([obj, fps]) =>
-                `<details class="layout-block"><summary><code>${escapeHtml(obj)}</code> <span class="muted">(${fps.length} 項目)</span></summary>
+                `<details class="layout-block"><summary>${objectRef(resolvers, obj)} <span class="muted">(${fps.length} 項目)</span></summary>
         <table class="data-table"><thead><tr><th>項目</th><th>参照</th><th>編集</th></tr></thead><tbody>
           ${fps
             .map(
               (f) =>
-                `<tr><td><code>${escapeHtml(f.field)}</code></td><td>${check(f.readable)}</td><td>${check(f.editable)}</td></tr>`,
+                `<tr><td>${renderRefInline(resolvers?.resolveField?.(f.field), f.field)}</td><td>${check(f.readable)}</td><td>${check(f.editable)}</td></tr>`,
             )
             .join("\n          ")}
         </tbody></table></details>`,
@@ -162,7 +181,7 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
       id: "rt-visibility",
       title: `レコードタイプ表示 (${rtv.length})`,
       html: `<table class="data-table"><thead><tr><th>レコードタイプ</th><th>表示</th><th>既定</th></tr></thead><tbody>
-        ${rtv.map((r) => `<tr><td><code>${escapeHtml(r.recordType)}</code></td><td>${check(r.visible)}</td><td>${check(r.default)}</td></tr>`).join("\n        ")}
+        ${rtv.map((r) => `<tr><td>${renderRefInline(resolvers?.resolveRecordType?.(r.recordType), r.recordType)}</td><td>${check(r.visible)}</td><td>${check(r.default)}</td></tr>`).join("\n        ")}
       </tbody></table>`,
     });
   }
@@ -190,22 +209,25 @@ function permissionBodySections(body: PermissionSetBodyInfo | undefined): RefSec
   return [objectPerms, fieldPerms, apexAccess, userPerms, ...extra];
 }
 
-export function buildPermissionSetSections(ps: PermissionSet): RefSection[] {
+export function buildPermissionSetSections(
+  ps: PermissionSet,
+  resolvers?: RefLabelResolvers,
+): RefSection[] {
   const summary: RefSection = {
     id: "summary",
     title: "概要",
     html: `<p><strong>${escapeHtml(ps.label ?? ps.fullyQualifiedName)}</strong>${ps.license ? ` / ライセンス: <code>${escapeHtml(ps.license)}</code>` : ""}</p>${ps.description ? `<p class="muted">${escapeHtml(ps.description)}</p>` : ""}`,
   };
-  return [summary, ...permissionBodySections(ps.body)];
+  return [summary, ...permissionBodySections(ps.body, resolvers)];
 }
 
-export function buildProfileSections(pf: Profile): RefSection[] {
+export function buildProfileSections(pf: Profile, resolvers?: RefLabelResolvers): RefSection[] {
   const summary: RefSection = {
     id: "summary",
     title: "概要",
     html: `<p><code>${escapeHtml(pf.fullyQualifiedName)}</code>${pf.userLicense ? ` / ユーザーライセンス: <code>${escapeHtml(pf.userLicense)}</code>` : ""}</p>`,
   };
-  return [summary, ...permissionBodySections(pf.body)];
+  return [summary, ...permissionBodySections(pf.body, resolvers)];
 }
 
 // ---------- FlexiPage ----------
@@ -227,20 +249,33 @@ function classifyFlexiItem(item: { componentName?: string; fieldName?: string })
   return { cls: "fp-component", label: "コンポーネント" };
 }
 
-function flexiItemChip(item: { componentName?: string; fieldName?: string }): string {
+function flexiItemChip(
+  item: { componentName?: string; fieldName?: string },
+  objectContext: string | undefined,
+  resolvers?: RefLabelResolvers,
+): string {
   const kind = classifyFlexiItem(item);
-  const name = item.fieldName ?? item.componentName ?? "?";
+  // 項目 (動的フォーム) は日本語ラベルを主表示にする。コンポーネントは API 名のまま。
+  if (item.fieldName !== undefined) {
+    const label = resolvers?.resolveField?.(item.fieldName, objectContext);
+    const body =
+      label !== undefined
+        ? `${escapeHtml(label)}<span class="api-name-inline">${escapeHtml(item.fieldName)}</span>`
+        : `<code>${escapeHtml(item.fieldName)}</code>`;
+    return `<div class="fp-item ${kind.cls}"><span class="fp-item-kind">${kind.label}</span>${body}</div>`;
+  }
+  const name = item.componentName ?? "?";
   return `<div class="fp-item ${kind.cls}"><span class="fp-item-kind">${kind.label}</span><code>${escapeHtml(name)}</code></div>`;
 }
 
-export function buildFlexiPageSections(fp: FlexiPage): RefSection[] {
+export function buildFlexiPageSections(fp: FlexiPage, resolvers?: RefLabelResolvers): RefSection[] {
   const hasDynamicForm = fp.regions.some((r) => r.items.some((it) => it.fieldName !== undefined));
   const summary: RefSection = {
     id: "summary",
     title: "概要",
     html: `<table class="data-table"><tbody>
       <tr><th>種別</th><td><code>${escapeHtml(fp.type ?? "—")}</code></td></tr>
-      ${fp.sobjectType ? `<tr><th>対象オブジェクト</th><td><code>${escapeHtml(fp.sobjectType)}</code></td></tr>` : ""}
+      ${fp.sobjectType ? `<tr><th>対象オブジェクト</th><td>${objectRef(resolvers, fp.sobjectType)}</td></tr>` : ""}
       ${fp.pageTemplate ? `<tr><th>テンプレート</th><td><code>${escapeHtml(fp.pageTemplate)}</code></td></tr>` : ""}
       ${fp.masterLabel ? `<tr><th>ラベル</th><td>${escapeHtml(fp.masterLabel)}</td></tr>` : ""}
       <tr><th>動的フォーム</th><td>${hasDynamicForm ? "✓ 採用 (項目をリージョンへ直接配置)" : "未使用 (項目はページレイアウト参照)"}</td></tr>
@@ -259,7 +294,7 @@ export function buildFlexiPageSections(fp: FlexiPage): RefSection[] {
             (r) => `<div class="fp-region">
           <div class="fp-region-label">${escapeHtml(r.name)}${r.type ? ` <span class="muted">${escapeHtml(r.type)}</span>` : ""}${r.items.some((it) => it.fieldName !== undefined) ? ' <span class="badge">動的フォーム</span>' : ""}</div>
           <div class="fp-items">
-            ${r.items.length === 0 ? '<span class="muted">（空）</span>' : r.items.map(flexiItemChip).join("\n            ")}
+            ${r.items.length === 0 ? '<span class="muted">（空）</span>' : r.items.map((it) => flexiItemChip(it, fp.sobjectType, resolvers)).join("\n            ")}
           </div>
         </div>`,
           )

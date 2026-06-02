@@ -7,7 +7,9 @@
 // ----------------------------------------------------------------------------
 
 import type { DomainsConfig } from "../domains/types.js";
+import { summaryForApex, summaryForApexTrigger } from "../render/summary.js";
 import type { KnowledgeGraph } from "../types/graph.js";
+import { firstSentencePlain, labelIfDistinct, renderNameStacked } from "./display.js";
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
 import type { ComponentType } from "./sections.js";
@@ -18,6 +20,10 @@ function escapeJsonForScript(s: string): string {
 
 export interface TypeIndexItem {
   readonly name: string;
+  /** 日本語ラベル (object/flow/lwc)。無ければ undefined。 */
+  readonly label?: string;
+  /** 見出し下の短い日本語説明 (apex/trigger)。 */
+  readonly subtitle?: string;
   /** 1 行サマリ (簡潔な決定的テキスト) */
   readonly summary: string;
   /** 紐づくドメイン (あれば) */
@@ -106,8 +112,15 @@ export function renderTypeIndexPage(
 function renderCard(type: ComponentType, it: TypeIndexItem): string {
   const href = `./${sanitizeFileName(it.name)}.html`;
   const domain = it.domain;
-  return `<a class="type-index-card" href="${escapeAttr(href)}" data-name="${escapeAttr(it.name.toLowerCase())}" data-domain="${escapeAttr((domain ?? "").toLowerCase())}">
-          <div class="card-name">${escapeHtml(it.name)}</div>
+  // フィルタはラベルでも当たるよう data-name にラベルを含める。
+  const filterText = `${it.label ?? ""} ${it.name}`.toLowerCase();
+  const subtitle =
+    it.subtitle !== undefined && it.subtitle !== ""
+      ? `<div class="card-sub">${escapeHtml(it.subtitle)}</div>`
+      : "";
+  return `<a class="type-index-card" href="${escapeAttr(href)}" data-name="${escapeAttr(filterText)}" data-domain="${escapeAttr((domain ?? "").toLowerCase())}">
+          <div class="card-name">${renderNameStacked(it.label, it.name)}</div>
+          ${subtitle}
           <div class="card-meta">${escapeHtml(it.summary)}</div>
           ${domain !== undefined ? `<div class="card-domain">${icon("folder", { size: "11" })} ${escapeHtml(domain)}</div>` : ""}
         </a>`;
@@ -117,29 +130,34 @@ function collectItems(type: ComponentType, graph: KnowledgeGraph): TypeIndexItem
   if (type === "apex") {
     return graph.apexClasses.map((c) => ({
       name: c.fullyQualifiedName,
+      subtitle: firstSentencePlain(summaryForApex(c, graph)),
       summary: apexSummary(c),
     }));
   }
   if (type === "trigger") {
     return graph.apexTriggers.map((t) => ({
       name: t.fullyQualifiedName,
+      subtitle: firstSentencePlain(summaryForApexTrigger(t, graph)),
       summary: `${t.object} / ${t.events.length} events`,
     }));
   }
   if (type === "lwc") {
     return graph.lwcs.map((l) => ({
       name: l.fullyQualifiedName,
+      label: labelIfDistinct(l.masterLabel, l.fullyQualifiedName),
       summary: `${l.publicProperties.length} props / ${l.customEvents.length} events`,
     }));
   }
   if (type === "object") {
     return graph.objects.map((o) => ({
       name: o.fullyQualifiedName,
+      label: labelIfDistinct(o.label, o.fullyQualifiedName),
       summary: `${o.isCustom ? "Custom" : "Standard"} / ${graph.fields.filter((f) => f.object === o.fullyQualifiedName).length} fields`,
     }));
   }
   return graph.flows.map((f) => ({
     name: f.fullyQualifiedName,
+    label: labelIfDistinct(f.label, f.fullyQualifiedName),
     summary: `${f.type} / ${f.status} / ${f.body?.elements.length ?? 0} elements`,
   }));
 }

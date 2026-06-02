@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="./assets/home.css" />
   <link rel="stylesheet" href="./assets/cmdk.css" />
   <script type="application/json" id="yohaku-data-stats">{"totals":{"components":6},"byType":[{"type":"apex","count":1,"avgSize":13,"maxSize":13},{"type":"trigger","count":1,"avgSize":0,"maxSize":0},{"type":"lwc","count":0,"avgSize":0,"maxSize":0},{"type":"object","count":3,"avgSize":2,"maxSize":3},{"type":"flow","count":1,"avgSize":0,"maxSize":0}],"generatedAt":"2026-05-31T01:13:37.649Z"}</script>
-  <script type="application/json" id="yohaku-data-architecture">{"nodes":[{"id":"object:Order__c","label":"Order__c","type":"object"},{"id":"object:Customer__c","label":"Customer__c","type":"object"},{"id":"object:Invoice__c","label":"Invoice__c","type":"object"},{"id":"apex:CustomerService","label":"CustomerService","type":"apex"},{"id":"trigger:OrderTrigger","label":"OrderTrigger","type":"trigger"},{"id":"flow:Order_AfterUpdate","label":"Order_AfterUpdate","type":"flow"}],"edges":[{"from":"apex:CustomerService","to":"object:Customer__c","kind":"queries"},{"from":"apex:CustomerService","to":"object:Order__c","kind":"queries"},{"from":"trigger:OrderTrigger","to":"object:Order__c","kind":"triggers"}]}</script>
+  <script type="application/json" id="yohaku-data-architecture">{"nodes":[{"id":"object:Order__c","label":"Order","apiName":"Order__c","type":"object"},{"id":"object:Customer__c","label":"Customer","apiName":"Customer__c","type":"object"},{"id":"object:Invoice__c","label":"Invoice","apiName":"Invoice__c","type":"object"},{"id":"apex:CustomerService","label":"CustomerService","apiName":"CustomerService","type":"apex"},{"id":"trigger:OrderTrigger","label":"OrderTrigger","apiName":"OrderTrigger","type":"trigger"},{"id":"flow:Order_AfterUpdate","label":"Order After Update","apiName":"Order_AfterUpdate","type":"flow"}],"edges":[{"from":"apex:CustomerService","to":"object:Customer__c","kind":"queries"},{"from":"apex:CustomerService","to":"object:Order__c","kind":"queries"},{"from":"trigger:OrderTrigger","to":"object:Order__c","kind":"triggers"}]}</script>
   <script type="application/json" id="yohaku-data-domains">{"domains":[],"unclassifiedCount":6}</script>
   <script type="application/json" id="yohaku-data-hotspots">{"items":[],"note":"git 連携は Phase 4 で追加予定です。"}</script>
   <script type="application/json" id="yohaku-data-business-flows">{"version":1,"domainFlows":[],"objectFlows":[{"id":"object:Customer__c","label":"Customer (Customer__c)","scope":"object","entryPoints":[],"processing":[{"type":"apex","name":"CustomerService","role":"process","evidence":"SOQL 1"}],"affectedData":[{"type":"object","name":"Customer__c","role":"data","evidence":"対象オブジェクト"}],"downstream":[]},{"id":"object:Invoice__c","label":"Invoice (Invoice__c)","scope":"object","entryPoints":[],"processing":[],"affectedData":[{"type":"object","name":"Invoice__c","role":"data","evidence":"対象オブジェクト"}],"downstream":[]},{"id":"object:Order__c","label":"Order (Order__c)","scope":"object","entryPoints":[{"type":"trigger","name":"OrderTrigger","role":"entry","evidence":"beforeInsert / beforeUpdate"}],"processing":[{"type":"apex","name":"CustomerService","role":"process","evidence":"SOQL 1"}],"affectedData":[{"type":"object","name":"Order__c","role":"data","evidence":"対象オブジェクト"}],"downstream":[{"type":"flow","name":"Order_AfterUpdate","role":"downstream","evidence":"Order__c を参照"}]}]}</script>
-  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html","label":"Customer","labelLc":"customer"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html","label":"Invoice","labelLc":"invoice"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html","label":"Order","labelLc":"order"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html","label":"Order After Update","labelLc":"order after update"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
   <script src="./assets/home.js" defer></script>
   <script src="./assets/cmdk.js" defer></script>
@@ -31,7 +31,7 @@
         <span class="search-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="m20 20-5.4-5.4"/></svg></span>
         <input id="global-search" type="search" placeholder="コンポーネント検索" />
       </div>
-      <div class="sidebar-group" data-collapsed="false" data-type="apex">
+      <div class="sidebar-group" data-collapsed="true" data-type="apex">
         <button class="sidebar-group-header" data-toggle="apex">
           <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
           <span class="group-label">
@@ -46,7 +46,7 @@
           
         </ul>
       </div>
-      <div class="sidebar-group" data-collapsed="false" data-type="trigger">
+      <div class="sidebar-group" data-collapsed="true" data-type="trigger">
         <button class="sidebar-group-header" data-toggle="trigger">
           <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
           <span class="group-label">
@@ -61,7 +61,7 @@
           
         </ul>
       </div>
-      <div class="sidebar-group" data-collapsed="false" data-type="lwc">
+      <div class="sidebar-group" data-collapsed="true" data-type="lwc">
         <button class="sidebar-group-header" data-toggle="lwc">
           <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
           <span class="group-label">
@@ -76,7 +76,7 @@
           
         </ul>
       </div>
-      <div class="sidebar-group" data-collapsed="false" data-type="object">
+      <div class="sidebar-group" data-collapsed="true" data-type="object">
         <button class="sidebar-group-header" data-toggle="object">
           <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
           <span class="group-label">
@@ -87,13 +87,13 @@
           <a class="group-link" href="./component/object/index.html" title="Objects 一覧を開く" onclick="event.stopPropagation();"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" aria-hidden="true"><path d="M14 4h6v6"/><path d="m20 4-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
         </button>
         <ul class="type-list">
-        <li><a href="./component/object/Customer_c.html">Customer__c</a></li>
-        <li><a href="./component/object/Invoice_c.html">Invoice__c</a></li>
-        <li><a href="./component/object/Order_c.html">Order__c</a></li>
+        <li><a href="./component/object/Customer_c.html">Customer<span class="api-name-inline">Customer__c</span></a></li>
+        <li><a href="./component/object/Invoice_c.html">Invoice<span class="api-name-inline">Invoice__c</span></a></li>
+        <li><a href="./component/object/Order_c.html">Order<span class="api-name-inline">Order__c</span></a></li>
           
         </ul>
       </div>
-      <div class="sidebar-group" data-collapsed="false" data-type="flow">
+      <div class="sidebar-group" data-collapsed="true" data-type="flow">
         <button class="sidebar-group-header" data-toggle="flow">
           <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
           <span class="group-label">
@@ -104,7 +104,22 @@
           <a class="group-link" href="./component/flow/index.html" title="Flows 一覧を開く" onclick="event.stopPropagation();"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" aria-hidden="true"><path d="M14 4h6v6"/><path d="m20 4-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
         </button>
         <ul class="type-list">
-        <li><a href="./component/flow/Order_AfterUpdate.html">Order_AfterUpdate</a></li>
+        <li><a href="./component/flow/Order_AfterUpdate.html">Order After Update<span class="api-name-inline">Order_AfterUpdate</span></a></li>
+          
+        </ul>
+      </div>
+      <div class="sidebar-group" data-collapsed="true" data-type="permissionset">
+        <button class="sidebar-group-header" data-toggle="permissionset">
+          <span class="chevron"><svg class="icon chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
+          <span class="group-label">
+            <span class="group-icon t-permissionset"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4l2 2h9A1.5 1.5 0 0 1 21 8.5v10A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5z"/></svg></span>
+            権限セット
+          </span>
+          <span class="count">1</span>
+          <a class="group-link" href="./component/permissionset/index.html" title="権限セット 一覧を開く" onclick="event.stopPropagation();"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" aria-hidden="true"><path d="M14 4h6v6"/><path d="m20 4-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+        </button>
+        <ul class="type-list">
+        <li><a href="./component/permissionset/SalesOps.html">SalesOps</a></li>
           
         </ul>
       </div>
@@ -116,6 +131,7 @@
         <button class="tab-button" data-tab="architecture" aria-selected="false">アーキテクチャ</button>
         <button class="tab-button" data-tab="domains" aria-selected="false">ドメインマップ</button>
         <button class="tab-button" data-tab="hotspots" aria-selected="false">ホットスポット</button>
+        <button class="tab-button" data-tab="org-settings" aria-selected="false">組織設定</button>
       </div>
 
       <div class="tab-panel" data-panel="stats" data-active="true">
@@ -154,6 +170,27 @@
 
       <div class="tab-panel" data-panel="hotspots" data-active="false">
         <div id="hotspots-list"></div>
+      </div>
+
+      <div class="tab-panel" data-panel="org-settings" data-active="false">
+        
+    <p class="notice" style="margin-bottom:16px;">オブジェクトに依存しない組織レベルの設定です。連携・アプリ・設定レコードの一覧を確認できます。</p>
+    <section class="org-block">
+      <h3>名前付き認証情報 (連携先) <span class="muted">(0)</span></h3>
+      <p class="muted">名前付き認証情報は検出されませんでした。</p>
+    </section>
+    <section class="org-block">
+      <h3>リモートサイト設定 (許可サイト) <span class="muted">(0)</span></h3>
+      <p class="muted">リモートサイト設定は検出されませんでした。</p>
+    </section>
+    <section class="org-block">
+      <h3>カスタムアプリケーション <span class="muted">(0)</span></h3>
+      <p class="muted">カスタムアプリケーションは検出されませんでした。</p>
+    </section>
+    <section class="org-block">
+      <h3>カスタムメタデータ (設定レコード) <span class="muted">(0)</span></h3>
+      <p class="muted">カスタムメタデータレコードは検出されませんでした。</p>
+    </section>
       </div>
     </main>
   </div>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>凡例 — この設計書の読み方 — yohakuforce</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/home.css" />
+</head>
+<body>
+  <header class="global-header">
+    <div class="brand">
+      <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+        <span class="brand-dot">y</span>
+        <span class="brand-name">yohakuforce</span>
+        <span class="brand-sub">Knowledge Hub</span>
+      </a>
+    </div>
+    <nav class="global-nav"><a href="index.html">Home</a></nav>
+  </header>
+  <header class="component-header">
+    <h1><span class="type-pill">凡例</span> この設計書の読み方</h1>
+    <p class="muted">フローチャート・処理ステップ・項目値の割り当て・色分けの意味をまとめています。各ページ右上の「凡例」から戻れます。</p>
+  </header>
+  <main class="component-main">
+    <article class="sections" style="grid-column:1 / -1;">
+      <section class="yohaku-section">
+        <h2>処理フロー図（フローチャート）のノード</h2>
+        <p class="muted">Apex / トリガの「内部処理フロー」で使う図形の意味です。図形の形と色で処理の種類を表します。</p>
+        <table class="data-table legend-table">
+          <thead><tr><th>図形</th><th>意味</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td><span class="lg-swatch lg-stadium"></span></td><td>開始・終了</td><td>メソッド（処理）の入口と出口。角丸の囲み。</td></tr>
+            <tr><td><span class="lg-swatch lg-paral lg-data"></span></td><td>データ取得（SOQL）</td><td>データベースからレコードを取得する。平行四辺形。</td></tr>
+            <tr><td><span class="lg-swatch lg-paral lg-data"></span></td><td>データ操作（DML）</td><td>レコードを登録・更新・削除する。平行四辺形。</td></tr>
+            <tr><td><span class="lg-swatch lg-diamond lg-cond"></span></td><td>分岐（条件判定）</td><td>条件を満たすか（はい / いいえ）で処理が分かれる。ひし形。</td></tr>
+            <tr><td><span class="lg-swatch lg-rect lg-cond"></span></td><td>繰り返し（ループ）</td><td>コレクションを 1 件ずつ処理する。点線が繰り返しの戻り。</td></tr>
+            <tr><td><span class="lg-swatch lg-rect lg-cond lg-double"></span></td><td>例外処理（try / 捕捉 / 後処理）</td><td>エラーを捕捉して処理する。点線が例外発生時の経路。二重枠。</td></tr>
+            <tr><td><span class="lg-swatch lg-circle lg-exit"></span></td><td>戻り値・例外送出</td><td>呼び出し元へ値を返す、またはエラーを送出して終了する。円。</td></tr>
+          </tbody>
+        </table>
+        <p class="muted">矢印のラベル「はい / いいえ」は分岐の結果、「繰返」は繰り返しの戻り、「例外発生」は例外時の経路を表します。図が読みにくい場合は各メソッドの「ツリー」表示に切り替えると入れ子構造で確認できます。</p>
+      </section>
+
+      <section class="yohaku-section">
+        <h2>処理ステップ（テキスト版）のバッジ</h2>
+        <p class="muted">「処理詳細」のメソッド別ステップで使うバッジです。</p>
+        <ul class="step-list" style="border:0;">
+          <li><span class="step-kind step-in">入力</span> メソッドの引数（受け取る値）。</li>
+          <li><span class="step-kind step-soql">SOQL</span> レコード取得。</li>
+          <li><span class="step-kind step-dml">DML</span> レコードの登録/更新/削除。</li>
+          <li><span class="step-kind step-if">分岐</span> 条件による分かれ道。</li>
+          <li><span class="step-kind step-loop">繰り返し</span> ループ処理。</li>
+          <li><span class="step-kind step-try">例外処理</span> try / catch。</li>
+          <li><span class="step-kind step-return">戻り値</span> 呼び出し元へ返す値。</li>
+          <li><span class="step-kind step-throw">例外送出</span> エラーを投げて中断。</li>
+          <li><span class="step-kind step-stmt">処理</span> その他の処理（代入・生成など）。</li>
+        </ul>
+      </section>
+
+      <section class="yohaku-section">
+        <h2>項目値の割り当て（値の決まり方）</h2>
+        <table class="data-table">
+          <thead><tr><th>区分</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td><span class="value-origin">数式で自動計算</span></td><td>数式項目。他項目から自動算出（入力不可）。</td></tr>
+            <tr><td><span class="value-origin">参照 (lookup)</span></td><td>他オブジェクトへの参照（Lookup / 主従）。</td></tr>
+            <tr><td><span class="value-origin">選択リスト</span></td><td>決められた選択肢から選ぶ。</td></tr>
+            <tr><td><span class="value-origin">初期値あり</span></td><td>新規作成時に既定値が入る。</td></tr>
+            <tr><td><span class="value-origin">積み上げ集計 (自動)</span></td><td>子レコードからの集計値（入力不可）。</td></tr>
+            <tr><td><span class="value-origin">処理で設定</span></td><td>Apex / トリガ / フロー が値を設定する。</td></tr>
+            <tr><td><span class="value-origin">ユーザー入力</span></td><td>画面・API からの手入力。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="yohaku-section">
+        <h2>色分け（事実 と 解釈）</h2>
+        <p class="muted">この設計書は「決定的に抽出した事実」と「AI による解釈・確認」を分けて表示します。</p>
+        <p><strong>決定的（事実）</strong>: 通常の表・カード。ソースから機械的に抽出した内容で、再生成しても同じ結果になります。</p>
+        <div class="ai-detail">
+          <div class="ai-detail-head"><span class="ai-tag">AI</span> 解釈・確認ブロック</div>
+          <p class="muted" style="margin:4px 0 0;">青い枠は AI が業務的意味・項目設定の詳細・抜け漏れ確認などを補ったブロックです。人手で編集でき、再生成しても保持されます。</p>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

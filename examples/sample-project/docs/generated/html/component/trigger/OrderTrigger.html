@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ApexTrigger: OrderTrigger — yohakuforce</title>
+  <title>OrderTrigger — yohakuforce</title>
   <link rel="stylesheet" href="../../assets/styles.css" />
   <link rel="stylesheet" href="../../assets/home.css" />
   <link rel="stylesheet" href="../../assets/cmdk.css" />
-  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html","label":"Customer","labelLc":"customer"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html","label":"Invoice","labelLc":"invoice"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html","label":"Order","labelLc":"order"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html","label":"Order After Update","labelLc":"order after update"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
   <script src="../../assets/method-flowchart.js" defer></script>
   <script src="../../assets/cmdk.js" defer></script>
@@ -21,6 +21,7 @@
         <span class="brand-sub">Knowledge Hub</span>
       </a>
     </div>
+    <nav class="global-nav"><a href="../../legend.html" class="legend-link icon-button"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true"><path d="M12 6.5C10.4 5.2 7.9 4.6 4 5.2v12.6c3.9-.6 6.4 0 8 1.4"/><path d="M12 6.5c1.6-1.3 4.1-1.9 8-1.3v12.6c-3.9-.6-6.4 0-8 1.4z"/><path d="M12 6.5v12.6"/></svg>凡例（読み方）</a></nav>
   </header>
   <header class="component-header">
     <nav class="breadcrumb">
@@ -34,6 +35,7 @@
       <span class="type-pill t-trigger">trigger</span>
       OrderTrigger
     </h1>
+    <p class="component-subtitle">Order__c の beforeInsert / beforeUpdate イベントで起動するトリガ</p>
   </header>
   <main class="component-main">
     <aside class="toc">
@@ -44,6 +46,8 @@
         <li><a href="#dependencies">依存関係</a></li>
         <li><a href="#data-model-touchpoints">データモデル接点</a></li>
         <li><a href="#internal-flow">内部処理フロー</a></li>
+        <li><a href="#processing-detail">処理詳細</a></li>
+        <li><a href="#field-writes">項目値の割り当て</a></li>
         <li><a href="#test-coverage">テスト被覆</a></li>
         <li><a href="#change-history">変更履歴</a></li>
         <li><a href="#impact-hint">影響範囲ヒント</a></li>
@@ -74,7 +78,7 @@
         
     <h3>呼び出し先ハンドラ (0)</h3>
     <p class="muted">（ハンドラへの委譲は検出されませんでした）</p>
-    <p class="muted">対象オブジェクト: <code>Order__c</code></p>
+    <p class="muted">対象オブジェクト: Order <code>Order__c</code></p>
     <p class="muted">イベント: <code>beforeInsert / beforeUpdate</code></p>
         
       </section>
@@ -98,6 +102,40 @@
         <h2>内部処理フロー</h2>
         
         <p class="muted">制御フロー情報がありません (トリガ本体がハンドラへの委譲のみ等)。</p>
+        
+      </section>
+      <section id="processing-detail" class="yohaku-section yohaku-section--processing-detail">
+        <h2>処理詳細</h2>
+        
+        <!-- yohaku:block kind="ai_managed" id="processing-detail-narrative" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">各メソッドが業務上何を達成するか、扱うデータ・主要な分岐条件・計算・戻り値を、下の決定的スケルトンを根拠に 1 メソッド数文で解説してください。事実はスケルトンに従い、推測は避けてください。</p>
+    </div><!-- yohaku:block kind="ai_managed" id="processing-detail-narrative" end -->
+    <p class="muted">処理詳細を導出できるメソッドがありません (interface / 抽象クラス、または body 解析対象外)。</p>
+        
+      </section>
+      <section id="field-writes" class="yohaku-section yohaku-section--field-writes">
+        <h2>項目値の割り当て</h2>
+        
+        
+    <p class="muted">このクラスが触れるオブジェクトごとに、設定する項目・値・条件を確認できます (タブ切替)。各タブの内訳は原文から AI が抽出します。</p>
+    
+    <div class="obj-tabs">
+      <input type="radio" name="fw-tabs" id="fw-Order__c" checked />
+      <div class="obj-tablist">
+        <label for="fw-Order__c"><code>Order__c</code></label>
+      </div>
+      <section class="obj-tabpanel">
+        <h4><code>Order__c</code> への項目設定</h4>
+        <!-- yohaku:block kind="ai_managed" id="field-writes:Order__c" start -->
+    <div class="llm-placeholder">
+      <p class="muted">（このセクションは LLM で生成されます）</p>
+      <p class="hint">Order__c について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(API名) / 設定値(式) / 設定条件 / 操作(insert|update)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。</p>
+      
+    </div><!-- yohaku:block kind="ai_managed" id="field-writes:Order__c" end -->
+      </section>
+    </div>
         
       </section>
       <section id="test-coverage" class="yohaku-section yohaku-section--test-coverage">

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../../assets/styles.css" />
   <link rel="stylesheet" href="../../assets/home.css" />
   <link rel="stylesheet" href="../../assets/cmdk.css" />
-  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
+  <script type="application/json" id="yohaku-search-index">{"version":1,"entries":[{"type":"object","name":"Customer__c","nameLc":"customer__c","href":"component/object/Customer_c.html","label":"Customer","labelLc":"customer"},{"type":"apex","name":"CustomerService","nameLc":"customerservice","href":"component/apex/CustomerService.html"},{"type":"object","name":"Invoice__c","nameLc":"invoice__c","href":"component/object/Invoice_c.html","label":"Invoice","labelLc":"invoice"},{"type":"object","name":"Order__c","nameLc":"order__c","href":"component/object/Order_c.html","label":"Order","labelLc":"order"},{"type":"flow","name":"Order_AfterUpdate","nameLc":"order_afterupdate","href":"component/flow/Order_AfterUpdate.html","label":"Order After Update","labelLc":"order after update"},{"type":"trigger","name":"OrderTrigger","nameLc":"ordertrigger","href":"component/trigger/OrderTrigger.html"}]}</script>
   <script src="../../assets/type-index.js" defer></script>
   <script src="../../assets/cmdk.js" defer></script>
 </head>
@@ -40,18 +40,21 @@
       <span class="muted" id="filter-counter" style="font-size:12px;"></span>
     </div>
     <div class="type-index-grid" id="type-index-grid">
-        <a class="type-index-card" href="./Customer_c.html" data-name="customer__c" data-domain="">
-          <div class="card-name">Customer__c</div>
+        <a class="type-index-card" href="./Customer_c.html" data-name="customer customer__c" data-domain="">
+          <div class="card-name"><span class="name-stacked">Customer<code class="api-name">Customer__c</code></span></div>
+          
           <div class="card-meta">Custom / 1 fields</div>
           
         </a>
-        <a class="type-index-card" href="./Invoice_c.html" data-name="invoice__c" data-domain="">
-          <div class="card-name">Invoice__c</div>
+        <a class="type-index-card" href="./Invoice_c.html" data-name="invoice invoice__c" data-domain="">
+          <div class="card-name"><span class="name-stacked">Invoice<code class="api-name">Invoice__c</code></span></div>
+          
           <div class="card-meta">Custom / 3 fields</div>
           
         </a>
-        <a class="type-index-card" href="./Order_c.html" data-name="order__c" data-domain="">
-          <div class="card-name">Order__c</div>
+        <a class="type-index-card" href="./Order_c.html" data-name="order order__c" data-domain="">
+          <div class="card-name"><span class="name-stacked">Order<code class="api-name">Order__c</code></span></div>
+          
           <div class="card-meta">Custom / 2 fields</div>
           
         </a>

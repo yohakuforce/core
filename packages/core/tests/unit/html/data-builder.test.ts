@@ -222,9 +222,103 @@ describe("buildDomains", () => {
 });
 
 describe("buildHotspots", () => {
-  it("Phase 3 ではプレースホルダ", () => {
+  it("空グラフでは items が空", () => {
     const result = buildHotspots(BASE as KnowledgeGraph);
     expect(result.items).toEqual([]);
-    expect(result.note).toContain("Phase 4");
+    expect(result.note).toContain("検出されませんでした");
+  });
+
+  it("懸念のある Apex を理由つきでスコアリングする", () => {
+    const graph: KnowledgeGraph = {
+      ...BASE,
+      apexClasses: [
+        {
+          fullyQualifiedName: "PaymentService",
+          apiVersion: "62.0",
+          isTest: false,
+          sourcePath: "PaymentService.cls",
+          contentHash: "h",
+          body: {
+            hasCallout: true,
+            hasTryCatch: false, // → HIGH: コールアウトに try/catch なし
+            methods: [],
+            soqlQueries: [],
+            dmlOperations: [],
+            classReferences: [],
+            classAnnotations: [],
+            controlFlows: [],
+          },
+        },
+      ],
+    } as unknown as KnowledgeGraph;
+    const result = buildHotspots(graph);
+    expect(result.items).toHaveLength(1);
+    const top = result.items[0];
+    expect(top?.name).toBe("PaymentService");
+    expect(top?.severity).toBe("HIGH");
+    expect(top?.score).toBeGreaterThan(0);
+    // try/catch なし(HIGH) と 対応テストなし(MEDIUM) の 2 件
+    expect(top?.reasons.some((r) => r.title.includes("try/catch"))).toBe(true);
+  });
+
+  it("被参照の多いオブジェクトを依存集中ホットスポットとして拾う", () => {
+    const obj = (fqn: string) => ({
+      fullyQualifiedName: fqn,
+      label: fqn,
+      isCustom: true,
+      sourcePath: `${fqn}.object`,
+      contentHash: "h",
+    });
+    const apex = (fqn: string, primaryObject: string) => ({
+      fullyQualifiedName: fqn,
+      apiVersion: "62.0",
+      isTest: false,
+      sourcePath: `${fqn}.cls`,
+      contentHash: "h",
+      body: {
+        hasCallout: false,
+        hasTryCatch: true,
+        methods: [],
+        soqlQueries: [{ primaryObject }],
+        dmlOperations: [],
+        classReferences: [],
+        classAnnotations: [],
+        controlFlows: [],
+      },
+    });
+    const graph: KnowledgeGraph = {
+      ...BASE,
+      objects: [obj("Hub__c")],
+      apexClasses: ["A", "B", "C", "D", "E"].map((n) => apex(n, "Hub__c")),
+    } as unknown as KnowledgeGraph;
+    const result = buildHotspots(graph);
+    const hub = result.items.find((i) => i.name === "Hub__c");
+    expect(hub).toBeDefined();
+    expect(hub?.reasons.some((r) => r.title.includes("中心的オブジェクト"))).toBe(true);
+  });
+
+  it("スコア降順に並び、上限 15 件に収める", () => {
+    const apexMany = Array.from({ length: 30 }, (_, i) => ({
+      fullyQualifiedName: `Cls${String(i).padStart(2, "0")}`,
+      apiVersion: "62.0",
+      isTest: false,
+      sourcePath: `Cls${i}.cls`,
+      contentHash: "h",
+      body: {
+        hasCallout: true,
+        hasTryCatch: false,
+        methods: [],
+        soqlQueries: [],
+        dmlOperations: [],
+        classReferences: [],
+        classAnnotations: [],
+        controlFlows: [],
+      },
+    }));
+    const graph = { ...BASE, apexClasses: apexMany } as unknown as KnowledgeGraph;
+    const result = buildHotspots(graph);
+    expect(result.items.length).toBeLessThanOrEqual(15);
+    const scores = result.items.map((it) => it.score);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 });
