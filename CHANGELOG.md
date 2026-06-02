@@ -15,6 +15,11 @@
 - **フローチャートの日本語化**: Mermaid / ツリーのノードを自然な日本語に (`Account を取得` / `o を登録` / `lines を 1 件ずつ繰り返す` / `o.Id を返す`、矢印も はい/いいえ・繰返)
 - **凡例ページ** (`legend.html`): 図形・ステップバッジ・項目値区分・色分け(事実/AI)を 1 枚に。全 component ページ右上からリンク
 - **LLM 役割拡張**: 項目設定詳細の抽出 (`field-writes` / `field-assignment-detail`)、計算項目・入力規則のレビュー (`calculation-review`) を ai_managed ブロックとして追加
+- **HTML カバレッジ拡張** (社内展開向け):
+  - SObject ページに周辺メタ章を追加: レコードタイプ / ページレイアウト / 承認プロセス / 共有ルール / アクセス権限 (PermissionSet・Profile)
+  - ホームに「組織設定」タブ: 名前付き認証情報 / リモートサイト設定 / カスタムアプリケーション / カスタムメタデータ
+  - 設定・UI 系メタデータのリファレンスページ: PermissionSet / Profile / FlexiPage / Visualforce Page・Component / Aura (ComponentType union 非依存の独立系統)
+  - **メールテンプレート (EmailTemplate)** を抽出層から新規対応 (graph / schema / sqlite round-trip + リファレンスページ)
 
 ### Changed
 
