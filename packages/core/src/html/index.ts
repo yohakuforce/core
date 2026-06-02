@@ -719,6 +719,13 @@ strong { color: var(--fg-strong); }
 .obj-tabs > input:nth-of-type(7):checked ~ .obj-tabpanel:nth-of-type(7),
 .obj-tabs > input:nth-of-type(8):checked ~ .obj-tabpanel:nth-of-type(8) { display: block; }
 
+/* Object 周辺メタ (レイアウト / 承認ステップ) */
+.layout-block { border: 1px solid var(--border); border-radius: var(--radius); margin: 8px 0; background: var(--bg-surface); padding: 4px 12px; }
+.layout-block > summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+.layout-block h4 { font-size: 13px; margin: 8px 0 4px; color: var(--fg-strong); }
+.approval-step { border-left: 3px solid var(--border-strong); padding: 2px 0 2px 12px; margin: 8px 0; }
+.approval-step h5 { font-size: 13px; margin: 4px 0; color: var(--fg-strong); }
+
 /* 凡例リンク (component ヘッダ) + 凡例ページの図形スウォッチ */
 .global-nav { margin-left: auto; }
 .global-nav .legend-link {

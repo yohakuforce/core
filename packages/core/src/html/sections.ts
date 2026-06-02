@@ -20,6 +20,11 @@ export const SECTION_IDS = [
   "field-writes", // 6.6 項目値の割り当て (apex/trigger: 触れるオブジェクト別タブ、LLM抽出)
   "field-assignment", // 4.5 項目値の割り当て (詳細設計: 項目ごとの値の決まり方・書き込み元)
   "calculation-rules", // 4.6 計算項目・入力規則 (詳細設計: 数式/入力規則の算出ロジック)
+  "record-types", // 4.7 レコードタイプ (object 周辺メタ)
+  "page-layouts", // 4.8 ページレイアウト (object 周辺メタ)
+  "approval-process", // 4.9 承認プロセス (object 周辺メタ)
+  "sharing-rules", // 4.10 共有ルール (object 周辺メタ)
+  "access-permissions", // 4.11 アクセス権限 (PermissionSet/Profile)
   "io-contract", // 7. 入出力契約 (params/returns / handlers)
   "test-coverage", // 8. テスト被覆 (既存テストへのリンク)
   "change-history", // 9. 変更履歴 (直近 N コミット)
@@ -41,7 +46,15 @@ export interface SectionDescriptor {
   readonly perType: Readonly<Record<ComponentType, SectionRequirement>>;
 }
 
-// 提案承認済みの12項目セクション仕様
+const OBJECT_RELATED_SECTIONS: readonly { id: SectionId; label: string }[] = [
+  { id: "record-types", label: "レコードタイプ" },
+  { id: "page-layouts", label: "ページレイアウト" },
+  { id: "approval-process", label: "承認プロセス" },
+  { id: "sharing-rules", label: "共有ルール" },
+  { id: "access-permissions", label: "アクセス権限" },
+];
+
+// 提案承認済みの基本12項目 + 詳細設計セクション
 // - 表現の凡例: required = 必須、optional = 任意、not-applicable = 出力対象外
 export const SECTION_SCHEMA: readonly SectionDescriptor[] = [
   {
@@ -166,6 +179,21 @@ export const SECTION_SCHEMA: readonly SectionDescriptor[] = [
       flow: "not-applicable",
     },
   },
+  ...OBJECT_RELATED_SECTIONS.map(
+    ({ id, label }) =>
+      ({
+        id,
+        label,
+        source: "deterministic",
+        perType: {
+          apex: "not-applicable",
+          trigger: "not-applicable",
+          lwc: "not-applicable",
+          object: "optional",
+          flow: "not-applicable",
+        },
+      }) satisfies SectionDescriptor,
+  ),
   {
     id: "io-contract",
     label: "入出力契約",

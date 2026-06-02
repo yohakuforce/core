@@ -7,6 +7,13 @@ import { escapeHtml } from "../escape.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import { buildCalculationRulesSection, buildFieldAssignmentSection } from "./object-detail.js";
 import {
+  buildAccessSection,
+  buildApprovalSection,
+  buildLayoutsSection,
+  buildRecordTypesSection,
+  buildSharingSection,
+} from "./object-related.js";
+import {
   changeHistorySection,
   emptyLlmPlaceholderSection,
   impactHintSection,
@@ -39,6 +46,11 @@ export function buildObjectViewModel(
     publicInterfaceSection(obj, fields),
     buildFieldAssignmentSection(obj, fields, graph, (id) => preservedBlocks?.get(id)),
     buildCalculationRulesSection(obj, fields, graph, (id) => preservedBlocks?.get(id)),
+    buildRecordTypesSection(obj, graph),
+    buildLayoutsSection(obj, graph),
+    buildApprovalSection(obj, graph),
+    buildSharingSection(obj, graph),
+    buildAccessSection(obj, graph),
     changeHistorySection(obj.sourcePath, gitCwd),
     impactHintSection(`SObject:${obj.fullyQualifiedName}`),
     relatedDomainsSection("object", obj.fullyQualifiedName, graph),
