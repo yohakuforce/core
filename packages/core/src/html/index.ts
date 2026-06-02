@@ -20,6 +20,7 @@ import { renderHomeHtml } from "./home.js";
 import { buildLegendPage } from "./legend.js";
 import { renderComponentPage } from "./page-template.js";
 import { preserveAiManagedBlocks } from "./preserve-blocks.js";
+import { collectReferencePages } from "./reference-page.js";
 import { METHOD_FLOWCHART_JS } from "./render-method-flow.js";
 import { TYPE_INDEX_JS, renderTypeIndexPage } from "./render-type-index.js";
 import { buildSearchIndex } from "./search-index.js";
@@ -219,6 +220,14 @@ export function renderHtmlAll(
     "utf8",
   );
   written.push(legendPath);
+
+  // Phase 3: 設定・UI 系メタデータのリファレンスページ (PermissionSet/Profile/FlexiPage/VF/Aura)
+  for (const page of collectReferencePages(graph)) {
+    const refPath = join(htmlOutDir, page.relativePath);
+    mkdirSync(dirname(refPath), { recursive: true });
+    writeFileSync(refPath, page.html, "utf8");
+    written.push(refPath);
+  }
 
   warnings.push({ code: "phase_notice", message: HOME_PHASE_NOTICE });
 

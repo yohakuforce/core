@@ -11,6 +11,7 @@ import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./da
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
 import { renderOrgSettingsPanel } from "./org-settings.js";
+import { referenceSidebarGroups } from "./reference-page.js";
 
 const TYPE_ICON_NAME: Record<string, "apex" | "trigger" | "lwc" | "object" | "flow"> = {
   apex: "apex",
@@ -68,6 +69,12 @@ export function renderHomeHtml(
         .sort((a, b) => a.fullyQualifiedName.localeCompare(b.fullyQualifiedName))
         .map((f) => ({ name: f.fullyQualifiedName })),
     },
+    // Phase 3: 設定・UI 系メタデータのリファレンス (folder アイコンにフォールバック)
+    ...referenceSidebarGroups(graph).map((g) => ({
+      type: g.key,
+      label: g.label,
+      items: g.names.map((name) => ({ name })),
+    })),
   ];
 
   // file:// で開いても動くよう、JSON をインライン埋め込みする。
