@@ -187,8 +187,8 @@ function escapeJsonForScript(s: string): string {
 
 function renderSidebarGroup(g: SidebarGroup): string {
   const iconName = TYPE_ICON_NAME[g.type] ?? "folder";
-  // 初期状態: コンポーネントが多いタイプは折り畳む (>15 件)
-  const initialCollapsed = g.items.length > 15 ? "true" : "false";
+  // 初期状態は全グループ折りたたみ (クリックで展開)
+  const initialCollapsed = "true";
   return `<div class="sidebar-group" data-collapsed="${initialCollapsed}" data-type="${escapeAttr(g.type)}">
         <button class="sidebar-group-header" data-toggle="${escapeAttr(g.type)}">
           <span class="chevron">${icon("chevron-right", { size: "14", className: "icon chevron" })}</span>
