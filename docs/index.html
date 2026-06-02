@@ -213,7 +213,7 @@
     <div class="chips">
       <span class="chip"><b>コア</b> — 決定的な知識足場（OSS）</span>
       <span class="chip"><b>コンテクストハブ</b> — 文脈の収集・提供（OSS）</span>
-      <span class="chip"><b>AIマネージャー</b> — 進行管理の5能力（社内）</span>
+      <span class="chip"><b>AIマネージャー</b> — 進行管理の7能力（社内）</span>
     </div>
     <div class="toc">
       <button data-go="core">コアの詳細 →</button>
@@ -228,7 +228,7 @@
     <div class="grid g3">
       <div class="card role"><div class="layer">layer · core</div><h3>コア</h3><p class="muted">Salesforce メタデータを SQLite 知識グラフ化し、決定的に Markdown を生成する CLI。LLMを呼ばず出所を管理する「足場」。</p><div class="meta"><span class="pill">@yohakuforce/core</span><span class="pill"><span class="d">v</span>0.5.0</span></div></div>
       <div class="card role"><div class="layer">layer · context-hub</div><h3>コンテクストハブ</h3><p class="muted">Slack / Backlog / Redmine / Gmail / 会議メモ を取り込み、検索・文脈・タスクを提供する MCP ネイティブ基盤。顧客データは社内に閉じる。</p><div class="meta"><span class="pill">yohakuforce-context-hub</span><span class="pill"><span class="d">v</span>0.3.0</span></div></div>
-      <div class="card role"><div class="layer">layer · ai-manager</div><h3>AIマネージャー</h3><p class="muted">ハブの文脈をもとに、計画・割当・進捗追跡・アラート・経営サマリの5能力でプロジェクト進行を回す社内アプリ。</p><div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span></div></div>
+      <div class="card role"><div class="layer">layer · ai-manager</div><h3>AIマネージャー</h3><p class="muted">ハブの文脈をもとに、計画・割当・進捗追跡・アラート・経営サマリ・朝会・総括の7能力でプロジェクト進行を回す社内アプリ。要所はリーダー確認ゲートで人が判断する。</p><div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span></div></div>
     </div>
   </section>
 
@@ -274,11 +274,12 @@
     <div class="flowtags">
       <span class="ft">会議メモ取込</span><span class="ar">→</span>
       <span class="ft">ハブが文脈化・タスク抽出</span><span class="ar">→</span>
-      <span class="ft">AIマネージャーが計画</span><span class="ar">→</span>
-      <span class="ft">担当割当</span><span class="ar">→</span>
-      <span class="ft">日報・進捗追跡</span><span class="ar">→</span>
-      <span class="ft">遅延アラート</span><span class="ar">→</span>
-      <span class="ft">経営サマリ</span>
+      <span class="ft">計画・割当</span><span class="ar">→</span>
+      <span class="ft">朝会（9:00）</span><span class="ar">→</span>
+      <span class="ft">日報（14:00）</span><span class="ar">→</span>
+      <span class="ft">催促（17:00）</span><span class="ar">→</span>
+      <span class="ft">総括＋確認ゲート（17:30）</span><span class="ar">→</span>
+      <span class="ft">リーダー確認後の全体分析</span>
     </div>
     <p class="muted">各タブで、それぞれの仕組みが「何ができるか」を機能・コマンド・API のレベルまで確認できます。「連携」タブでは三層を繋いだ全体フローを示します。</p>
   </section>
@@ -415,76 +416,108 @@ POST /api/v1/projects/{id}/ingest/slack  { "messages":[ … ] }</pre></li>
 <div class="panel" id="manager" role="tabpanel">
   <section>
     <div class="section-head"><span class="num">ai-manager</span><h2>AIマネージャー / AI-Project-Manager</h2></div>
-    <p class="lead">コンテクストハブの文脈をもとに、プロジェクト進行を5つの能力で回す。会議や課題からタスクを起こし、担当に割り当て、日報で追跡し、遅延を検知し、経営サマリにまとめる。文脈はハブから REST で取得し、進行データは自前の PostgreSQL に保持する。</p>
-    <div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span><span class="pill">REST :8001</span><span class="pill">PostgreSQL</span></div>
+    <p class="lead">コンテクストハブの文脈をもとに、プロジェクト進行を7つの能力で回す。会議や課題からタスクを起こし、担当に割り当て、朝会で前日を振り返り、日報で追跡し、未提出を催促し、遅延を検知し、当日を総括する。AI が定型を回し、<b>判断が必要な要所はリーダー確認ゲートで人が決める</b>。文脈はハブから REST で取得し、進行データは自前の PostgreSQL に保持する。</p>
+    <div class="meta"><span class="pill">AI-Project-Manager</span><span class="pill">private</span><span class="pill">REST :8001</span><span class="pill">PostgreSQL</span><span class="pill">tz: Asia/Tokyo</span></div>
 
-    <h3><span class="x">01</span>5つの能力（詳細）</h3>
+    <div class="note"><b>このページの読み方。</b>以下で「7能力 → 一日のタイムライン → リーダー確認ゲート → 日報の仕組みと型 → 朝会 → アラートの型 → 実行モデル → API → セットアップ」の順に、何ができて・どう使うかを型レベルまで記載しています。これさえ見れば運用イメージが掴めます。</div>
+
+    <h3><span class="x">01</span>7つの能力（詳細）</h3>
     <div class="frow"><div class="k">Plan · 計画<span class="s">extract / import</span></div><div class="v"><b>会議メモ</b>（ハブの <code class="inl">get_meeting</code> の抽出タスク）と <b>Backlog/Redmine 課題</b>（ステータス絞り込み可）からタスクを自動生成し、プロジェクトに取り込む。初期開発案件でも「最初からAIがタスクを切る」状態をつくる。</div></div>
-    <div class="frow"><div class="k">Assign · 割当<span class="s">draft / confirm</span></div><div class="v">メンバーのスキル・稼働状況・負荷をふまえて担当案（draft）を生成。PM が承認 / 却下して確定する。</div></div>
-    <div class="frow"><div class="k">Track · 進捗追跡<span class="s">report / analyze</span></div><div class="v">日報テンプレを生成・配信し、回答を集約。回答を分析してブロッカーを抽出する。</div></div>
-    <div class="frow"><div class="k">Alert · アラート<span class="s">scan</span></div><div class="v">プロジェクトをスキャンし <b>タスク遅延 / メンバー過負荷 / 顧客（日報）未回答</b> を検知して通知。確認・解決の状態管理つき。</div></div>
-    <div class="frow"><div class="k">Overview · 経営サマリ<span class="s">summary / phase</span></div><div class="v">タスク状態・日報提出状況・アクティブアラートを集約した日次サマリと、フェーズ進捗（計画対実績）を生成。</div></div>
+    <div class="frow"><div class="k">Assign · 割当<span class="s">draft / confirm</span></div><div class="v">メンバーのスキル・稼働状況・負荷をふまえて担当案（<code class="inl">draft</code>）を生成。リーダー / PM が承認 / 却下して確定する。<b>AIは提案、人が承認</b>が不変条件。</div></div>
+    <div class="frow"><div class="k">Track · 進捗追跡<span class="s">report / remind / analyze</span></div><div class="v">日報テンプレを生成・配信し、回答を集約・分析してブロッカーを抽出。<b>未提出者には本人へ催促＋リーダーへ未提出一覧</b>を出す。</div></div>
+    <div class="frow"><div class="k">Alert · アラート<span class="s">scan</span></div><div class="v">プロジェクトをスキャンし <b>タスク遅延 / メンバー過負荷 / 日報未回答</b> を検知して通知。確認・解決の状態管理つき。背景で 30 分間隔に稼働。</div></div>
+    <div class="frow"><div class="k">Overview · 経営サマリ<span class="s">summary / phase</span></div><div class="v">タスク状態・日報提出状況・アクティブアラートを集約した日次サマリと、フェーズ進捗（計画対実績）を生成。総括・全体分析の土台。</div></div>
+    <div class="frow"><div class="k">Standup · 朝会<span class="s">9:00</span></div><div class="v"><b>前日の日報・出来事（ハブの課題更新）・昨日のアサインをレビュー</b>し、問題タスク（過負荷者保有・期日超過・ブロック）には別メンバーへの DRAFT 入替案を添えてリーダーへスタンドアップ共有。</div></div>
+    <div class="frow"><div class="k">WrapUp / Status · 総括<span class="s">17:30 + gate</span></div><div class="v">当日を総括し<b>リーダー確認ゲート</b>を起票。リーダー確認後に、全体ステータスレポート（順調 / 要注意）の生成と未割当タスクの DRAFT アサインを実行して報告する。</div></div>
 
-    <h3><span class="x">02</span>能力フロー</h3>
-    <div class="figure">
-      <div class="pipe">
-        <div class="pnode em"><div class="t">Plan</div><div class="s">計画</div></div>
-        <div class="pgo"></div>
-        <div class="pnode"><div class="t">Assign</div><div class="s">割当</div></div>
-        <div class="pgo"></div>
-        <div class="pnode"><div class="t">Track</div><div class="s">追跡</div></div>
-        <div class="pgo"></div>
-        <div class="pnode"><div class="t">Alert</div><div class="s">アラート</div></div>
-        <div class="pgo"></div>
-        <div class="pnode"><div class="t">Overview</div><div class="s">サマリ</div></div>
-      </div>
-      <div class="figcap">図 4 — Plan は会議・課題（コンテクストハブ）を入力に起動する。5 能力はそれぞれ REST エンドポイントとして実行される。</div>
-    </div>
-
-    <h3><span class="x">03</span>いつ・何が動くか — 一日の運用</h3>
-    <p class="muted">内蔵スケジューラ（APScheduler）が設定時刻に各能力を自動実行する。時刻は設定 GUI（<code class="inl">/settings</code>）で自由に調整でき、既定は <b>経営サマリ 7:00 / 日報配信 8:00 / アラートスキャン 30 分間隔</b>。<b>処理の順序は時刻設定に関わらず常に固定</b>（経営サマリ→日報生成→日報配信→アラート）で、ユーザーがどんな時刻を設定しても入れ替わらない。</p>
+    <h3><span class="x">02</span>いつ・何が動くか — 一日の運用タイムライン</h3>
+    <p class="muted">内蔵スケジューラ（APScheduler）が設定時刻に各フェーズを自動実行する。時刻（時・分）は設定 GUI（<code class="inl">/settings</code>）で自由に調整でき、既定は <b>朝会 9:00 / 日報 14:00 / 催促 17:00 / 総括 17:30 / アラート 30 分間隔</b>。<b>処理の順序は時刻設定に関わらず常に固定</b>（standup → report_generate → report_deliver → report_reminder → wrap_up → alert_scan）で、どんな時刻を設定しても入れ替わらない。<b>リーダー確認後の全体分析（final_analysis）だけは時刻ではなく人の確認で発火</b>する。</p>
     <div class="figure">
       <div class="timeline">
         <div class="tl-row">
-          <div class="tl-when">07:00<span class="sub">毎朝</span></div>
-          <div class="tl-body auto"><h4>経営サマリ生成<span class="who">Overview · 自動</span></h4>
-            <p>前日のタスク状態・日報提出状況・アクティブアラートを集約し、AI が日次サマリとフェーズ進捗（計画対実績）を生成。PM はこれを見て一日を始める。</p>
-            <span class="api">POST /overview/daily-summary · /overview/phase-progress</span></div>
+          <div class="tl-when">09:00<span class="sub">毎朝</span></div>
+          <div class="tl-body auto"><h4>朝会（スタンドアップ）＋アサイン点検<span class="who">Standup · 自動</span></h4>
+            <p>前日の日報・ブロッカー、ハブの課題更新（出来事）、昨日のアサインをレビュー。過負荷・期日超過・ブロックの問題タスクには別メンバーへの DRAFT 入替案を作り、スタンドアップとしてリーダーへ共有する。最終判断はリーダー。</p>
+            <span class="api">POST /pipeline/standup</span></div>
         </div>
         <div class="tl-row">
-          <div class="tl-when">08:00<span class="sub">毎朝</span></div>
+          <div class="tl-when">14:00<span class="sub">毎日</span></div>
           <div class="tl-body auto"><h4>日報テンプレ生成 → 配信<span class="who">Track · 自動</span></h4>
             <p>その日の担当タスクから質問を動的に組み立て、メンバーごとの日報を生成。各メンバーのチャネル（Slack DM / Sheets / ローカル）へ配信する。</p>
             <span class="api">POST /track/generate-templates → /track/deliver</span></div>
         </div>
         <div class="tl-row">
           <div class="tl-when">日中<span class="sub">随時</span></div>
-          <div class="tl-body"><h4>回答の収集<span class="who">メンバー</span></h4>
-            <p>メンバーが配信された日報に回答。AI マネージャーが受信して記録し、提出済みに更新する。</p>
-            <span class="api">POST /track/submit-responses</span></div>
+          <div class="tl-body"><h4>回答の収集 → AI 分析<span class="who">メンバー → 自動</span></h4>
+            <p>メンバーが配信された日報に回答。受信して記録・提出済みに更新し、AI が進捗サマリとブロッカーを抽出する。</p>
+            <span class="api">POST /track/submit-responses → /track/analyze</span></div>
         </div>
         <div class="tl-row">
-          <div class="tl-when">回答後<span class="sub">自動</span></div>
-          <div class="tl-body auto"><h4>AI 分析 → ブロッカー抽出<span class="who">Track · 自動</span></h4>
-            <p>回答を AI が解析し、進捗サマリとブロッカーを抽出。検出したブロッカーは以降のアラート・経営サマリに反映される。</p>
-            <span class="api">POST /track/analyze</span></div>
+          <div class="tl-when">17:00<span class="sub">毎日</span></div>
+          <div class="tl-body auto"><h4>日報未提出の催促<span class="who">Track · 自動</span></h4>
+            <p>未提出（生成済み・配信済みのまま回答なし）のメンバー本人へ DM で催促し、リーダーへ未提出者一覧を提示する。</p>
+            <span class="api">POST /pipeline/&hellip; (report_reminder)</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">17:30<span class="sub">毎日</span></div>
+          <div class="tl-body auto"><h4>当日総括 ＋ リーダー確認ゲート起票<span class="who">WrapUp · 自動</span></h4>
+            <p><b>全員提出済み</b>なら総括を生成し注目タスクを添えてリーダーへ共有、「タスク状態は最新か」確認ゲートを起票。<b>未提出が残る</b>なら「未提出があるが総括するか」判断ゲートを起票してリーダーへ打診する。</p>
+            <span class="api">POST /pipeline/wrap-up</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">確認後<span class="sub">リーダー</span></div>
+          <div class="tl-body"><h4>リーダーがゲートを解決<span class="who">リーダー</span></h4>
+            <p>リーダーが API / GUI でゲートを <code class="inl">proceed</code> / <code class="inl">skip</code> 解決。「タスク状態は最新」と確認（proceed）すると次の全体分析が発火する。</p>
+            <span class="api">POST /pipeline/{projectId}/gates/{gateId}/resolve</span></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-when">解決直後<span class="sub">自動</span></div>
+          <div class="tl-body auto"><h4>全体ステータス分析 ＋ 未割当アサイン<span class="who">Status · 自動</span></h4>
+            <p>タスク状態・日報提出・アクティブアラートを集約し、全体ステータスレポート（🟢順調 / 🟡要注意）を生成。未割当タスクには DRAFT アサインを作り、リーダーへ報告する。</p>
+            <span class="api">POST /pipeline/final-analysis</span></div>
         </div>
         <div class="tl-row">
           <div class="tl-when">30分毎<span class="sub">終日</span></div>
           <div class="tl-body auto"><h4>アラートスキャン<span class="who">Alert · 自動</span></h4>
-            <p>タスク遅延・メンバー過負荷（推定残時間 40h 超）・日報未回答を検知し、アラートを生成して通知チャンネルへ。確認・解決の状態管理つき。</p>
+            <p>タスク遅延・メンバー過負荷・日報未回答を検知し、アラートを生成して通知チャンネルへ。確認・解決の状態管理つき。</p>
             <span class="api">POST /alerts/scan</span></div>
         </div>
       </div>
       <div class="legend">
         <span><span class="dot fill"></span>自動実行（設定時刻 / 間隔で起動）</span>
-        <span><span class="dot"></span>人が関与（回答・承認・確認）</span>
+        <span><span class="dot"></span>人が関与（回答・承認・ゲート解決）</span>
       </div>
-      <div class="figcap">図 5 — 一日の運用ループ。設定した時刻に各能力の REST エンドポイントが実行される。</div>
+      <div class="figcap">図 4 — 一日の運用ループ。9:00 朝会から 17:30 総括までが自動で進み、リーダーがゲートを解決すると全体分析が発火する。</div>
     </div>
-    <div class="note"><b>Plan・Assign はイベント駆動。</b>計画（Plan）と割当（Assign）は時刻ではなく<b>新しい会議メモ・課題が増えたとき</b>（プロジェクト発足時・スプリント開始時など）に実行する。Assign だけは AI が割当案を作り、<b>PM が承認 / 却下して確定</b>する人の関門を挟む。</div>
+    <div class="note"><b>Plan・Assign はイベント駆動。</b>計画（Plan）と割当（Assign）は時刻ではなく<b>新しい会議メモ・課題が増えたとき</b>（プロジェクト発足時・スプリント開始時など）に実行する。日々のタイムラインとは独立。</div>
+    <div class="note boundary"><b>順序はユーザー操作で壊れない。</b>調整できるのは各フェーズの時刻（時・分）だけで、実行順序は内部で固定。複数フェーズを同じ時刻にしても 1 ジョブにまとめて正しい順に逐次実行し、スキャン間隔を極端に短くしても多重起動・滞留しないよう同時実行を 1 つに集約する。不正な時刻 / 分は既定値へ丸めて停止しない。1 プロジェクト / 1 ステップの失敗は記録のみで他に波及しない。</div>
 
-    <h3><span class="x">04</span>日報のライフサイクル — 作成・共有・収集・分析</h3>
+    <h3><span class="x">03</span>リーダー確認ゲート — 人間判断のトリガー</h3>
+    <p class="muted">時刻では進められない「人間の確認・判断」を待つ仕組み。総括（17:30）でゲートが起票され、リーダーが解決した瞬間に後続処理が発火する。<b>確認が翌日になっても保持される（PostgreSQL 永続化）</b>。</p>
+    <div class="figure">
+      <div class="pipe">
+        <div class="pnode"><div class="t">17:30 総括</div><div class="s">提出状況で分岐</div></div>
+        <div class="pgo"></div>
+        <div class="pnode em"><div class="t">ゲート起票</div><div class="s">pending で待機</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">リーダー解決</div><div class="s">proceed / skip</div></div>
+        <div class="pgo"></div>
+        <div class="pnode"><div class="t">後続が発火</div><div class="s">総括継続 / 全体分析</div></div>
+      </div>
+      <div class="loopnote">未提出が残る場合 <span class="rt">→</span> まず「総括するか」を尋ね、proceed なら総括 → 次のゲートへ</div>
+      <div class="figcap">図 5 — ゲートは pending で待機し、リーダーの判断（proceed / skip）で後続を発火する。</div>
+    </div>
+    <table>
+      <tr><th>ゲートの型</th><th>いつ起票</th><th>問い</th><th>proceed で起こること</th></tr>
+      <tr><td><b>wrap_up_decision</b></td><td>17:30 に未提出が残るとき</td><td>未提出があるが総括するか</td><td>総括を生成し <code class="inl">task_state_current</code> ゲートを起票</td></tr>
+      <tr><td><b>task_state_current</b></td><td>総括の直後</td><td>タスク状態は最新か</td><td>全体ステータス分析＋未割当 DRAFT アサインを発火</td></tr>
+    </table>
+    <div class="frow"><div class="k">状態<span class="s">status</span></div><div class="v"><code class="inl">pending</code>（判断待ち）→ <code class="inl">resolved</code>（解決済み）。解決済みゲートの再解決はできない。</div></div>
+    <div class="frow"><div class="k">判断<span class="s">decision</span></div><div class="v"><code class="inl">proceed</code>（進める：総括する / 確認した）または <code class="inl">skip</code>（進めない：その日の総括はしない）。誰が解決したかも記録。</div></div>
+    <div class="frow"><div class="k">永続化<span class="s">persistence</span></div><div class="v"><code class="inl">USE_DATABASE=true</code> で <b>PostgreSQL に保存</b>（テーブル <code class="inl">leader_gates</code>、マイグレーション <code class="inl">0002</code>）。プロセス再起動を跨いで pending ゲートが残り、<b>リーダーは翌日でも解決できる</b>。dev / テストはインメモリ。</div></div>
+    <div class="note"><b>宛先。</b>リーダー向けの共有・打診は設定の通知チャネル（例 Slack <code class="inl">#ai-pm-alerts</code>）へ、本人向けの催促は各メンバーの DM へ送る。</div>
+
+    <h3><span class="x">04</span>日報の仕組みと型 — 作成・共有・収集・分析</h3>
     <div class="figure">
       <div class="pipe">
         <div class="pnode"><div class="t">① 作成</div><div class="s">タスクから動的生成</div></div>
@@ -495,38 +528,93 @@ POST /api/v1/projects/{id}/ingest/slack  { "messages":[ … ] }</pre></li>
         <div class="pgo"></div>
         <div class="pnode"><div class="t">④ AI 分析</div><div class="s">サマリ + ブロッカー</div></div>
       </div>
-      <div class="loopnote">検出したブロッカー・未回答は <span class="rt">→</span> アラート / 翌朝の経営サマリへ反映</div>
+      <div class="loopnote">未提出は <span class="rt">→</span> 17:00 催促・アラートへ／ブロッカーは <span class="rt">→</span> 総括・全体分析へ反映</div>
       <div class="figcap">図 6 — 日報は「タスク状態から作られ、各メンバーへ配信され、回答が集約され、AI が分析する」一連で回る。</div>
     </div>
-    <div class="frow"><div class="k">① 作成<span class="s">dynamic template</span></div><div class="v">メンバーの担当タスクごとに「<b>進捗率（0〜100）</b>」と「<b>ブロッカー有無</b>」の質問を生成。ブロック中のタスクには「<b>顧客確認の要否</b>」を追加。担当タスクが無ければ自由記述のみ。当日分が既にあるメンバーは二重生成せずスキップ。</div></div>
-    <div class="frow"><div class="k">② 配信（共有）<span class="s">multi-channel</span></div><div class="v">メンバーの <code class="inl">external_id</code> を Slack のチャネル / DM として解決して配信。未設定なら既定チャネルへフォールバック。配信は Slack / Google Sheets / ローカルファイルから選択。</div></div>
-    <div class="frow"><div class="k">③ 収集<span class="s">submit</span></div><div class="v">メンバーの回答を受信して日報に記録、提出済みへ更新。配信済みで未回答のものは Alert の「日報未回答」スキャンが拾う。</div></div>
-    <div class="frow"><div class="k">④ AI 分析<span class="s">analyze</span></div><div class="v">回答を AI が解析して進捗サマリを生成し、ブロッカーを構造化抽出。「なし」以外のブロッカー回答は経営サマリ・アラートの材料になる。</div></div>
 
-    <h3><span class="x">05</span>実行モデル — トリガーと承認</h3>
+    <h4 style="font-size:13px;font-weight:700;letter-spacing:.04em;margin:24px 0 8px;color:var(--ink-soft);">日報の質問型（4種）</h4>
+    <p class="muted" style="margin-top:0;">日報テンプレは固定様式ではなく、<b>その日の担当タスクの状態から動的に組み立てられる</b>。担当タスクごとに以下の質問が積み上がる。</p>
     <table>
-      <tr><th>能力</th><th>実行タイミング</th><th>トリガー</th><th>人の関与</th></tr>
-      <tr><td><b>Plan</b></td><td>会議・課題の発生時</td><td>取込イベント / 手動</td><td>—（自動でタスク化）</td></tr>
-      <tr><td><b>Assign</b></td><td>Plan 直後</td><td>AI が割当案を生成</td><td><b>PM が承認 / 却下</b></td></tr>
-      <tr><td><b>Track</b></td><td>毎日（配信 8:00 → 回答 → 分析）</td><td>スケジュール</td><td>メンバーが回答</td></tr>
-      <tr><td><b>Alert</b></td><td>30 分ごと（終日）</td><td>スケジュール</td><td>確認・解決を操作</td></tr>
-      <tr><td><b>Overview</b></td><td>毎朝 7:00</td><td>スケジュール</td><td>閲覧して意思決定</td></tr>
+      <tr><th>質問型</th><th>内容</th><th>付与条件</th></tr>
+      <tr><td><b>progress_percent</b><br><span class="muted">進捗率</span></td><td>「〈タスク名〉の進捗率（0〜100）を入力してください」</td><td>担当タスクごとに1問</td></tr>
+      <tr><td><b>blocker</b><br><span class="muted">ブロッカー</span></td><td>「〈タスク名〉にブロッカーや課題があれば記入（なければ『なし』）」</td><td>担当タスクごとに1問</td></tr>
+      <tr><td><b>customer_pending</b><br><span class="muted">顧客確認</span></td><td>「〈タスク名〉のブロック解除に顧客への確認が必要か」</td><td>ブロック中タスクのみ追加</td></tr>
+      <tr><td><b>free_text</b><br><span class="muted">自由記述</span></td><td>担当ありなら「その他の共有事項」、担当なしなら「本日の作業内容と成果」</td><td>常に末尾に1問</td></tr>
     </table>
-    <div class="note"><b>AI が回し、人は要所だけ。</b>取込・タスク化・日報配信・分析・アラート・サマリは自動で回る。人が手を入れるのは「割当の承認」「日報への回答」「アラートの解決判断」だけ — 進行管理の定型は AI に任せ、人は判断に集中する。</div>
-    <div class="note boundary"><b>順序はユーザー操作で壊れない。</b>調整できるのは時刻だけで、実行順序は内部で固定。経営サマリと日報配信を同じ時刻にしても 1 ジョブにまとめて正しい順に逐次実行し、スキャン間隔を極端に短くしても多重起動・滞留しないよう同時実行を 1 つに集約する。不正な時刻は既定値へ丸めて停止しない。</div>
 
-    <h3><span class="x">06</span>配信とインターフェース</h3>
+    <h4 style="font-size:13px;font-weight:700;letter-spacing:.04em;margin:24px 0 8px;color:var(--ink-soft);">日報のステータス遷移（4状態）</h4>
+    <div class="flowtags">
+      <span class="ft">pending</span><span class="ar">→</span>
+      <span class="ft">delivered</span><span class="ar">→</span>
+      <span class="ft">submitted</span><span class="ar">→</span>
+      <span class="ft">analyzed</span>
+    </div>
+    <table>
+      <tr><th>状態</th><th>意味</th></tr>
+      <tr><td><b>pending</b></td><td>テンプレ生成済み・未配信</td></tr>
+      <tr><td><b>delivered</b></td><td>メンバーへ配信済み（未回答ならここで催促・アラートの対象）</td></tr>
+      <tr><td><b>submitted</b></td><td>メンバーが回答を送信</td></tr>
+      <tr><td><b>analyzed</b></td><td>AI が解析しサマリ・ブロッカーを付与</td></tr>
+    </table>
+
+    <div class="frow"><div class="k">① 作成<span class="s">dynamic template</span></div><div class="v">上記の質問型を担当タスク状態から組み立てる。担当タスクが無ければ自由記述のみ。<b>当日分が既にあるメンバーは二重生成せずスキップ</b>。</div></div>
+    <div class="frow"><div class="k">② 配信（共有）<span class="s">multi-channel</span></div><div class="v">メンバーの <code class="inl">external_id</code> を Slack のチャネル / DM として解決して配信。未設定なら既定チャネルへフォールバック。Slack / Google Sheets / ローカルから選択。</div></div>
+    <div class="frow"><div class="k">③ 収集<span class="s">submit</span></div><div class="v">回答を受信して記録、submitted へ更新。配信済みで未回答のものは 17:00 催促と「日報未回答」アラートが拾う。</div></div>
+    <div class="frow"><div class="k">④ AI 分析<span class="s">analyze</span></div><div class="v">回答を解析して進捗サマリを生成し、ブロッカーを構造化抽出。「なし」以外のブロッカーは総括・全体分析・アラートの材料になる。</div></div>
+
+    <h3><span class="x">05</span>朝のスタンドアップ（9:00）の中身</h3>
+    <div class="frow"><div class="k">前日レビュー<span class="s">yesterday</span></div><div class="v">前日の日報の提出状況とブロッカー、現在の期日超過・ブロック中タスクを集約。</div></div>
+    <div class="frow"><div class="k">出来事の取り込み<span class="s">context-hub</span></div><div class="v">ハブから<b>前日更新の課題</b>（<code class="inl">get_issues(updatedSince=昨日)</code>）を取得して「昨日の出来事」に反映。取得できない場合もスタンドアップは止めずに継続。</div></div>
+    <div class="frow"><div class="k">アサイン妥当性の点検<span class="s">reassign draft</span></div><div class="v">昨日の確定アサインを点検し、<b>過負荷者が保有 / 期日超過 / ブロック</b>のタスクを問題として抽出。妥当なら<b>別メンバーへの DRAFT 入替案</b>を生成（現担当は除外して選定）。提案に留め、入替の確定はリーダーが判断。</div></div>
+    <div class="frow"><div class="k">共有<span class="s">narrative</span></div><div class="v">以上を AI が日本語のスタンドアップにまとめ、リーダーチャネルへ共有する。</div></div>
+
+    <h3><span class="x">06</span>アラートの型と検知</h3>
+    <table>
+      <tr><th>カテゴリ</th><th>検知条件</th><th>重要度</th></tr>
+      <tr><td><b>task_delay</b><br><span class="muted">タスク遅延</span></td><td>期日超過（即時）</td><td>3日以上=critical / 1日以上=high / 当日=medium</td></tr>
+      <tr><td><b>member_overload</b><br><span class="muted">メンバー過負荷</span></td><td>未完了の確認済みタスクが 5 件以上（推定残時間も併記）</td><td>high</td></tr>
+      <tr><td><b>customer_no_response</b><br><span class="muted">日報未回答</span></td><td>配信済みのまま N 日（既定 1 日）未回答</td><td>medium</td></tr>
+    </table>
+    <div class="frow"><div class="k">重複抑止<span class="s">dedup</span></div><div class="v">同じ対象に既存のアクティブアラートがあれば再生成しない。</div></div>
+    <div class="frow"><div class="k">状態管理<span class="s">lifecycle</span></div><div class="v"><code class="inl">active</code> → <code class="inl">acknowledged</code>（確認） → <code class="inl">resolved</code>（解決）。必ず「なぜ鳴ったか」の根拠（evidence）を添える。</div></div>
+
+    <h3><span class="x">07</span>実行モデル — トリガーと承認</h3>
+    <table>
+      <tr><th>能力 / フェーズ</th><th>実行タイミング</th><th>トリガー</th><th>人の関与</th></tr>
+      <tr><td><b>Plan</b></td><td>会議・課題の発生時</td><td>取込イベント / 手動</td><td>—（自動でタスク化）</td></tr>
+      <tr><td><b>Assign</b></td><td>Plan 直後</td><td>AI が割当案を生成</td><td><b>リーダーが承認 / 却下</b></td></tr>
+      <tr><td><b>Standup</b></td><td>毎朝 9:00</td><td>スケジュール</td><td>共有を読み、入替案を判断</td></tr>
+      <tr><td><b>Track（日報）</b></td><td>14:00 配信 → 回答 → 分析</td><td>スケジュール</td><td>メンバーが回答</td></tr>
+      <tr><td><b>Track（催促）</b></td><td>毎日 17:00</td><td>スケジュール</td><td>本人が提出 / リーダーが把握</td></tr>
+      <tr><td><b>WrapUp（総括）</b></td><td>毎日 17:30</td><td>スケジュール</td><td><b>リーダーがゲートを解決</b></td></tr>
+      <tr><td><b>Status（全体分析）</b></td><td>確認ゲート解決後</td><td>リーダーの確認（イベント）</td><td>DRAFT アサインを承認 / 却下</td></tr>
+      <tr><td><b>Alert</b></td><td>30 分ごと（終日）</td><td>スケジュール</td><td>確認・解決を操作</td></tr>
+    </table>
+    <div class="note"><b>AI が回し、人は要所だけ。</b>取込・タスク化・朝会・日報配信・分析・催促・総括・アラートは自動で回る。人が手を入れるのは「割当の承認」「日報への回答」「確認ゲートの解決」「アラートの解決判断」だけ — 進行管理の定型は AI に任せ、人は判断に集中する。</div>
+
+    <h3><span class="x">08</span>API・配信・インターフェース</h3>
+    <table>
+      <tr><th>エンドポイント</th><th>役割</th></tr>
+      <tr><td><code class="inl">GET /pipeline/{projectId}/gates</code></td><td>未解決（pending）のリーダー確認ゲート一覧</td></tr>
+      <tr><td><code class="inl">POST /pipeline/{projectId}/gates/{gateId}/resolve</code></td><td>ゲートを解決（<code class="inl">{"decision":"proceed"|"skip","resolvedBy":"…"}</code>）</td></tr>
+      <tr><td><code class="inl">POST /pipeline/standup · /wrap-up · /final-analysis</code></td><td>朝会 / 総括 / 全体分析の手動再実行（再起動復旧・運用用）</td></tr>
+      <tr><td><code class="inl">POST /track/generate-templates · /deliver · /submit-responses · /analyze</code></td><td>日報の生成・配信・回答・分析</td></tr>
+      <tr><td><code class="inl">POST /assign/generate-drafts · /confirm · /reject</code></td><td>割当案の生成と承認 / 却下</td></tr>
+      <tr><td><code class="inl">POST /alerts/scan · /overview/daily-summary</code></td><td>アラートスキャン・経営サマリ生成</td></tr>
+    </table>
     <div class="frow"><div class="k">マルチチャネル配信</div><div class="v"><b>Slack / Google Sheets / ローカルファイル</b> へ配信。未設定時は <code class="inl">local_file → in_memory</code> へ安全にフォールバック（Slack トークンが無くても動く）。</div></div>
-    <div class="frow"><div class="k">設定 GUI</div><div class="v"><code class="inl">/settings</code> で接続先・チャネル・配信時刻を設定（localhost 専用・シークレットはマスク表示）。</div></div>
-    <div class="frow"><div class="k">永続化</div><div class="v">PostgreSQL にタスク / メンバー / 日報 / アラート / 監査ログを保持。</div></div>
+    <div class="frow"><div class="k">設定 GUI</div><div class="v"><code class="inl">/settings</code> で接続先・チャネル・<b>各フェーズの時刻（時・分）</b>を設定（localhost 専用・シークレットはマスク表示）。</div></div>
+    <div class="frow"><div class="k">永続化</div><div class="v">PostgreSQL にタスク / メンバー / 日報 / アラート / <b>リーダー確認ゲート</b> / 監査ログを保持。</div></div>
 
-    <h3><span class="x">07</span>セットアップ</h3>
+    <h3><span class="x">09</span>セットアップ</h3>
     <ol class="steps">
       <li><h4>環境変数（.env）</h4><pre>CONTEXT_HUB_BASE_URL=http://localhost:8000/api/v1
 CONTEXT_HUB_USE_MOCK=false
+USE_DATABASE=true                 <span class="c"># ゲート等を PostgreSQL に永続化</span>
 NOTIFICATION_CHANNEL=local_file   <span class="c"># Slack未取得時の安全策</span></pre></li>
       <li><h4>起動（PostgreSQL + compose）</h4><pre>docker compose up --build
-<span class="c"># db(:5433) / app(:8001) / migrate が起動</span></pre></li>
+<span class="c"># db(:5433) / app(:8001) / migrate(alembic upgrade head) が起動</span></pre></li>
+      <li><h4>時刻の調整（任意）</h4><p><code class="inl">/settings</code> で朝会 / 日報 / 催促 / 総括の時刻を変更。順序は固定のまま。</p></li>
       <li><h4>会議からタスク生成</h4><pre>plan.extract_tasks_from_meeting(projectId, meetingId)
 <span class="c"># ハブの get_meeting を叩き、抽出タスクを取り込む</span></pre></li>
     </ol>
