@@ -10,6 +10,7 @@ import type { KnowledgeGraph } from "../types/graph.js";
 import { buildArchitecture, buildDomains, buildHotspots, buildStats } from "./data-builder.js";
 import { escapeAttr, escapeHtml, sanitizeFileName } from "./escape.js";
 import { icon } from "./icons.js";
+import { renderOrgSettingsPanel } from "./org-settings.js";
 
 const TYPE_ICON_NAME: Record<string, "apex" | "trigger" | "lwc" | "object" | "flow"> = {
   apex: "apex",
@@ -118,6 +119,7 @@ export function renderHomeHtml(
         <button class="tab-button" data-tab="architecture" aria-selected="false">アーキテクチャ</button>
         <button class="tab-button" data-tab="domains" aria-selected="false">ドメインマップ</button>
         <button class="tab-button" data-tab="hotspots" aria-selected="false">ホットスポット</button>
+        <button class="tab-button" data-tab="org-settings" aria-selected="false">組織設定</button>
       </div>
 
       <div class="tab-panel" data-panel="stats" data-active="true">
@@ -156,6 +158,10 @@ export function renderHomeHtml(
 
       <div class="tab-panel" data-panel="hotspots" data-active="false">
         <div id="hotspots-list"></div>
+      </div>
+
+      <div class="tab-panel" data-panel="org-settings" data-active="false">
+        ${renderOrgSettingsPanel(graph)}
       </div>
     </main>
   </div>
