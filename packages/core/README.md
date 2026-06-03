@@ -75,8 +75,8 @@ yohaku context --kind explain --fqn Account
 
 ## The suite
 
-Core is one of three layers (Core / Context-Hub / AI Manager). See the suite documentation
-at [yohakuforce.github.io/core](https://yohakuforce.github.io/core/) for how they fit together.
+Core is one of three layers (Core / Context-Hub / AI Manager). See the official help site
+at [yohakuforce.github.io/docs](https://yohakuforce.github.io/docs/) for how they fit together.
 
 ## License
 
