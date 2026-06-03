@@ -28,7 +28,7 @@ describe("CLI — yohaku graph query error hints", () => {
   });
 
   function stderrText(): string {
-    return errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    return errSpy.mock.calls.map((c: unknown[]) => c.join(" ")).join("\n");
   }
 
   it("PRAGMA を投げると 'use yohaku graph schema --tables' のヒントが出る", async () => {
@@ -97,7 +97,7 @@ describe("CLI — yohaku graph schema --tables", () => {
   });
 
   function stdoutText(): string {
-    return outSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    return outSpy.mock.calls.map((c: unknown[]) => c.join(" ")).join("\n");
   }
 
   it("--tables で全テーブルが JSON 出力される", async () => {

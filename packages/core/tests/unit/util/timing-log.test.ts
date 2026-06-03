@@ -54,7 +54,7 @@ describe("timing-log", () => {
       { timestamp: "t", command: "graph build", durationMs: 3500 },
       { warnThresholdMs: 2000 },
     );
-    const stderrText = errSpy.mock.calls.map((c) => c.join(" ")).join("\n");
+    const stderrText = errSpy.mock.calls.map((c: unknown[]) => c.join(" ")).join("\n");
     expect(stderrText).toMatch(/warning.*graph build took 3\.50s/);
     expect(stderrText).toMatch(/--async|Stop hook/);
   });
