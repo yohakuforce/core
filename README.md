@@ -31,9 +31,9 @@ npx -p @yohakuforce/core yohaku init --bootstrap --profile minimal
 
 30 分で導入完了する詳細手順: [`docs/01-getting-started/quickstart.md`](./docs/01-getting-started/quickstart.md)
 
-### v0.5.0 の目玉: HTML 設計書パイプライン
+### v0.6.0 の目玉: HTML 詳細設計書パイプライン
 
-同じ知識グラフから「AI が読む Markdown」と「人間がレビューする HTML 設計書」を二系統で生成し、ブラウザでプレビューできる。
+同じ知識グラフから「AI が読む Markdown」と「人間がレビューする HTML 設計書」を二系統で生成し、ブラウザでプレビューできる。v0.6.0 では HTML を**詳細設計レベル**（処理詳細・項目値の割り当て・計算方法）まで踏み込ませ、数式・入力規則の自然語化、フローチャートの日本語化、凡例ページを追加した。
 
 ```bash
 # Markdown と HTML を同時生成 (docs/generated/html/index.html がホーム)
