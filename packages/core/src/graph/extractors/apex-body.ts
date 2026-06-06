@@ -11,6 +11,8 @@ import type {
   ApexSoqlInfo,
   ApexVisibility,
 } from "../../types/graph.js";
+import { extractFieldWrites } from "./apex-field-writes.js";
+import { parseSoqlDetail } from "./soql-parse.js";
 
 const COMMENT_LINE_REGEX = /\/\/[^\n]*/g;
 const COMMENT_BLOCK_REGEX = /\/\*[\s\S]*?\*\//g;
@@ -48,6 +50,14 @@ export function stripApexNoise(content: string): string {
     .replace(STRING_LITERAL_REGEX, "''");
 }
 
+/**
+ * コメントのみ除去し、文字列リテラルは残す。項目代入の「設定値」抽出のように
+ * リテラルそのものが意味を持つ解析で使う。
+ */
+export function stripApexComments(content: string): string {
+  return content.replace(COMMENT_BLOCK_REGEX, " ").replace(COMMENT_LINE_REGEX, " ");
+}
+
 /** 旧シンボル名 (内部互換用) */
 function strip(content: string): string {
   return stripApexNoise(content);
@@ -55,14 +65,18 @@ function strip(content: string): string {
 
 export function extractApexBody(rawContent: string): ApexBodyInfo {
   const stripped = strip(rawContent);
+  // SOQL は WHERE 値 (文字列リテラル) も意味を持つため、リテラルを残した本文から抽出する。
+  const commentStripped = stripApexComments(rawContent);
 
   const methods = extractMethods(stripped, rawContent);
-  const soqlQueries = extractSoql(stripped);
+  const soqlQueries = extractSoql(commentStripped);
   const dmlOperations = extractDml(stripped);
   const classReferences = extractClassReferences(stripped);
   const classAnnotations = extractClassAnnotations(rawContent);
   const hasTryCatch = TRY_REGEX.test(stripped);
   const hasCallout = CALLOUT_REGEX.test(rawContent);
+  // 設定値リテラルを保持するためコメントのみ除去した本文を渡す
+  const fieldWrites = extractFieldWrites(commentStripped, dmlOperations);
 
   return {
     methods,
@@ -72,6 +86,7 @@ export function extractApexBody(rawContent: string): ApexBodyInfo {
     classAnnotations,
     hasTryCatch,
     hasCallout,
+    fieldWrites: fieldWrites.length > 0 ? fieldWrites : undefined,
   };
 }
 
@@ -150,9 +165,18 @@ function extractSoql(stripped: string): readonly ApexSoqlInfo[] {
   let match: RegExpExecArray | null = re.exec(stripped);
   while (match !== null) {
     const raw = (match[1] ?? "").trim().replace(/\s+/g, " ");
-    const fromMatch = SOQL_FROM_REGEX.exec(raw);
-    const primaryObject = fromMatch?.[1] ?? null;
-    result.push({ raw, primaryObject });
+    const detail = parseSoqlDetail(raw);
+    // detail.object はトップレベル FROM 由来。サブクエリを含むクエリでも正しい
+    // 主オブジェクトになる (旧 SOQL_FROM_REGEX は最初の FROM=サブクエリを誤検出した)。
+    const primaryObject = detail.object ?? SOQL_FROM_REGEX.exec(raw)?.[1] ?? null;
+    result.push({
+      raw,
+      primaryObject,
+      fields: detail.fields.length > 0 ? detail.fields : undefined,
+      whereClause: detail.whereClause,
+      orderByClause: detail.orderByClause,
+      limitClause: detail.limitClause,
+    });
     match = re.exec(stripped);
   }
   return result;

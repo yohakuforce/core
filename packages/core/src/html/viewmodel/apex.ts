@@ -13,8 +13,10 @@ import { buildMethodSummaryTable } from "../../render/method-summary-table.js";
 import { summaryForApex } from "../../render/summary.js";
 import type { ApexClass, ApexMethodInfo, KnowledgeGraph } from "../../types/graph.js";
 import {
+  type FieldLabelResolver,
   type LabelResolver,
   firstSentencePlain,
+  makeFieldLabelResolver,
   makeLabelResolver,
   objectRefListHtml,
 } from "../display.js";
@@ -23,6 +25,7 @@ import { renderMethodFlowcharts } from "../render-method-flow.js";
 import type { ComponentViewModel, SectionViewModel } from "../types.js";
 import { buildProcessingDetailSection } from "./apex-detail.js";
 import { buildFieldWritesSection } from "./apex-field-writes.js";
+import { renderQueryDetailBlock } from "./apex-query-detail.js";
 import { changeHistorySection } from "./shared.js";
 
 export function buildApexViewModel(
@@ -33,6 +36,7 @@ export function buildApexViewModel(
   preservedBlocks?: Map<string, string>,
 ): ComponentViewModel {
   const resolveLabel = makeLabelResolver(graph);
+  const resolveFieldLabel = makeFieldLabelResolver(graph);
   const summary = summaryForApex(cls, graph);
   const sections: SectionViewModel[] = [
     {
@@ -59,7 +63,12 @@ export function buildApexViewModel(
     {
       id: "data-model-touchpoints",
       title: "データモデル接点",
-      htmlContent: renderDataModelTouchpoints(cls, resolveLabel),
+      htmlContent: renderDataModelTouchpoints(
+        cls,
+        resolveLabel,
+        resolveFieldLabel,
+        (id) => preservedBlocks?.get(id),
+      ),
     },
     {
       id: "internal-flow",
@@ -77,6 +86,7 @@ export function buildApexViewModel(
       knownObjects: new Set(graph.objects.map((o) => o.fullyQualifiedName)),
       getPreserved: (id) => preservedBlocks?.get(id),
       resolveObjectLabel: (o) => resolveLabel("object", o),
+      resolveFieldLabel,
     }),
     {
       id: "io-contract",
@@ -166,12 +176,23 @@ function methodRow(m: ApexMethodInfo): string {
   </tr>`;
 }
 
-function renderDataModelTouchpoints(cls: ApexClass, resolveLabel: LabelResolver): string {
+function renderDataModelTouchpoints(
+  cls: ApexClass,
+  resolveLabel: LabelResolver,
+  resolveFieldLabel: FieldLabelResolver,
+  getPreserved: (id: string) => string | undefined,
+): string {
   const body = cls.body;
   const soqlObjects = unique(
     (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
   );
   const dmlTargets = unique((body?.dmlOperations ?? []).map((d) => d.target));
+  const queryDetail = renderQueryDetailBlock(
+    body?.soqlQueries ?? [],
+    (api) => resolveLabel("object", api),
+    resolveFieldLabel,
+    getPreserved,
+  );
   return `
     <div class="grid two-col">
       <div>
@@ -182,7 +203,7 @@ function renderDataModelTouchpoints(cls: ApexClass, resolveLabel: LabelResolver)
         <h3>DML 対象 (${dmlTargets.length})</h3>
         ${objectRefListHtml(dmlTargets, resolveLabel, "（DML は検出されませんでした）")}
       </div>
-    </div>`;
+    </div>${queryDetail}`;
 }
 
 function renderInternalFlowPlaceholder(cls: ApexClass): string {

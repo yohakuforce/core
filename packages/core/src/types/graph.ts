@@ -147,6 +147,17 @@ export interface ApexMethodInfo {
 export interface ApexSoqlInfo {
   readonly raw: string;
   readonly primaryObject: string | null;
+  /**
+   * SELECT 句の取得項目リスト (詳細設計: query-detail)。サブクエリ・集計関数は
+   * 原文のまま 1 要素として保持する。動的 SOQL 等で解析できない場合は undefined。
+   */
+  readonly fields?: readonly string[];
+  /** WHERE 句の条件式 (キーワード WHERE を除いた原文)。無ければ undefined。 */
+  readonly whereClause?: string;
+  /** ORDER BY 句 (キーワードを除いた原文)。 */
+  readonly orderByClause?: string;
+  /** LIMIT 句の値 (原文。バインド変数なら式のまま)。 */
+  readonly limitClause?: string;
 }
 
 export interface ApexDmlInfo {
@@ -160,6 +171,26 @@ export interface ApexClassReferenceInfo {
   readonly memberName: string;
 }
 
+/**
+ * 「このオブジェクトのこの項目にこの値を割り当てる」を構造化したもの
+ * (詳細設計: field-writes)。`receiver.field = value` 形の代入を決定的に抽出する。
+ * 動的代入・putSObject 等は取り切れないため LLM / HUMAN_MANAGED 補完前提。
+ */
+export interface ApexFieldWriteInfo {
+  /** 代入先レシーバ変数名 (例: acc)。 */
+  readonly receiver: string;
+  /** 解決できた SObject 型 (宣言 / new / for-each から)。不明なら null。 */
+  readonly object: string | null;
+  /** 設定する項目 API 名 (例: Status__c)。 */
+  readonly field: string;
+  /** 設定値の式 (原文)。 */
+  readonly valueExpr: string;
+  /** 同一レシーバに対する後続 DML から推定した操作種別 (あれば)。 */
+  readonly operation?: ApexDmlKind;
+  /** 代入が属するメソッド名 (直近の宣言から推定。不明なら undefined)。 */
+  readonly methodName?: string;
+}
+
 export interface ApexBodyInfo {
   readonly methods: readonly ApexMethodInfo[];
   readonly soqlQueries: readonly ApexSoqlInfo[];
@@ -168,6 +199,8 @@ export interface ApexBodyInfo {
   readonly classAnnotations: readonly string[];
   readonly hasTryCatch: boolean;
   readonly hasCallout: boolean;
+  /** 項目への値の割り当て (詳細設計: field-writes)。`receiver.field = value` を抽出。 */
+  readonly fieldWrites?: readonly ApexFieldWriteInfo[];
   /** メソッド単位の制御フロー (Phase 8-B1)。recursive 構造のため JSON シリアライズ可。 */
   readonly controlFlows?: readonly ApexMethodControlFlow[];
 }
@@ -243,11 +276,42 @@ export type FlowElementKind =
   | "screen"
   | "wait";
 
+/** Flow のレコード操作の絞り込み条件 1 件 (詳細設計: query-detail)。 */
+export interface FlowRecordFilter {
+  readonly field: string;
+  readonly operator: string;
+  /** 比較値 (リテラル or {!参照})。解決できない場合は空文字。 */
+  readonly value: string;
+}
+
+/** Flow が「このオブジェクトのこの項目にこの値を割り当てる」1 件 (詳細設計: field-writes)。 */
+export interface FlowFieldAssignment {
+  readonly field: string;
+  /** 設定値 (リテラル or {!参照})。 */
+  readonly value: string;
+}
+
 export interface FlowElementInfo {
   readonly name: string;
   readonly kind: FlowElementKind;
   readonly label?: string;
   readonly target?: string;
+  /** recordLookup の取得項目 (queriedFields)。 */
+  readonly queriedFields?: readonly string[];
+  /** recordLookup/Update/Delete の絞り込み条件。 */
+  readonly filters?: readonly FlowRecordFilter[];
+  /** 複数条件の論理 (and / or / カスタム)。 */
+  readonly filterLogic?: string;
+  /** recordCreate/Update の項目への値割り当て (inputAssignments)。 */
+  readonly inputAssignments?: readonly FlowFieldAssignment[];
+  /** inputReference で 1 レコード変数を直接 create/update する場合の参照名。 */
+  readonly inputReference?: string;
+  /** recordLookup の並び替え項目。 */
+  readonly sortField?: string;
+  /** Asc / Desc。 */
+  readonly sortOrder?: string;
+  /** recordLookup が先頭 1 件のみ取得するか (件数=1 相当)。 */
+  readonly getFirstRecordOnly?: boolean;
 }
 
 export interface FlowBodyInfo {
@@ -257,6 +321,23 @@ export interface FlowBodyInfo {
   readonly actionCalls: readonly string[];
   readonly edges?: readonly FlowEdgeInfo[];
   readonly startTarget?: string;
+  /** レコードトリガ Flow の起動条件 (いつ起動するか)。非トリガ Flow では undefined。 */
+  readonly startTrigger?: FlowStartTrigger;
+}
+
+/** レコードトリガ Flow の「いつ起動するか」(詳細設計: 起動条件)。 */
+export interface FlowStartTrigger {
+  /** 起動対象オブジェクト。 */
+  readonly object?: string;
+  /** Create / Update / CreateAndUpdate / Delete。 */
+  readonly recordTriggerType?: string;
+  /** RecordBeforeSave / RecordAfterSave。 */
+  readonly triggerType?: string;
+  /** 起動条件の数式 (filterFormula)。 */
+  readonly conditionFormula?: string;
+  /** 起動条件 (filters 形式)。 */
+  readonly filters?: readonly FlowRecordFilter[];
+  readonly filterLogic?: string;
 }
 
 export interface FlowEdgeInfo {

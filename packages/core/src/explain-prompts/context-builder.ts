@@ -10,8 +10,11 @@ import type { ComponentType } from "../html/sections.js";
 import { concernsForApex, concernsForFlow, concernsForTrigger } from "../render/concerns.js";
 import type {
   ApexClass,
+  ApexFieldWriteInfo,
+  ApexSoqlInfo,
   ApexTrigger,
   Flow,
+  FlowElementInfo,
   KnowledgeGraph,
   LightningWebComponent,
   SObject,
@@ -41,6 +44,8 @@ export function buildContextForApex(
     soqlObjects: unique(
       (body?.soqlQueries ?? []).map((q) => q.primaryObject).filter((o): o is string => o !== null),
     ),
+    soqlDetail: soqlDetailContext(body?.soqlQueries),
+    fieldWrites: fieldWritesContext(body?.fieldWrites),
     dmlTargets: unique((body?.dmlOperations ?? []).map((d) => `${d.kind} ${d.target}`)),
     callees: unique((body?.classReferences ?? []).map((r) => r.className)),
     callers: graph.apexClasses
@@ -72,6 +77,8 @@ export function buildContextForTrigger(
         .map((q) => q.primaryObject)
         .filter((o): o is string => o !== null),
     ),
+    soqlDetail: soqlDetailContext(trg.body?.soqlQueries),
+    fieldWrites: fieldWritesContext(trg.body?.fieldWrites),
     dmlTargets: unique((trg.body?.dmlOperations ?? []).map((d) => `${d.kind} ${d.target}`)),
     siblingsOnSameObject: graph.apexTriggers
       .filter((t) => t.object === trg.object && t.fullyQualifiedName !== trg.fullyQualifiedName)
@@ -145,6 +152,8 @@ export function buildContextForFlow(flow: Flow, _graph: KnowledgeGraph): Record<
     status: flow.status,
     triggeringObject: flow.triggeringObject ?? null,
     recordObjects: body?.recordObjects ?? [],
+    recordDetail: flowRecordDetailContext(body?.elements),
+    fieldAssignments: flowFieldAssignmentContext(body?.elements),
     subflows: body?.subflows ?? [],
     actionCalls: body?.actionCalls ?? [],
     elementsCount: body?.elements.length ?? 0,
@@ -184,6 +193,82 @@ export function buildContextFor(
       return flow === undefined ? null : buildContextForFlow(flow, graph);
     }
   }
+}
+
+/**
+ * LLM が「どのオブジェクトを / どの項目を / どの条件で」取得するかを書けるよう、
+ * 決定的に分解した SOQL の構造を渡す (詳細設計: query-detail / processing-detail-narrative)。
+ */
+function soqlDetailContext(
+  queries: readonly ApexSoqlInfo[] | undefined,
+): readonly Record<string, unknown>[] {
+  return (queries ?? []).map((q) => ({
+    object: q.primaryObject,
+    fields: q.fields ?? [],
+    where: q.whereClause ?? null,
+    orderBy: q.orderByClause ?? null,
+    limit: q.limitClause ?? null,
+  }));
+}
+
+/**
+ * 「このオブジェクトのこの項目にこの値を割り当てる」を LLM に渡す
+ * (詳細設計: field-writes / processing-detail-narrative)。
+ */
+function fieldWritesContext(
+  writes: readonly ApexFieldWriteInfo[] | undefined,
+): readonly Record<string, unknown>[] {
+  return (writes ?? []).map((w) => ({
+    object: w.object,
+    field: w.field,
+    value: w.valueExpr,
+    operation: w.operation ?? null,
+    method: w.methodName ?? null,
+  }));
+}
+
+/** Flow のレコード取得・絞り込みを LLM に渡す (詳細設計: query-detail)。 */
+function flowRecordDetailContext(
+  elements: readonly FlowElementInfo[] | undefined,
+): readonly Record<string, unknown>[] {
+  return (elements ?? [])
+    .filter(
+      (e) =>
+        (e.queriedFields?.length ?? 0) > 0 ||
+        (e.filters?.length ?? 0) > 0 ||
+        e.sortField !== undefined ||
+        e.getFirstRecordOnly !== undefined,
+    )
+    .map((e) => ({
+      element: e.name,
+      operation: e.kind,
+      object: e.target ?? null,
+      queriedFields: e.queriedFields ?? [],
+      filters: (e.filters ?? []).map((f) => ({
+        field: f.field,
+        operator: f.operator,
+        value: f.value,
+      })),
+      filterLogic: e.filterLogic ?? null,
+      sortField: e.sortField ?? null,
+      sortOrder: e.sortOrder ?? null,
+      firstRecordOnly: e.getFirstRecordOnly ?? null,
+    }));
+}
+
+/** Flow の項目への値割り当てを LLM に渡す (詳細設計: field-writes)。 */
+function flowFieldAssignmentContext(
+  elements: readonly FlowElementInfo[] | undefined,
+): readonly Record<string, unknown>[] {
+  return (elements ?? [])
+    .filter((e) => (e.inputAssignments?.length ?? 0) > 0 || e.inputReference !== undefined)
+    .map((e) => ({
+      element: e.name,
+      operation: e.kind,
+      object: e.target ?? null,
+      assignments: (e.inputAssignments ?? []).map((a) => ({ field: a.field, value: a.value })),
+      inputReference: e.inputReference ?? null,
+    }));
 }
 
 function unique<T>(arr: readonly T[]): T[] {

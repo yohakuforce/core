@@ -12,8 +12,14 @@ export type { ExplainBlockKind, ExplainPromptItem, ExplainPromptsOutput } from "
 export { buildContextFor } from "./context-builder.js";
 export { buildPrompt, buildOverallInstructions } from "./prompt-builder.js";
 
+// processing-detail-narrative は出力が大きくなるため既定には含めず、
+// `--kind processing-detail-narrative` で明示的にオプトインする。
 const DEFAULT_KINDS: readonly ExplainBlockKind[] = ["business-meaning", "concerns"];
-const VALID_KINDS = new Set<ExplainBlockKind>(["business-meaning", "concerns"]);
+const VALID_KINDS = new Set<ExplainBlockKind>([
+  "business-meaning",
+  "concerns",
+  "processing-detail-narrative",
+]);
 
 export interface BuildExplainPromptsOptions {
   /** 対象ブロック種別。未指定なら ["business-meaning", "concerns"] */
@@ -86,5 +92,8 @@ export function buildExplainPrompts(
 function isKindApplicable(type: ComponentType, kind: ExplainBlockKind): boolean {
   if (kind === "business-meaning") return true;
   if (kind === "concerns") return type === "apex" || type === "trigger" || type === "flow";
+  if (kind === "processing-detail-narrative") {
+    return type === "apex" || type === "trigger" || type === "flow";
+  }
   return false;
 }

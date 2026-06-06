@@ -160,6 +160,29 @@ describe("buildExplainPrompts", () => {
     expect(ctx.dmlTargets).toEqual(["insert Account"]);
   });
 
+  it("context は構造化 SOQL (soqlDetail) と項目代入 (fieldWrites) を含む", () => {
+    const graph: KnowledgeGraph = { ...BASE, apexClasses: [apex("X")] };
+    const out = buildExplainPrompts(graph, { kinds: ["business-meaning"] });
+    const ctx = out.items[0]?.context as Record<string, unknown>;
+    expect(ctx.soqlDetail).toEqual([
+      { object: "Account", fields: [], where: null, orderBy: null, limit: null },
+    ]);
+    expect(ctx.fieldWrites).toEqual([]);
+  });
+
+  it("processing-detail-narrative は opt-in で apex に 1 item 生成 (既定では出ない)", () => {
+    const graph: KnowledgeGraph = { ...BASE, apexClasses: [apex("AccountService")] };
+    // 既定には含まれない
+    expect(
+      buildExplainPrompts(graph).items.some((i) => i.blockId === "processing-detail-narrative"),
+    ).toBe(false);
+    // 明示指定で生成され、処理詳細の観点を含む
+    const out = buildExplainPrompts(graph, { kinds: ["processing-detail-narrative"] });
+    expect(out.items).toHaveLength(1);
+    expect(out.items[0]?.blockId).toBe("processing-detail-narrative");
+    expect(out.items[0]?.prompt).toContain("どの条件で");
+  });
+
   it("instructions と outputTemplate を返す", () => {
     const out = buildExplainPrompts({ ...BASE } as KnowledgeGraph);
     expect(out.instructions).toContain("version");

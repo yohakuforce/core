@@ -7,7 +7,10 @@
 
 import type { ComponentType } from "../html/sections.js";
 
-export type ExplainBlockKind = "business-meaning" | "concerns";
+export type ExplainBlockKind =
+  | "business-meaning"
+  | "concerns"
+  | "processing-detail-narrative";
 
 export interface ExplainPromptItem {
   readonly type: ComponentType;

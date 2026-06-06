@@ -1421,7 +1421,12 @@ async function cmdExplainPrompts(args: ParsedArgs): Promise<number> {
       : (kindsRaw
           .split(",")
           .map((s) => s.trim())
-          .filter((s) => s === "business-meaning" || s === "concerns") as ExplainBlockKind[]);
+          .filter(
+            (s) =>
+              s === "business-meaning" ||
+              s === "concerns" ||
+              s === "processing-detail-narrative",
+          ) as ExplainBlockKind[]);
 
   const typesFilter =
     typesRaw === undefined || typesRaw.trim() === ""
@@ -1712,12 +1717,14 @@ Local preview (Phase 10 / 12):
                                        # --watch: ソース変更時に graph+HTML 再生成 + ブラウザ auto-reload (SSE)
 
 LLM prompts (Phase 9):
-  yohaku explain-prompts [--kind business-meaning,concerns]
+  yohaku explain-prompts [--kind business-meaning,concerns,processing-detail-narrative]
                          [--types apex,trigger,...] [--names X,Y,...]
                          [--max-items N] [--output prompts.json]
                                        # 空 AI-managed ブロックを LLM に埋めてもらうための
                                        # prompt + context を JSON 出力。
                                        # 受け取った fill.json は html-write で適用。
+                                       # processing-detail-narrative: SOQL の項目/条件・項目代入の
+                                       # 値/条件まで踏み込んだ処理詳細 (既定では出さない。明示オプトイン)。
 
 Domains (Phase 5):
   yohaku domains init [--path <yaml>] [--force]

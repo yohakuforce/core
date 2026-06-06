@@ -17,7 +17,37 @@ export function buildPrompt(type: ComponentType, name: string, blockId: ExplainB
   if (blockId === "business-meaning") {
     return buildBusinessMeaningPrompt(type, name);
   }
+  if (blockId === "processing-detail-narrative") {
+    return buildProcessingDetailPrompt(type, name);
+  }
   return buildConcernsPrompt(type, name);
+}
+
+function buildProcessingDetailPrompt(type: ComponentType, name: string): string {
+  const label = TYPE_LABEL[type];
+  return `あなたは Salesforce プロジェクトの詳細設計書を補完するシニアエンジニアです。
+以下の ${label} "${name}" の「処理詳細」を、データ操作に踏み込んで記述してください。
+
+## 入力 (context)
+- context.soqlDetail: 各 SOQL の { object, fields, where, orderBy, limit } (決定的抽出)
+- context.fieldWrites: 各 項目代入の { object, field, value, operation, method } (決定的抽出)
+- context.methods / dmlTargets / autoDetectedConcerns も参照可
+
+## 書くこと
+1. クエリ発行箇所ごとに「どのオブジェクトの / どの項目を / どの条件で」取得するかを明確化する
+   - context.soqlDetail を根拠にし、where 条件の業務的な意味 (例: 当月・有効のみ) を補足する
+   - 動的 SOQL (context に出ない文字列結合) があれば原文を読んで補う
+2. 項目への値の割り当てを「オブジェクト.項目 ← 値 (条件 / 操作)」の形で記述する
+   - context.fieldWrites を根拠にし、設定条件 (どの分岐で設定されるか) を補う
+   - putSObject 等の動的代入で context に出ないものは原文から補う
+
+## 制約
+- context と原文から観察できる事実だけを書く。推測は "要確認" と明示
+- 既出の一覧 (SOQL対象/DML対象) の単純な繰り返しはしない。項目・条件・値まで踏み込む
+
+## 出力フォーマット
+- 純粋な HTML 断片のみ。許可タグ: <p>, <ul>, <li>, <ol>, <strong>, <em>, <code>, <table>, <thead>, <tbody>, <tr>, <th>, <td>
+- マークダウン / コードフェンス / 見出し(h*) / 説明文 / コメントは禁止`;
 }
 
 function buildBusinessMeaningPrompt(type: ComponentType, name: string): string {

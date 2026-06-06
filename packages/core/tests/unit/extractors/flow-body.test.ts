@@ -78,6 +78,87 @@ describe("extractFlowBody", () => {
     expect(body.edges).toEqual([]);
   });
 
+  it("recordLookup の 取得項目 / 絞り込み条件 / 並び / 件数 を抽出する", () => {
+    const node = {
+      recordLookups: [
+        {
+          name: "Get_Gold",
+          object: "Customer__c",
+          queriedFields: ["Id", "Name", "Tier__c"],
+          filters: [
+            { field: "Tier__c", operator: "EqualTo", value: { stringValue: "Gold" } },
+            { field: "OwnerId", operator: "EqualTo", value: { elementReference: "$User.Id" } },
+          ],
+          filterLogic: "and",
+          sortField: "Name",
+          sortOrder: "Asc",
+          getFirstRecordOnly: "true",
+        },
+      ],
+    };
+    const el = extractFlowBody(node).elements.find((e) => e.name === "Get_Gold");
+    expect(el?.queriedFields).toEqual(["Id", "Name", "Tier__c"]);
+    expect(el?.filters).toEqual([
+      { field: "Tier__c", operator: "EqualTo", value: "'Gold'" },
+      { field: "OwnerId", operator: "EqualTo", value: "{!$User.Id}" },
+    ]);
+    expect(el?.filterLogic).toBe("and");
+    expect(el?.sortField).toBe("Name");
+    expect(el?.getFirstRecordOnly).toBe(true);
+  });
+
+  it("recordCreate/Update の inputAssignments (項目←値) を抽出する", () => {
+    const node = {
+      recordUpdates: [
+        {
+          name: "Set_Tier",
+          object: "Customer__c",
+          inputAssignments: [
+            { field: "Tier__c", value: { stringValue: "Platinum" } },
+            { field: "Active__c", value: { booleanValue: "true" } },
+          ],
+        },
+      ],
+      recordCreates: [
+        { name: "By_Ref", object: "Task", inputReference: "newTaskVar" },
+      ],
+    };
+    const els = extractFlowBody(node).elements;
+    const upd = els.find((e) => e.name === "Set_Tier");
+    expect(upd?.inputAssignments).toEqual([
+      { field: "Tier__c", value: "'Platinum'" },
+      { field: "Active__c", value: "true" },
+    ]);
+    expect(els.find((e) => e.name === "By_Ref")?.inputReference).toBe("newTaskVar");
+  });
+
+  it("レコードトリガ Flow の起動条件 (object/タイミング/条件式) を抽出する", () => {
+    const node = {
+      start: {
+        object: "Order__c",
+        recordTriggerType: "CreateAndUpdate",
+        triggerType: "RecordAfterSave",
+        filterFormula: "ISPICKVAL({!$Record.Status__c}, \"Approved\")",
+        connector: { targetReference: "Create_Shipment" },
+      },
+      recordCreates: [{ name: "Create_Shipment", object: "Shipment__c" }],
+    };
+    const st = extractFlowBody(node).startTrigger;
+    expect(st?.object).toBe("Order__c");
+    expect(st?.recordTriggerType).toBe("CreateAndUpdate");
+    expect(st?.conditionFormula).toContain("ISPICKVAL");
+  });
+
+  it("非トリガ Flow では startTrigger を出さない", () => {
+    expect(extractFlowBody(FLOW_NODE).startTrigger).toBeUndefined();
+  });
+
+  it("非 record 要素には詳細フィールドを付けない", () => {
+    const el = extractFlowBody(FLOW_NODE).elements.find((e) => e.kind === "decision");
+    expect(el?.filters).toBeUndefined();
+    expect(el?.inputAssignments).toBeUndefined();
+  });
+
   it("connector / decision rules / fault / loop / start を edges として返す", () => {
     const body = extractFlowBody(FLOW_NODE);
     const edges = body.edges ?? [];

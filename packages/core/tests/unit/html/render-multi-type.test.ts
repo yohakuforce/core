@@ -210,6 +210,62 @@ describe("Flow ViewModel", () => {
     const dm = vm.sections.find((s) => s.id === "data-model-touchpoints");
     expect(dm?.htmlContent).toContain("Account");
   });
+
+  it("レコード取得詳細・項目割り当ての決定的テーブルが ai_managed で出る", () => {
+    const flow = mkFlow({
+      body: {
+        elements: [
+          {
+            name: "Get_Gold",
+            kind: "recordLookup",
+            target: "Customer__c",
+            queriedFields: ["Id", "Tier__c"],
+            filters: [{ field: "Tier__c", operator: "EqualTo", value: "'Gold'" }],
+            getFirstRecordOnly: true,
+          },
+          {
+            name: "Set_Tier",
+            kind: "recordUpdate",
+            target: "Customer__c",
+            inputAssignments: [{ field: "Tier__c", value: "'Platinum'" }],
+          },
+        ],
+        subflows: [],
+        recordObjects: ["Customer__c"],
+        actionCalls: [],
+      },
+    });
+    const graph: KnowledgeGraph = {
+      ...EMPTY_GRAPH_BASE,
+      flows: [flow],
+      objects: [
+        { fullyQualifiedName: "Customer__c", label: "顧客", isCustom: true, sourcePath: "c", contentHash: "h" } as KnowledgeGraph["objects"][number],
+      ],
+      fields: [
+        { fullyQualifiedName: "Customer__c.Tier__c", object: "Customer__c", label: "階層", type: "Picklist", sourcePath: "c", contentHash: "h" } as KnowledgeGraph["fields"][number],
+      ],
+    };
+    const dm = buildFlowViewModel(flow, graph).sections.find(
+      (s) => s.id === "data-model-touchpoints",
+    );
+    // 取得詳細 (1要素1表、項目はラベル+API名)
+    expect(dm?.htmlContent).toContain('id="flow-query-detail"');
+    expect(dm?.htmlContent).toContain("レコード取得・絞り込み 詳細");
+    expect(dm?.htmlContent).toContain('<table class="data-table detail-kv">');
+    expect(dm?.htmlContent).toContain("階層 <code>Tier__c</code> EqualTo");
+    expect(dm?.htmlContent).toContain("先頭1件");
+    // 項目割り当ては Apex と同じ表形式 (項目/設定値/操作/設定箇所) に統一
+    expect(dm?.htmlContent).toContain('id="flow-field-writes"');
+    expect(dm?.htmlContent).toContain("項目値の割り当て");
+    expect(dm?.htmlContent).toContain('<table class="data-table fieldwrite-skeleton">');
+    expect(dm?.htmlContent).toContain("階層 <code>Tier__c</code>");
+    expect(dm?.htmlContent).toContain("<td><code>&#39;Platinum&#39;</code></td>");
+    expect(dm?.htmlContent).toContain("<td>更新</td>");
+    // フローチャート (Mermaid) が内部処理フローに出る
+    const flowSec = buildFlowViewModel(flow, graph).sections.find((s) => s.id === "internal-flow");
+    expect(flowSec?.htmlContent).toContain("mermaid-source");
+    expect(flowSec?.htmlContent).toContain("フローチャート");
+  });
 });
 
 describe("renderHtmlAll multi-type", () => {

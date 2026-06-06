@@ -566,6 +566,22 @@ strong { color: var(--fg-strong); }
 .data-table th { font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 .data-table tbody tr:hover { background: var(--accent-bg); }
 
+/* 詳細設計: 1クエリ/1要素=1表 の縦レイアウト (query-detail / field-writes) */
+.query-cards { display: flex; flex-direction: column; gap: 14px; }
+.query-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
+.query-card > h4 { margin: 0; padding: 8px 12px; background: var(--bg-alt); border-bottom: 1px solid var(--border); font-size: 13px; }
+.query-card .detail-kv { border: 0; border-radius: 0; }
+.detail-kv th {
+  /* 行見出し (オブジェクト/取得項目/…) は日本語のまま読ませる: 大文字化・縮小しない */
+  width: 132px; vertical-align: top; white-space: nowrap;
+  font-weight: 600; color: var(--text); font-size: 13px;
+  text-transform: none; letter-spacing: 0; background: var(--bg-alt);
+}
+.detail-kv td { vertical-align: top; }
+.detail-list { margin: 0; padding-left: 1.1em; }
+.detail-list li { margin: 2px 0; }
+.cond-op { color: var(--muted); font-weight: 600; font-size: 11px; }
+
 .llm-placeholder {
   border: 1px dashed var(--border-strong); padding: 14px 16px;
   border-radius: var(--radius); background: var(--bg-alt);

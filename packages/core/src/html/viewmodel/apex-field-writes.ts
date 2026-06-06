@@ -12,11 +12,17 @@
 // ai_managed ブロックとして LLM が原文から「掴み取って」充填する。
 // ----------------------------------------------------------------------------
 
-import type { ApexBodyInfo, ApexControlFlowNode } from "../../types/graph.js";
+import type {
+  ApexBodyInfo,
+  ApexControlFlowNode,
+  ApexFieldWriteInfo,
+} from "../../types/graph.js";
+import type { FieldLabelResolver } from "../display.js";
 import { renderRefInline } from "../display.js";
 import { escapeAttr, escapeHtml } from "../escape.js";
 import type { SectionViewModel } from "../types.js";
 import { aiManagedBlock } from "./ai-block.js";
+import { dmlKindJa } from "./detail-format.js";
 
 const MAX_TABS = 8; // CSS radio タブの対応上限
 
@@ -31,6 +37,8 @@ export interface FieldWritesInput {
   readonly getPreserved: (id: string) => string | undefined;
   /** オブジェクト API 名 → 日本語ラベル (タブ/見出しの主表示用、任意) */
   readonly resolveObjectLabel?: (apiName: string) => string | undefined;
+  /** 項目 API 名 → 日本語ラベル (項目列の主表示用、任意) */
+  readonly resolveFieldLabel?: FieldLabelResolver;
 }
 
 export function buildFieldWritesSection(input: FieldWritesInput): SectionViewModel {
@@ -61,8 +69,17 @@ export function buildFieldWritesSection(input: FieldWritesInput): SectionViewMod
         `<label for="fw-${escapeAttr(o)}">${renderRefInline(input.resolveObjectLabel?.(o), o)}</label>`,
     )
     .join("\n        ");
+  const fieldWrites = input.body?.fieldWrites ?? [];
   const panels = tabs
-    .map((o) => renderPanel(o, input.getPreserved, input.resolveObjectLabel?.(o)))
+    .map((o) =>
+      renderPanel(
+        o,
+        input.getPreserved,
+        input.resolveObjectLabel?.(o),
+        fieldWrites,
+        input.resolveFieldLabel,
+      ),
+    )
     .join("\n      ");
 
   return {
@@ -84,19 +101,54 @@ export function buildFieldWritesSection(input: FieldWritesInput): SectionViewMod
 function renderPanel(
   object: string,
   getPreserved: (id: string) => string | undefined,
-  objectLabel?: string,
+  objectLabel: string | undefined,
+  fieldWrites: readonly ApexFieldWriteInfo[],
+  resolveFieldLabel?: FieldLabelResolver,
 ): string {
   const id = `field-writes:${object}`;
+  const rows = fieldWrites.filter((w) => w.object === object);
   const block = aiManagedBlock({
     id,
     preserved: getPreserved(id),
     heading: object,
-    prompt: `${object} について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(API名) / 設定値(式) / 設定条件 / 操作(insert|update)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。`,
+    prompt: `${object} について、このクラスが設定する項目を原文から抽出し、表で記述してください: 項目(日本語ラベル+API名) / 設定値(式) / 設定条件 / 操作(新規作成|更新)。設定がなく参照のみなら「参照のみ・項目設定なし」と明記。推測は避け、原文の代入のみを記載してください。下の決定的スケルトン表は機械抽出の初期値です。条件(設定条件)の補完や、動的代入(putSObject 等)の取りこぼしを追記・修正してください。`,
+    skeleton: fieldWriteSkeletonTable(rows, object, resolveFieldLabel),
   });
   return `<section class="obj-tabpanel">
         <h4>${renderRefInline(objectLabel, object)} への項目設定</h4>
         ${block}
       </section>`;
+}
+
+/**
+ * 決定的に抽出した項目代入を表 (skeleton) にする。項目は「日本語ラベル + API 名」、
+ * 操作は日本語で表示する。LLM はこれを土台に条件補完・取りこぼし修正を行う。
+ */
+function fieldWriteSkeletonTable(
+  rows: readonly ApexFieldWriteInfo[],
+  object: string,
+  resolveFieldLabel?: FieldLabelResolver,
+): string {
+  if (rows.length === 0) {
+    return `<p class="muted">（このオブジェクトへの <code>項目 = 値</code> 形の代入は決定的には検出されませんでした。new SObject やコレクション経由・動的代入の可能性があるため、原文を確認して補ってください。）</p>`;
+  }
+  const body = rows
+    .map(
+      (w) => `<tr>
+          <td>${renderRefInline(resolveFieldLabel?.(w.field, object), w.field)}</td>
+          <td><code>${escapeHtml(w.valueExpr)}</code></td>
+          <td>${w.operation !== undefined ? `${escapeHtml(dmlKindJa(w.operation))} <code>${escapeHtml(w.operation)}</code>` : "—"}</td>
+          <td>${w.methodName !== undefined ? `<code>${escapeHtml(w.methodName)}</code>` : "—"}</td>
+        </tr>`,
+    )
+    .join("\n        ");
+  return `<table class="data-table fieldwrite-skeleton">
+        <thead><tr><th>項目</th><th>設定値 (式)</th><th>操作</th><th>設定箇所 (メソッド)</th></tr></thead>
+        <tbody>
+        ${body}
+        </tbody>
+      </table>
+      <p class="muted">※ 上表は <code>レシーバ.項目 = 値</code> の決定的抽出。設定条件 (if 等) と動的代入は含みません。</p>`;
 }
 
 // ---------- 触れているオブジェクトの決定的導出 ----------
@@ -115,6 +167,9 @@ function touchedObjects(input: FieldWritesInput): readonly string[] {
     }
     for (const name of newSObjectTypes(collectText(body.controlFlows ?? []), input.knownObjects)) {
       found.add(name);
+    }
+    for (const w of body.fieldWrites ?? []) {
+      if (w.object !== null && input.knownObjects.has(w.object)) found.add(w.object);
     }
   }
   return [...found].toSorted((a, b) => a.localeCompare(b));

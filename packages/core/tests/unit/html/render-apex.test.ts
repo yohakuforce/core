@@ -115,6 +115,91 @@ describe("buildApexViewModel", () => {
     expect(dm?.htmlContent).toContain("Account");
   });
 
+  it("SOQL 詳細は 1クエリ1表で、項目を日本語ラベル+API名で出す", () => {
+    const cls = makeClass({
+      body: {
+        methods: [method("save")],
+        soqlQueries: [
+          {
+            raw: "SELECT Id, Tier__c FROM Account WHERE Tier__c = 'Gold' ORDER BY Name LIMIT 50",
+            primaryObject: "Account",
+            fields: ["Id", "Tier__c"],
+            whereClause: "Tier__c = 'Gold'",
+            orderByClause: "Name",
+            limitClause: "50",
+          },
+        ],
+        dmlOperations: [],
+        classReferences: [],
+        classAnnotations: [],
+        hasTryCatch: false,
+        hasCallout: false,
+      },
+    });
+    const labeledGraph: KnowledgeGraph = {
+      ...graphWith([cls]),
+      objects: [
+        { fullyQualifiedName: "Account", label: "取引先", isCustom: false, sourcePath: "a", contentHash: "h" } as KnowledgeGraph["objects"][number],
+      ],
+      fields: [
+        { fullyQualifiedName: "Account.Tier__c", object: "Account", label: "階層", type: "Picklist", sourcePath: "a", contentHash: "h" } as KnowledgeGraph["fields"][number],
+      ],
+    };
+    const dm = buildApexViewModel(cls, labeledGraph).sections.find(
+      (s) => s.id === "data-model-touchpoints",
+    );
+    expect(dm?.htmlContent).toContain('id="query-detail"');
+    // 1クエリ1表
+    expect(dm?.htmlContent).toContain("クエリ 1");
+    expect(dm?.htmlContent).toContain('<table class="data-table detail-kv">');
+    // 取得項目: 階層 (label) + Tier__c (API) を併記
+    expect(dm?.htmlContent).toContain("階層 <code>Tier__c</code>");
+    // 絞り込み条件: 先頭項目もラベル化、API併記で曖昧さなし
+    expect(dm?.htmlContent).toContain("階層 <code>Tier__c</code> = &#39;Gold&#39;");
+    // 件数
+    expect(dm?.htmlContent).toContain("<td><code>50</code></td>");
+  });
+
+  it("項目値の割り当ては 項目=ラベル+API名、操作=日本語で出す", () => {
+    const cls = makeClass({
+      body: {
+        methods: [method("save")],
+        soqlQueries: [],
+        dmlOperations: [{ kind: "insert", target: "acc", viaDatabaseClass: false }],
+        classReferences: [],
+        classAnnotations: [],
+        hasTryCatch: false,
+        hasCallout: false,
+        fieldWrites: [
+          {
+            receiver: "acc",
+            object: "Account",
+            field: "Tier__c",
+            valueExpr: "'Gold'",
+            operation: "insert",
+            methodName: "save",
+          },
+        ],
+      },
+    });
+    const objGraph: KnowledgeGraph = {
+      ...graphWith([cls]),
+      objects: [
+        { fullyQualifiedName: "Account", label: "取引先", isCustom: false, sourcePath: "a", contentHash: "h" } as KnowledgeGraph["objects"][number],
+      ],
+      fields: [
+        { fullyQualifiedName: "Account.Tier__c", object: "Account", label: "階層", type: "Picklist", sourcePath: "a", contentHash: "h" } as KnowledgeGraph["fields"][number],
+      ],
+    };
+    const fw = buildApexViewModel(cls, objGraph).sections.find((s) => s.id === "field-writes");
+    expect(fw?.htmlContent).toContain('id="field-writes:Account"');
+    // 項目: 階層 (label) + Tier__c (API)
+    expect(fw?.htmlContent).toContain("階層 <code>Tier__c</code>");
+    expect(fw?.htmlContent).toContain("&#39;Gold&#39;");
+    // 操作: 日本語 + API
+    expect(fw?.htmlContent).toContain("新規作成 <code>insert</code>");
+  });
+
   it("テストクラスがあれば test-coverage に出る", () => {
     const cls = makeClass();
     const testCls = makeClass({ fullyQualifiedName: "AccountServiceTest", isTest: true });
