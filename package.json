@@ -1,6 +1,6 @@
 {
   "name": "yohakuforce",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Salesforce 特化の AI 駆動プロジェクト推進基盤 OSS。属人化の解消・運用タスク自動化・AI 駆動開発の再現性を提供する。",
   "license": "Apache-2.0",

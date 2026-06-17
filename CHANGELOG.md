@@ -2,6 +2,29 @@
 
 すべての注目すべき変更は本ファイルに記録される (SemVer 準拠)。
 
+## [0.7.0] - 2026-06-17 (SOQL・項目代入の決定的詳細表)
+
+> Apex / Flow の HTML 設計書に「どのオブジェクトを / どの項目を / どの条件で取得し、どの項目にどの値を設定するか」を
+> 決定的な表として出力。日本語ラベル + API 名を併記し、可読性と無曖昧性を両立。決定的テーブルは ai_managed ブロックの seed になる。
+
+### Added
+
+- **SOQL クエリ詳細表** (Apex/Flow): 1 クエリ = 1 縦表 (オブジェクト / 取得項目 / 条件 / 並び / 件数)。`soql-parse` 抽出器が SELECT/WHERE/ORDER BY/LIMIT を分解し、トップレベル FROM を解決 (サブクエリ FROM の誤検出を修正)
+- **項目代入 (field-writes) 詳細表**: `receiver.field = value` を抽出し「項目 / 設定値 / 操作 / 設定箇所」表に統一 (Apex は `apex-field-writes`、Flow は record 要素の inputAssignments)
+- **Flow 詳細**: レコードトリガの起動条件 (start) とフローチャート (Mermaid) を追加 (`flow-detail`)。項目ラベルは日本語ラベル + API 名を併記
+- **AI 配線**: explain-prompts の context に `soqlDetail` / `fieldWrites` / `recordDetail` を追加。opt-in の `processing-detail-narrative` kind を追加
+
+### Changed
+
+- `ApexSoqlInfo` / `ApexBodyInfo` / `FlowElementInfo` への追加はすべて optional で後方互換
+- CI: GitHub Actions を v6 系へ更新 (Node 20 deprecation 対応)
+
+### Fixed
+
+- XXE 対策で `processEntities=false` の環境向けに、表示用の安全な XML 実体復号を追加
+- `package-lock.json` を完全再生成し、`npm ci` のクロスプラットフォーム optional 依存欠落を解消
+- vitest を 4.1.8 に更新し `npm audit` (high) を解消
+
 ## [0.6.0] - 2026-06-02 (詳細設計書化)
 
 > HTML 設計書を「詳細設計で必要な観点」(処理詳細・項目値の割り当て・計算方法) まで踏み込ませ、
