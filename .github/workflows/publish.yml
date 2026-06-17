@@ -1,0 +1,43 @@
+name: Publish to npm
+
+# タグ (v*) を push すると @yohakuforce/core を npm に公開する。
+# 必要な一度きりの設定: リポジトリ Secrets に NPM_TOKEN (npmjs の Automation トークン) を登録。
+# provenance のため id-token: write を付与している (npm が GitHub OIDC で署名)。
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    name: Publish @yohakuforce/core to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Publish to npm (with provenance)
+        working-directory: packages/core
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

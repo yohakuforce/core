@@ -6,6 +6,14 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yohakuforce/core.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "yohaku": "./dist/cli.js"
   },
